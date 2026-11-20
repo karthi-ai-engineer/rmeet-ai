@@ -74,7 +74,7 @@ Daniel = Achird, Jacob = Puck; Max = Charon (`MAX_VOICE` in `max/.env`). UI has 
 
 Tests (both servers running): `.venv\Scripts\python tests\e2e_phase3_meeting_call.py`, `tests\e2e_phase3_live_and_edges.py`
 (add `--voice` or `--only-voice` for the voice run), `tests\e2e_phase2_graph.py`,
-`tests\e2e_phase1_messaging.py`, `tests\check_voice_pipeline.py` (Gemini only), `tests	est_quota_guard.py` (offline).
+`tests\e2e_phase1_messaging.py`, `tests\check_voice_pipeline.py` (Gemini only), `tests\test_quota_guard.py` (offline).
 Note: the tests reset the channel (Max is reinstalled).
 
 ## 5. Known issues / gotchas
