@@ -106,9 +106,17 @@ Note: the tests reset the channel (Max is reinstalled).
 
 1. Voice run with the new Gemini key (`tests/e2e_phase3_meeting_call.py --only-voice`), tune segmenting
    (`END_SILENCE` in `max/calling.py`) and the TTS throttle if needed.
-2. Phase 4 (agentic): adaptive cards in threads, Max drafts "Budget v3", reminders on action items,
-   follow-up posts before the next meeting.
-3. Later: real Teams (section 6) or a Daily.co demo (the original free-demo plan).
+2. Phase 4 (agentic): rebuild Max's brain as a **tool-calling agent** (Qwen picks tools, Max runs them,
+   loops until done) instead of "send all memory, get one answer". Connections become plug-ins
+   (prefer **MCP** connectors) so adding/removing Jira, SharePoint, calendar, DBs is configuration.
+   Plan for: test Qwen tool calling through the company gateway first; per-team allowed tools;
+   human confirmation for risky actions (sending, deleting); a log of tool calls.
+   First tools/tasks: search_memory, read_file, adaptive cards in threads, Max drafts "Budget v3",
+   reminders on action items, follow-up posts before the next meeting.
+3. Memory at scale: per-file/meeting summaries + search (keyword first; hybrid with embeddings in
+   PostgreSQL + pgvector only if Karthi approves an embedding model, e.g. Gemini's). Today the whole
+   team memory fits in one Qwen request.
+4. Later: real Teams (section 6) or a Daily.co demo (the original free-demo plan).
 
 ## 8. File map (most important)
 
