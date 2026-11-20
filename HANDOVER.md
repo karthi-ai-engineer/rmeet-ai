@@ -32,7 +32,7 @@ The simulated team: **Planning Department, Kestrel Home Goods**.
 | World + simulator | Planning Department world, rmeet-ai UI, AI colleagues, scoring | Done (40/40) |
 | 1. Messaging | Max as separate program (Teams SDK), install/RSC consent, `@Max` thread answers | Done, `tests/e2e_phase1_messaging.py` 17/17 |
 | 2. Graph knowledge | Change notifications, files + delta, calendars/onlineMeetings/VTT transcripts, admin gates, lifecycle recovery | Done, `tests/e2e_phase2_graph.py` 27/27 |
-| 3. Meetings via calling | meetingStart → Graph `POST /communications/calls` → callbacks → recording status → media; voices | **Text mode done** (`tests/e2e_phase3_meeting_call.py`: 16/16 checks, notes 40/40). **Voice mode works but is limited by the free Gemini TTS quota** (see 5) |
+| 3. Meetings via calling | meetingStart → Graph `POST /communications/calls` → callbacks → recording status → media; voices | **Text mode done**: `tests/e2e_phase3_meeting_call.py` 16/16 (notes 40/40), `tests/e2e_phase3_live_and_edges.py` 13/13 (you host, interjections, end early, Max remembers the meeting), `tests/test_quota_guard.py` 7/7 (offline). **Voice mode works but is limited by the free Gemini TTS quota** (see 5) |
 | 4. Agentic | Adaptive cards, Max drafts Budget v3, reminders/follow-ups | Not started |
 
 ## 3. How a meeting works now (Phase 3)
@@ -72,16 +72,17 @@ Daniel = Achird, Jacob = Puck; Max = Charon (`MAX_VOICE` in `max/.env`). UI has 
 6. In the UI: **Apps → Add Max**, then **Admin** (left rail): grant admin consent, access policy, transcript
    switch. Then **Meet → Join** (Live = you host, Autopilot = all simulated + scored; Voice/Text).
 
-Tests (both servers running): `.venv\Scripts\python tests\e2e_phase3_meeting_call.py`
+Tests (both servers running): `.venv\Scripts\python tests\e2e_phase3_meeting_call.py`, `tests\e2e_phase3_live_and_edges.py`
 (add `--voice` or `--only-voice` for the voice run), `tests\e2e_phase2_graph.py`,
-`tests\e2e_phase1_messaging.py`, `tests\check_voice_pipeline.py` (Gemini only).
+`tests\e2e_phase1_messaging.py`, `tests\check_voice_pipeline.py` (Gemini only), `tests	est_quota_guard.py` (offline).
 Note: the tests reset the channel (Max is reinstalled).
 
 ## 5. Known issues / gotchas
 
 - **Gemini free tier TTS quota (HTTP 429 "exceeded your current quota")**: only ~3 of 8 lines got a voice
-  in the voice run. Karthi will get a better API key; then re-run `--only-voice`. Everything falls back
-  correctly meanwhile.
+  in the voice run. Karthi will get a better API key; then re-run `--only-voice`. A quota guard now pauses
+  TTS/STT until Google's `retryDelay` passes (no stalling); colleagues fall back to the browser voice +
+  text to Max, Max falls back to the meeting chat. Note: in voice mode Max's *hearing* is also Gemini (STT).
 - First Gemini TTS call can stall ~20-60 s; calls are capped and retried.
 - Qwen: always send `enable_thinking: false` (1.5-2 s vs 5-6 s); the first call after idle can hang
   → warmup + per-try timeout + retry are in place.

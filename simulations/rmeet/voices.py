@@ -11,6 +11,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import socket
 import time
 import urllib.error
@@ -41,6 +42,20 @@ class TTSError(Exception):
     pass
 
 
+# Quota guard: after a 429 "quota exceeded", don't hammer Gemini (each retry costs seconds of dead air).
+# Pause TTS until Google's retryDelay has passed; callers fall back (browser voice / text) instantly.
+_cooldown_until = 0.0
+
+
+def _retry_delay(body: str) -> float:
+    m = re.search(r'"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"', body)
+    return min(300.0, float(m.group(1))) if m else 60.0
+
+
+def cooldown_left() -> float:
+    return max(0.0, _cooldown_until - time.time())
+
+
 def synthesize(text: str, voice: str, style: str | None = None, timeout: float = 15) -> bytes:
     key = os.environ.get("GEMINI_API_KEY", "")
     if not key:
@@ -49,6 +64,8 @@ def synthesize(text: str, voice: str, style: str | None = None, timeout: float =
     cached = CACHE / f"{h}.wav"
     if cached.exists():
         return cached.read_bytes()
+    if cooldown_left():
+        raise TTSError(f"Gemini TTS quota reached; voices resume in {cooldown_left():.0f}s")
     part = {"text": text}
     if style:
         part["speechMetadata"] = {"style": style}
@@ -71,7 +88,12 @@ def synthesize(text: str, voice: str, style: str | None = None, timeout: float =
             cached.write_bytes(wav)
             return wav
         except urllib.error.HTTPError as e:
-            last = f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:160]}"
+            err = e.read().decode("utf-8", "replace")
+            last = f"HTTP {e.code}: {err[:160]}"
+            if e.code == 429 and ("quota" in err.lower() or "RESOURCE_EXHAUSTED" in err):
+                global _cooldown_until
+                _cooldown_until = time.time() + _retry_delay(err)
+                raise TTSError(f"Gemini TTS quota reached; voices resume in {cooldown_left():.0f}s")
             if e.code not in (429, 500, 502, 503, 504):
                 break
             time.sleep(2 * (attempt + 1))

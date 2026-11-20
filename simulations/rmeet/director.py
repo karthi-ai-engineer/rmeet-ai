@@ -27,6 +27,7 @@ from datetime import datetime
 from audio import pcm_to_wav, wav_to_pcm16k
 from llm import LLMError, gemini_transcribe, parse_json, qwen_chat, qwen_warmup
 from scoring import score
+import voices
 from voices import EMOTION_STYLE, TTSError, synthesize
 from world import World
 
@@ -227,7 +228,12 @@ class Meeting:
         try:
             return synthesize(text, voice, EMOTION_STYLE.get(emotion or "idle"))
         except TTSError as e:
-            self._emit("error", message=f"Voice unavailable for {self.world.first_name(speaker)}: {e}", keep=False)
+            if "quota" in str(e).lower():
+                if time.time() >= getattr(self, "_quota_warned_until", 0):       # tell people once per pause
+                    self._quota_warned_until = time.time() + max(30.0, voices.cooldown_left())
+                    self._emit("error", message=f"{e}. Using the backup voice meanwhile.", keep=False)
+            else:
+                self._emit("error", message=f"Voice unavailable for {self.world.first_name(speaker)}: {e}", keep=False)
             return None
 
     def _utter(self, speaker: str, text: str, emotion: str | None = None, wav: bytes | None = None,
@@ -425,6 +431,9 @@ class Meeting:
         live = self.meetings.meetings[LIVE_KEY]
         joined = self.bot_joined.is_set()
         self.calls.close_meeting("200", "5001", "The conversation has ended.")
+        if joined:
+            self._emit("call", state="terminated", subcode="5001")
+            self._emit("chat", speaker="system", text="Call ended for everyone (200/5001)")
         if self.root_id:
             self.store.end_meeting_post(self.root_id)
         self.connector.meeting_event("application/vnd.microsoft.meetingEnd", live, self.root_id, False)
