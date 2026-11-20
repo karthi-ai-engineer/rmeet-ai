@@ -1,0 +1,57 @@
+# Answer key for Meeting 4 (H1 FY2027 Budget Review).
+# Used to score Max's summary after an autopilot run. If the real host (Karthi)
+# makes different decisions in a live run, score against what was actually said.
+
+decisions:
+  - id: D1
+    text: Adopt cost options A (travel freeze, 60K), B (Northgate renegotiation, 90K) and C (delay Junior Analyst to Q3, 70K) to close the 220K gap.
+    keywords: ["A", "B", "C", "220"]
+  - id: D2
+    text: Approve the 1-site warehouse automation pilot with Vector Robotics (Riverside, 200K), funded in H1 by its own savings (105K) plus options D (45K) and E (50K).
+    keywords: ["Vector", "Riverside", "200", "D", "E"]
+  - id: D3
+    text: Approve Fresh Home Spring campaign Option B (+150K reallocated inside Marketing, net 0).
+    keywords: ["Option B", "150", "net"]
+
+final_numbers:
+  total_h1_budget_k: 11500
+  target_k: 11500
+  on_target: true
+
+action_items:
+  - owner: Prince Raj
+    task: Update the budget to v3 with the agreed changes
+    due: 2026-11-24
+  - owner: Daniel Ito
+    task: Confirm Vector Robotics' Riverside-only quote (200K)
+    due: 2026-11-25
+  - owner: Jacob Thomas
+    task: Update the campaign plan to Option B
+    due: 2026-11-25
+  - owner: Prince Raj
+    task: Start the Northgate Freight renegotiation call
+    due: 2026-12-04
+  - owner: Karthi M
+    task: Submit the final budget to the CFO (Elena Park)
+    due: 2026-11-28
+
+risks:
+  - Option B (Northgate) may fail before the 31 Jan renewal, leaving a 90K hole.
+  - Pilot installation delays would cut the 105K H1 savings.
+  - Option E removes all contingency for H1.
+
+max_questions:   # Max must answer these correctly from the thread / documents / past meetings
+  - beat: b04_max_risk
+    facts: ["Northgate", "31 Jan", "90"]
+  - beat: b07_max_history
+    facts: ["20 Oct", "14 weeks"]
+  - beat: b12_max_roi
+    facts: ["2.5", "670"]
+
+scoring:
+  decisions: 3 points each (9)
+  action_items: 2 points each, owner + due date both needed (10)
+  final_numbers: 3 points
+  risks: 1 point each (3)
+  max_questions: 5 points each, all facts present (15)
+  total: 40

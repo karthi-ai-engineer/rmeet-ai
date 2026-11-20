@@ -1,0 +1,166 @@
+{
+  "team": "Planning Department",
+  "channel": "General",
+  "posts": [
+    {
+      "id": "p01",
+      "author": "karthi",
+      "time": "2026-09-15T09:30:00",
+      "text": "Hi team, I've updated our Department Charter to v3. Main changes: decision rights (anything above $100K needs my sign-off and goes in the CFO submission) and the 'thread first' rule: please post documents here before every meeting.",
+      "attachments": ["files/01_Department_Charter_v3.pdf"],
+      "reactions": {"👍": ["prince", "daniel", "jacob"]},
+      "replies": [
+        {"author": "jacob", "time": "2026-09-15T10:02:00", "text": "Thread first, got it. Does that include drafts?"},
+        {"author": "karthi", "time": "2026-09-15T10:05:00", "text": "Yes, drafts too. Just mark them as draft in the file name."}
+      ]
+    },
+    {
+      "id": "p02",
+      "author": "karthi",
+      "time": "2026-10-06T11:05:00",
+      "text": "Minutes from today's Q3 results review (full transcript is in the meeting recap). Key decision: expedited shipping is frozen unless I approve it. Action items are in the minutes.",
+      "attachments": ["../meetings/2026-10-06_q3-results-review/minutes.md"],
+      "reactions": {"👍": ["prince", "daniel"]},
+      "replies": [
+        {"author": "daniel", "time": "2026-10-06T11:20:00", "text": "I've already emailed Vector, LiftLine and Autonix for quotes. Should have them before the 20th."}
+      ]
+    },
+    {
+      "id": "p03",
+      "author": "prince",
+      "time": "2026-10-08T16:25:00",
+      "text": "Final Q3 actuals are up. Total 6,241K vs 6,005K budget (+3.9%). Logistics is +12.0% (234K over). The breakdown of the logistics drivers is on the second sheet.",
+      "attachments": ["files/03_Q3_FY2026_Actuals_vs_Budget.xlsx"],
+      "reactions": {"😬": ["daniel"], "👀": ["karthi"]},
+      "replies": [
+        {"author": "daniel", "time": "2026-10-08T16:40:00", "text": "Fuel surcharge alone is 96K. Northgate raised it in July without much warning."},
+        {"author": "prince", "time": "2026-10-08T16:44:00", "text": "To be precise: fuel 96, overtime 78, expedited shipping 60. Overtime is the one we can actually control."}
+      ]
+    },
+    {
+      "id": "p04",
+      "author": "daniel",
+      "time": "2026-10-19T17:50:00",
+      "text": "Vendor contract summary for tomorrow. It includes the three automation quotes on the second sheet. Also note Northgate Freight renews on 31 Jan, and I think we can get about 3% off for a 2-year term.",
+      "attachments": ["files/08_Vendor_Contract_Summary.xlsx"],
+      "reactions": {"🙌": ["karthi"]},
+      "replies": []
+    },
+    {
+      "id": "p05",
+      "author": "karthi",
+      "time": "2026-10-20T11:00:00",
+      "text": "Minutes from the vendors & automation meeting (full transcript is in the meeting recap). We shortlisted Vector Robotics and LiftLine Systems and dropped Autonix.",
+      "attachments": ["../meetings/2026-10-20_vendors-and-automation/minutes.md"],
+      "reactions": {"👍": ["daniel", "jacob"]},
+      "replies": []
+    },
+    {
+      "id": "p06",
+      "author": "jacob",
+      "time": "2026-10-23T15:15:00",
+      "text": "H1 FY2027 demand forecast is ready, one day late, sorry! Home Essentials is 26,700K for H1. The spring campaign uplift is on a separate sheet so it doesn't mess up the baseline.",
+      "attachments": ["files/10_H1_FY2027_Demand_Forecast.xlsx"],
+      "reactions": {"👍": ["karthi"]},
+      "replies": [
+        {"author": "prince", "time": "2026-10-23T15:40:00", "text": "Thanks. Just to confirm: the 1,200K uplift is NOT in the baseline tab?"},
+        {"author": "jacob", "time": "2026-10-23T15:42:00", "text": "Correct, baseline is clean. Uplift is only on the 'Campaign uplift' sheet."}
+      ]
+    },
+    {
+      "id": "p07",
+      "author": "karthi",
+      "time": "2026-10-28T14:10:00",
+      "text": "Forwarding Elena's memo. We need to cut H1 FY2027 by 8% vs H1 FY2026 actual: our ceiling is 11,500K (baseline 12,500K). Any new initiative must be cost-neutral within H1. The final budget is due to Elena on 28 Nov.",
+      "attachments": ["files/02_CFO_Memo_H1_FY2027_Budget_Guidance.pdf"],
+      "reactions": {"😮": ["jacob", "daniel"], "👍": ["prince"]},
+      "replies": [
+        {"author": "jacob", "time": "2026-10-28T14:18:00", "text": "Does this mean marketing gets cut first? 😅"},
+        {"author": "karthi", "time": "2026-10-28T14:21:00", "text": "Everything is on the table. Bring options, not just cuts. That's what Elena asked for too."},
+        {"author": "daniel", "time": "2026-10-28T14:30:00", "text": "Cost-neutral within H1 is tough for the pilot. I'll show the savings side clearly in the proposal."}
+      ]
+    },
+    {
+      "id": "p08",
+      "author": "daniel",
+      "time": "2026-10-30T18:00:00",
+      "text": "Warehouse automation pilot proposal. Recommending Vector Robotics: 380K for both sites, go-live 1 April, about 95K/month in savings. Net H1 impact is +95K, I know. Pays back in about 4 months after go-live.",
+      "attachments": ["files/07_Warehouse_Automation_Pilot_Proposal.pdf"],
+      "reactions": {"👍": ["karthi"], "🤔": ["prince"]},
+      "replies": [
+        {"author": "prince", "time": "2026-10-30T18:25:00", "text": "Good proposal, but +95K is still +95K under the CFO rule. We'd need a matching saving."}
+      ]
+    },
+    {
+      "id": "p09",
+      "author": "jacob",
+      "time": "2026-11-02T20:35:00",
+      "text": "Fresh Home Spring campaign plan (1 Mar to 31 May). Option A is +300K new money for about +4.5% Home Essentials revenue. Option B is a smaller campaign funded inside Marketing (print and trade events), so net zero.",
+      "attachments": ["files/09_Fresh_Home_Spring_Campaign_Plan.docx"],
+      "reactions": {"🔥": ["daniel"], "👀": ["prince"]},
+      "replies": []
+    },
+    {
+      "id": "p10",
+      "author": "karthi",
+      "time": "2026-11-03T11:10:00",
+      "text": "Minutes from the budget draft v1 walkthrough (full transcript is in the meeting recap). v1 is at 12,180K, so not enough. Prince will do v2 with cuts across all lines. The pilot and the campaign stay OUT of v2 until the 20 Nov review.",
+      "attachments": ["../meetings/2026-11-03_budget-draft-v1/minutes.md"],
+      "reactions": {"👍": ["prince", "daniel", "jacob"]},
+      "replies": []
+    },
+    {
+      "id": "p11",
+      "author": "karthi",
+      "time": "2026-11-10T11:05:00",
+      "text": "Headcount plan for FY2027. 38 FTE today. Open reqs: Junior Analyst (planned Q2, 70K in H1 including the agency fee), Warehouse Shift Lead (moved to H2), Procurement Specialist (frozen).",
+      "attachments": ["files/06_Headcount_Plan_FY2027.xlsx"],
+      "reactions": {"👍": ["prince"]},
+      "replies": [
+        {"author": "prince", "time": "2026-11-10T11:30:00", "text": "Matches the Personnel line in v2: 2,490 staff + 70 Junior Analyst = 2,560."}
+      ]
+    },
+    {
+      "id": "p12",
+      "author": "prince",
+      "time": "2026-11-12T18:15:00",
+      "text": "Budget draft v2 and the cost reduction options. v2 total is 11,720K (−6.2%). Gap to the 11,500K target: 220K. My recommendation is options A + B + C (travel freeze 60, Northgate renegotiation 90, delay Junior Analyst to Q3 70), which is exactly 220K. D and E (95K together) are held in reserve.",
+      "attachments": ["files/04_H1_FY2027_Budget_Draft_v2.xlsx", "files/05_Cost_Reduction_Options.docx"],
+      "reactions": {"👍": ["karthi"], "😅": ["jacob"]},
+      "replies": [
+        {"author": "jacob", "time": "2026-11-12T18:40:00", "text": "Very happy option F (cut digital ads) is not recommended 😅"},
+        {"author": "daniel", "time": "2026-11-12T19:02:00", "text": "Option B depends on Northgate. I'll sound them out informally this week."}
+      ]
+    },
+    {
+      "id": "p13",
+      "author": "jacob",
+      "time": "2026-11-16T10:20:00",
+      "text": "ROI numbers as promised. Option A: +300K spend → about +1,200K revenue (+4.5% Home Essentials). Option B: net 0 spend (reallocated from print −90 and trade events −60) → about +670K revenue (+2.5%). B has no influencer work.",
+      "attachments": [],
+      "reactions": {"👍": ["karthi", "prince"]},
+      "replies": []
+    },
+    {
+      "id": "p14",
+      "author": "daniel",
+      "time": "2026-11-18T16:45:00",
+      "text": "Good news: Vector came back with a 1-site option. Riverside only, 200K, start 1 March, 8-week install, go-live 1 May. Savings about 52.5K/month, so about 105K in H1. Net H1 is +95K. And Northgate sounded open to the 3% for a 2-year deal.",
+      "attachments": [],
+      "reactions": {"🙌": ["karthi", "jacob"]},
+      "replies": [
+        {"author": "prince", "time": "2026-11-18T17:05:00", "text": "Interesting. Net is still +95K, but options D + E add up to exactly 95K. Could work."},
+        {"author": "daniel", "time": "2026-11-18T17:07:00", "text": "👀 Let's talk Friday."}
+      ]
+    },
+    {
+      "id": "p15",
+      "author": "karthi",
+      "time": "2026-11-19T17:30:00",
+      "text": "Tomorrow 10:00: H1 FY2027 budget review. Agenda: 1) close the 220K gap, 2) decide on the automation pilot, 3) decide on the spring campaign, 4) confirm the final numbers for Elena. Max (AI) will join as our note-taker. You can ask Max about anything in this thread or our past meetings.",
+      "attachments": [],
+      "reactions": {"👍": ["prince", "daniel", "jacob"], "🤖": ["jacob"]},
+      "replies": []
+    }
+  ]
+}

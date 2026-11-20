@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cloud Avatar</title>
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --panel: #ffffff;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --line: #e6e6e6;
+    --btn: #f6f6f6;
+    --avatar: #ff6b00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121214;
+      --panel: #1b1b1e;
+      --text: #f2f2f2;
+      --muted: #9a9aa0;
+      --line: #2b2b30;
+      --btn: #232327;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .app { display: grid; grid-template-columns: 1fr 340px; min-height: 100vh; }
+
+  .stage {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .4s ease;
+    overflow: hidden;
+  }
+  .stage[data-bg="light"]   { background: #ffffff; }
+  .stage[data-bg="meeting"] { background: #1f2023; }
+  .stage[data-bg="tint"]    { background: color-mix(in srgb, var(--avatar) 14%, #ffffff); }
+
+  .avatar-host { width: min(72vmin, 540px); }
+
+  .caption {
+    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+    font-size: 14px; padding: 6px 14px; border-radius: 999px;
+    background: rgba(0,0,0,.06); color: #444; white-space: nowrap;
+  }
+  .stage[data-bg="meeting"] .caption { background: rgba(255,255,255,.08); color: #ddd; }
+
+  .tile-label {
+    position: absolute; left: 20px; bottom: 20px;
+    font-size: 13px; color: #fff; background: rgba(0,0,0,.45);
+    padding: 4px 10px; border-radius: 6px; display: none;
+  }
+  .stage[data-bg="meeting"] .tile-label { display: block; }
+
+  .panel {
+    background: var(--panel); border-left: 1px solid var(--line);
+    padding: 24px; overflow-y: auto; max-height: 100vh;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 8px; line-height: 1.45; }
+  h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 22px 0 10px; font-weight: 600;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 10px; border-radius: 10px;
+    border: 1.5px solid transparent; background: var(--btn); color: var(--text);
+    font: inherit; font-size: 13.5px; cursor: pointer; text-align: left;
+    transition: background .15s, border-color .15s, transform .08s;
+  }
+  .btn:hover { border-color: var(--line); }
+  .btn:active { transform: scale(.97); }
+  .btn.active {
+    border-color: var(--avatar);
+    background: color-mix(in srgb, var(--avatar) 13%, var(--btn));
+  }
+  .btn .emo { font-size: 16px; width: 20px; text-align: center; }
+  .btn kbd {
+    margin-left: auto; font-family: inherit; font-size: 11px; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 4px; padding: 0 5px;
+  }
+  .btn.wide { grid-column: span 2; justify-content: center; font-weight: 600; }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .swatch {
+    width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+    outline: 2px solid transparent; outline-offset: 3px; transition: transform .1s;
+  }
+  .swatch:hover { transform: scale(1.08); }
+  .swatch.active { outline-color: var(--text); }
+  .custom {
+    width: 32px; height: 32px; border-radius: 50%; overflow: hidden;
+    border: 1.5px dashed var(--muted); position: relative; cursor: pointer;
+  }
+  .custom input {
+    position: absolute; inset: -8px; width: 48px; height: 48px;
+    border: none; padding: 0; cursor: pointer; opacity: 0;
+  }
+  .custom span {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 16px; color: var(--muted); pointer-events: none;
+  }
+
+  .seg { display: flex; background: var(--btn); border-radius: 10px; padding: 3px; }
+  .seg button {
+    flex: 1; border: none; background: transparent; color: var(--text);
+    font: inherit; font-size: 13px; padding: 7px 6px; border-radius: 8px; cursor: pointer;
+  }
+  .seg button.active { background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,.12); font-weight: 600; }
+
+  .toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; font-size: 14px; cursor: pointer;
+  }
+  .toggle input { width: 18px; height: 18px; accent-color: var(--avatar); cursor: pointer; }
+
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; }
+    .stage { min-height: 62vh; }
+    .panel { border-left: none; border-top: 1px solid var(--line); max-height: none; padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="stage" id="stage" data-bg="light">
+    <div class="avatar-host" id="avatarHost"></div>
+    <div class="tile-label">Max (AI)</div>
+    <div class="caption" id="stateLabel">Idle</div>
+  </main>
+
+  <aside class="panel">
+    <h1>Cloud Avatar</h1>
+    <p class="sub">Flat 2D body, with eyes that move as if they sit on a 3D surface. Try <b>Follow cursor</b> to see the depth effect.</p>
+
+    <h2>Expressions</h2>
+    <div class="grid" id="exprGrid"></div>
+
+    <h2>Demo</h2>
+    <div class="grid">
+      <button class="btn wide" id="demoBtn">▶ Play meeting demo</button>
+    </div>
+
+    <h2>Colour</h2>
+    <div class="swatches" id="swatches"></div>
+
+    <h2>Background</h2>
+    <div class="seg" id="bgSeg">
+      <button data-bg="light" class="active">White</button>
+      <button data-bg="tint">Tinted</button>
+      <button data-bg="meeting">Meeting tile</button>
+    </div>
+
+    <h2>Behaviour</h2>
+    <label class="toggle">Auto blink &amp; glance <input type="checkbox" id="autoIdle" checked></label>
+    <label class="toggle">Follow cursor <input type="checkbox" id="follow"></label>
+  </aside>
+</div>
+
+<script src="avatar.js"></script>
+<script>
+(() => {
+  const $ = (q) => document.querySelector(q);
+  const { ORDER, COLOURS } = CloudAvatar;
+  const KEYS = ['1','2','3','4','5','6','7','8','9','0','q','w','e','r'];
+  const stage = $('#stage');
+
+  const avatar = CloudAvatar.create($('#avatarHost'), {
+    background: 'light',
+    onState: (name) => {
+      const o = ORDER.find((x) => x[0] === name);
+      $('#stateLabel').textContent = o ? `${o[1]}  ${o[2]}` : name;
+      document.querySelectorAll('[data-expr]').forEach((b) => b.classList.toggle('active', b.dataset.expr === name));
+    },
+  });
+
+  function setColour(hex) {
+    avatar.setColour(hex);
+    document.documentElement.style.setProperty('--avatar', hex);
+    document.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('active', s.dataset.c === hex));
+  }
+
+  // Expression buttons
+  ORDER.forEach(([key, emo, label], i) => {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.dataset.expr = key;
+    b.innerHTML = `<span class="emo">${emo}</span>${label}<kbd>${KEYS[i].toUpperCase()}</kbd>`;
+    b.addEventListener('click', () => { stopDemo(); avatar.setState(key); });
+    $('#exprGrid').appendChild(b);
+  });
+
+  // Colour swatches
+  COLOURS.forEach((c) => {
+    const b = document.createElement('button');
+    b.className = 'swatch';
+    b.dataset.c = c;
+    b.style.background = c;
+    b.title = c;
+    b.setAttribute('aria-label', `Colour ${c}`);
+    b.addEventListener('click', () => setColour(c));
+    $('#swatches').appendChild(b);
+  });
+  const custom = document.createElement('label');
+  custom.className = 'custom';
+  custom.title = 'Custom colour';
+  custom.innerHTML = '<span>+</span><input type="color" value="#ff6b00" aria-label="Custom colour">';
+  custom.querySelector('input').addEventListener('input', (e) => setColour(e.target.value.toUpperCase()));
+  $('#swatches').appendChild(custom);
+
+  // Background
+  document.querySelectorAll('#bgSeg button').forEach((b) => {
+    b.addEventListener('click', () => {
+      stage.dataset.bg = b.dataset.bg;
+      avatar.setBackground(b.dataset.bg);
+      document.querySelectorAll('#bgSeg button').forEach((x) => x.classList.toggle('active', x === b));
+    });
+  });
+
+  $('#autoIdle').addEventListener('change', (e) => avatar.setAutoIdle(e.target.checked));
+  $('#follow').addEventListener('change', (e) => avatar.setFollow(e.target.checked));
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    const i = KEYS.indexOf(e.key.toLowerCase());
+    if (i >= 0) { stopDemo(); avatar.setState(ORDER[i][0]); }
+  });
+
+  // Fake mic level so "Listening" can be previewed here
+  setInterval(() => {
+    const t = performance.now() / 1000;
+    avatar.setLevel(Math.max(0, Math.sin(t * 7) * Math.sin(t * 1.3)) * 0.8);
+  }, 50);
+
+  // Meeting demo
+  let demoToken = 0;
+  const wait = (ms, tok) => new Promise((res, rej) =>
+    setTimeout(() => (tok === demoToken ? res() : rej()), ms));
+  function stopDemo() {
+    demoToken++;
+    $('#demoBtn').textContent = '▶ Play meeting demo';
+  }
+  async function playDemo() {
+    const tok = ++demoToken;
+    $('#demoBtn').textContent = '■ Stop demo';
+    const steps = [
+      ['idle', 2000, 'Listening…'],
+      ['lookLeft', 1600, 'Priya is talking'],
+      ['lookRight', 1600, 'Ravi is talking'],
+      ['surprised', 1500, '"Max, what did we decide?"'],
+      ['thinking', 2400, 'Checking memory…'],
+      ['speaking', 3800, 'Answering'],
+      ['happy', 1600, '"Thanks, Max!"'],
+      ['wink', 1600, '😉'],
+      ['idle', 1200, 'Listening…'],
+    ];
+    try {
+      for (const [s, ms, cap] of steps) {
+        avatar.setState(s);
+        $('#stateLabel').textContent = cap;
+        await wait(ms, tok);
+      }
+      stopDemo();
+      avatar.setState('idle');
+    } catch (_) { /* demo cancelled */ }
+  }
+  $('#demoBtn').addEventListener('click', () => {
+    if ($('#demoBtn').textContent.startsWith('■')) { stopDemo(); avatar.setState('idle'); }
+    else playDemo();
+  });
+
+  setColour(COLOURS[0]);
+  avatar.setState('idle');
+})();
+</script>
+</body>
+</html>

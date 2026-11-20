@@ -1,0 +1,11 @@
+# Text files: normalise line endings
+* text=auto
+
+# Documents, images and audio are binary: never touch their bytes
+*.pdf  binary
+*.xlsx binary
+*.docx binary
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.wav  binary

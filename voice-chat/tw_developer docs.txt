@@ -1,0 +1,47 @@
+API & Endpoints
+Endpoints reference and a curl quickstart. Use a gateway API key from the API Keys tab — not your portal session. For Python, JS, image, and audio examples, see the Help tab.
+
+Key for examples
+
+Fill key in curl
+Clear key
+Gateway Endpoints
+Base URL
+https://tw-gateway.twave.co.jp/v1
+COPY
+Chat Completions
+https://tw-gateway.twave.co.jp/v1/chat/completions
+COPY
+Responses
+https://tw-gateway.twave.co.jp/v1/responses
+COPY
+Completions
+https://tw-gateway.twave.co.jp/v1/completions
+COPY
+Models
+https://tw-gateway.twave.co.jp/v1/models
+COPY
+Embeddings
+https://tw-gateway.twave.co.jp/v1/embeddings
+COPY
+Image Generation
+https://tw-gateway.twave.co.jp/v1/images/generations
+COPY
+Audio Transcription
+https://tw-gateway.twave.co.jp/v1/audio/transcriptions
+Use your API key as the Bearer token in the Authorization header.
+
+Quickstart
+curl example
+curl -X POST https://tw-gateway.twave.co.jp/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-API-KEY: YOUR_API_KEY" \
+  -d '{
+    "model": "default",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ]
+  }'
