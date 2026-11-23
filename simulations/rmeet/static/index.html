@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>rmeet-ai</title>
+<title>rmeet · Planning Department</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try { const t = localStorage.getItem("rmeet.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
@@ -17,9 +21,11 @@
     <button class="rail-btn" title="Activity"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span>Activity</span></button>
     <button class="rail-btn" title="Chat"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Chat</span></button>
     <button class="rail-btn active" title="Teams"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2A4.5 4.5 0 0 1 21 18.5"/></svg><span>Teams</span></button>
-    <button class="rail-btn" title="Calendar"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Calendar</span></button>
+    <button class="rail-btn" id="calendarBtn" title="Calendars (simulated Outlook)"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Calendar</span></button>
+    <button class="rail-btn" id="mailBtn" title="Mail (simulated Outlook mailboxes)"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg><span>Mail</span></button>
     <button class="rail-btn" title="Files"><svg viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/></svg><span>Files</span></button>
     <div class="rail-spacer"></div>
+    <button class="theme-btn" id="themeBtn" title="Theme: System" aria-label="Switch theme (System / Light / Dark)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg></button>
     <button class="rail-btn" id="adminBtn" title="Admin center (tenant settings)"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Admin</span></button>
     <div class="me" title="Karthi M (you)">KM</div>
   </nav>
@@ -33,7 +39,7 @@
     <button class="tl-channel active"># General</button>
     <div class="tl-foot">
       <div id="modelInfo"></div>
-      <button class="linkish" id="resetChannelBtn" title="Remove runtime posts and uninstall Max">↺ Reset channel</button>
+      <button class="linkish" id="resetChannelBtn" title="Remove runtime posts and uninstall Max"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg> Reset channel</button>
     </div>
   </aside>
 
@@ -49,6 +55,8 @@
         <button class="tab" data-tab="files" role="tab">Files</button>
         <button class="tab" data-tab="meetings" role="tab">Meetings</button>
       </nav>
+      <label class="act-as" title="Simulator: post and click approval cards as this team member">As
+        <select id="actAs" aria-label="Act as team member"></select></label>
       <button class="btn apps-btn" id="appsBtn" title="Apps in this team">
         <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg>
         <span id="appsLabel">Apps</span>
@@ -61,6 +69,7 @@
 
     <section class="pane active" id="pane-posts">
       <div class="install-banner" id="installBanner" hidden></div>
+      <div class="cal-live" id="calLive" hidden></div>
       <div class="meeting-card" id="meetingCard"></div>
       <div class="posts" id="posts"></div>
       <div class="new-post">
@@ -73,7 +82,7 @@
     <section class="pane" id="pane-files">
       <div class="files-bar">
         <span class="muted">Channel files (SharePoint document library · General)</span>
-        <label class="btn primary upload-btn">⬆ Upload<input type="file" id="uploadInput" hidden></label>
+        <label class="btn primary upload-btn"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg> Upload<input type="file" id="uploadInput" hidden></label>
       </div>
       <div class="files" id="files"></div>
     </section>
@@ -99,7 +108,7 @@
     </div>
   </header>
 
-  <div class="rec-banner" id="recBanner" hidden>🔴 Recording and transcription have started · <span class="muted">Max (AI) is taking notes for this meeting</span></div>
+  <div class="rec-banner" id="recBanner" hidden>Recording and transcription have started · <span class="muted">Max (AI) is taking notes for this meeting</span></div>
   <div class="m-body">
     <section class="m-stage">
       <div class="grid" id="grid"></div>
@@ -111,7 +120,7 @@
     <aside class="m-side" id="mSide">
       <nav class="side-tabs">
         <button class="side-tab active" data-side="transcript">Transcript</button>
-        <button class="side-tab" data-side="chat">Chat</button>
+        <button class="side-tab" data-side="chat">Chat <span class="tab-badge" id="chatBadge" hidden></span></button>
       </nav>
       <div class="side-pane active" id="side-transcript"><div class="tlist" id="tlist"></div></div>
       <div class="side-pane" id="side-chat"><div class="clist" id="clist"></div></div>
@@ -120,7 +129,7 @@
 
   <footer class="m-bar">
     <div class="turn" id="turn" hidden>
-      <div class="turn-label">🎤 Your turn (you're hosting)</div>
+      <div class="turn-label"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg> Your turn (you're hosting)</div>
       <div class="turn-goal" id="turnGoal"></div>
       <button class="suggest" id="suggestBtn"></button>
     </div>
@@ -129,6 +138,7 @@
         <svg class="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
         <svg class="i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2.5" fill="currentColor" stroke="none"/></svg>
       </button>
+      <select id="mAs" class="m-as" title="Speak as" hidden></select>
       <input id="sayInput" type="text" autocomplete="off" placeholder="Speak as Karthi: type here and press Enter">
       <button class="btn primary" id="sayBtn">Send</button>
     </div>
@@ -154,10 +164,10 @@
     <div class="speed">
       <span>Audio</span>
       <div class="seg" id="mediaSeg">
-        <button data-media="voice" class="active">🔊 Voice</button>
-        <button data-media="text">⚡ Text</button>
+        <button data-media="voice" class="active"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg> Voice</button>
+        <button data-media="text"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg> Text</button>
       </div>
-      <button class="btn" id="voicesBtn" type="button">🎧 Voices</button>
+      <button class="btn" id="voicesBtn" type="button"><svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5"/></svg> Voices</button>
     </div>
     <p class="muted small" id="mediaHint">Everyone speaks with their own Gemini voice. Max hears the audio through the call and answers out loud.</p>
     <div class="speed" id="speedRow">
@@ -192,7 +202,7 @@
 <div class="modal" id="notes" hidden>
   <div class="dialog wide">
     <div class="viewer-head">
-      <h2>📝 Meeting notes by Max</h2>
+      <h2><span class="ico"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h5"/></svg></span> Meeting notes by Max</h2>
       <button class="btn" id="backToChannel">Back to channel</button>
       <button class="btn" data-close>Close</button>
     </div>
@@ -224,7 +234,7 @@
 <div class="modal" id="adminModal" hidden>
   <div class="dialog wide">
     <div class="viewer-head">
-      <h2>🛡️ Admin center · Kestrel Home Goods</h2>
+      <h2><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span> Admin center · Kestrel Home Goods</h2>
       <button class="btn" data-close>Close</button>
     </div>
     <div class="viewer-body admin-body" id="adminBody"></div>
@@ -234,10 +244,32 @@
 <div class="modal" id="voicesModal" hidden>
   <div class="dialog wide">
     <div class="viewer-head">
-      <h2>🎧 Voices (Gemini TTS)</h2>
+      <h2><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5"/></svg></span> Voices</h2>
       <button class="btn" data-close>Close</button>
     </div>
     <div class="viewer-body" id="voicesBody"></div>
+  </div>
+</div>
+
+<div class="modal" id="mailModal" hidden>
+  <div class="dialog wide">
+    <div class="viewer-head">
+      <h2><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg></span> Mail <span class="muted small">simulated Outlook</span></h2>
+      <select id="mailUser" aria-label="Mailbox"></select>
+      <button class="btn" data-close>Close</button>
+    </div>
+    <div class="viewer-body" id="mailBody"></div>
+  </div>
+</div>
+
+<div class="modal" id="calModal" hidden>
+  <div class="dialog wide">
+    <div class="viewer-head">
+      <h2><span class="ico"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span> Calendars <span class="muted small">simulated Outlook</span></h2>
+      <select id="calUser" aria-label="Calendar"></select>
+      <button class="btn" data-close>Close</button>
+    </div>
+    <div class="viewer-body" id="calBody"></div>
   </div>
 </div>
 

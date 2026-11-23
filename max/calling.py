@@ -25,7 +25,10 @@ from urllib.parse import parse_qs, unquote, urlsplit
 import websockets
 
 import brain
+import followups
+import meeting_actions
 import voice
+from agent.clock import SYSTEM as SYSTEM_CLOCK
 from audio import FRAME_BYTES, frames, unpack_media, wav_to_pcm16k
 from auth import TOKENS
 from config import CONFIG
@@ -35,7 +38,7 @@ from llm import LLMError
 log = logging.getLogger("max")
 END_SILENCE = 0.6          # seconds of silence that ends a speaker's segment
 MIN_SEGMENT = 0.35         # ignore shorter blips
-STT_HINT = ("Max, Karthi, Prince, Daniel, Jacob, Elena, Northgate Freight, Vector Robotics, LiftLine Systems, "
+STT_HINT = ("Max, Karthi, Prince Alex, Daniel, Jacob, Elena, Northgate Freight, Vector Robotics, LiftLine Systems, "
             "Riverside, Eastgate, Brightpack, Corrin, Orbis, Fresh Home Spring, H1, FY2027")
 
 
@@ -49,11 +52,16 @@ def parse_join_url(url: str) -> dict:
 
 class MeetingCall:
     def __init__(self, app, graph: GraphClient, team_id: str, knowledge, conversation_id: str, service_url: str,
-                 title: str, on_finished):
+                 title: str, on_finished, clock=SYSTEM_CLOCK, act=None):
         self.app, self.graph, self.team_id, self.kb = app, graph, team_id, knowledge
+        self.clock = clock
         self.conversation_id, self.service_url, self.title = conversation_id, service_url, title
         self.on_finished = on_finished
-        self.session = brain.MeetingSession(str(uuid.uuid4()), title, knowledge.prompt_text())
+        self.act = act                                 # async act(call, speaker, aad, text): agent run (actions)
+        self.run_ids: list[str] = []                   # agent runs started from this meeting (for the notes)
+        self.speaker_aad: dict[str, str] = {}          # display name -> AAD id (who asked, for approvals)
+        today = clock.now().astimezone(followups.team_tz(knowledge.store, team_id))   # the meeting's real date
+        self.session = brain.MeetingSession(str(uuid.uuid4()), title, knowledge.prompt_text(), today=today)
         self.call_id = None
         self.state = "new"
         self.roster: dict[str, dict] = {}          # MSI (string) -> {"name", "id"}
@@ -67,11 +75,14 @@ class MeetingCall:
         self.humans_talking_since = None
         self.speaking = False
         self.answering = False
+        self.recaps = 0                                # end-of-meeting checks read back (Phase 5.3)
+        self.recap_waiting = False
         self.finished = False
         self.tasks: list[asyncio.Task] = []
 
     # ================================================================ join / leave
     async def join(self, join_url: str) -> None:
+        self.join_url = join_url
         info = parse_join_url(join_url)
         body = {
             "@odata.type": "#microsoft.graph.call", "direction": "outgoing",
@@ -188,8 +199,9 @@ class MeetingCall:
             self.send_active.set()
         elif t == "transcript":
             spk = m.get("speaker") or {}
-            name = spk.get("displayName") or self.roster.get(str(m.get("msi")), {}).get("name", "Someone")
-            await self._line(name, m.get("text", ""))
+            who = self.roster.get(str(m.get("msi")), {})
+            name = spk.get("displayName") or who.get("name", "Someone")
+            await self._line(name, m.get("text", ""), spk.get("id") or who.get("id"))
 
     def _on_audio(self, msg: bytes) -> None:
         header, payload = unpack_media(msg)
@@ -227,36 +239,87 @@ class MeetingCall:
                 log.warning("Speech-to-text failed: %s", e)
                 continue
             if text:
-                await self._line(self.roster.get(msi, {}).get("name", f"Speaker {msi}"), text)
+                who = self.roster.get(msi, {})
+                await self._line(who.get("name", f"Speaker {msi}"), text, who.get("id"))
 
     # ==================================================================== brain
-    async def _line(self, speaker: str, text: str) -> None:
+    async def _line(self, speaker: str, text: str, aad: str | None = None) -> None:
         if not text.strip():
             return
+        if aad:
+            self.speaker_aad[speaker] = aad
         addressed = self.session.hear(speaker, text)
-        log.info("Heard %s: %s%s", speaker, text[:90], "  [-> Max]" if addressed else "")
-        if addressed and not self.answering:
-            self.answering = True
-            asyncio.create_task(self._answer())
+        action = addressed and self.act is not None and meeting_actions.wants_action(text)
+        recap = not action and meeting_actions.wants_recap(text, addressed, self.recaps, len(self.session.transcript))
+        kind = "action" if action else "recap" if recap else "answer" if addressed else None
+        log.info("Heard %s: %s%s", speaker, text[:90], f"  [-> Max: {kind}]" if kind else "")
+        if kind is None:
+            return
+        if self.answering:                         # busy: a recap waits for the current answer, a question doesn't
+            self.recap_waiting = self.recap_waiting or kind == "recap"
+            return
+        self.answering = True
+        asyncio.create_task(self._respond(kind, speaker, text))
+
+    def people(self) -> list[str]:
+        return list(dict.fromkeys(v["name"] for v in self.roster.values()))
+
+    async def _respond(self, kind: str, speaker: str, said: str) -> None:
+        """One thing Max does at a time: an action (agent + approval), the end-of-meeting recap, or an answer."""
+        try:
+            if kind == "action":
+                await self._act(speaker, said)
+            elif kind == "recap":
+                await self._recap()
+            else:
+                await self._answer()
+        finally:
+            if self.recap_waiting and not self.finished:
+                self.recap_waiting = False
+                asyncio.create_task(self._respond("recap", speaker, said))
+            else:
+                self.answering = False
+
+    async def _act(self, speaker: str, said: str) -> None:
+        try:                                       # asked to DO something: agent run (tools + approval card)
+            await self.act(self, speaker, self.speaker_aad.get(speaker), said)
+        except Exception as e:  # noqa: BLE001
+            log.exception("Meeting action failed: %s", e)
+            await self.say("Sorry, I couldn't do that just now. Please ask me again in the channel.")
 
     async def _answer(self) -> None:
         try:
             reply = await asyncio.to_thread(self.session.answer)
         except LLMError as e:
             log.warning("Could not answer: %s", e)
-            self.answering = False
             return
+        if self.audio_mode and self.ws is not None:
+            await self._speak(reply)
+        else:
+            await self._chat(reply)
+
+    async def _recap(self) -> None:
+        """End-of-meeting check: read back the draft decisions and action items and ask what's missing. Spoken in a
+        voice call (short), and the draft goes to the meeting chat so people can read it. One model call."""
         try:
-            if self.audio_mode and self.ws is not None:
-                await self._speak(reply)
-            else:
-                await self._chat(reply)
-        finally:
-            self.answering = False
+            notes = await asyncio.to_thread(self.session.summarize)
+        except LLMError as e:
+            log.warning("Could not prepare the recap: %s", e)
+            return
+        spoken, draft = brain.recap_text(notes)
+        self.recaps += 1
+        self.session.transcript.append(("Max", spoken))      # the final notes know what was read back
+        log.info("Recap #%d: %d decisions, %d action items", self.recaps, len(notes.get("decisions") or []),
+                 len(notes.get("action_items") or []))
+        if not self.finished and self.audio_mode and self.ws is not None:
+            await self._speak(spoken)
+        await self._chat(draft)
 
     async def _speak(self, text: str) -> None:
+        spoken = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", text)                 # [label](link) -> label
+        spoken = re.sub(r"[*_`#>]+", "", spoken).strip()                       # no Markdown read out loud
         try:
-            wav = await asyncio.to_thread(voice.speak, text)
+            wav = await asyncio.to_thread(voice.speak, spoken)
         except voice.VoiceError as e:
             log.warning("Voice unavailable (%s): answering in the meeting chat", e)
             await self._chat(text)
@@ -283,6 +346,14 @@ class MeetingCall:
         finally:
             self.speaking = False
 
+    async def say(self, text: str) -> None:
+        """Max's words in the meeting: spoken when the call has voice, else in the meeting chat."""
+        self.session.transcript.append(("Max", text))
+        if not self.finished and self.audio_mode and self.ws is not None:
+            await self._speak(text)
+        else:
+            await self._chat(text)
+
     async def _chat(self, text: str) -> None:
         await self.app.send(self.conversation_id, text, service_url=self.service_url)
 
@@ -306,10 +377,23 @@ class MeetingCall:
         try:
             notes = await asyncio.to_thread(self.session.summarize)
             text = brain.notes_markdown(self.title, notes)
+            if self.recaps:
+                text += ("\n\n_I read the decisions and action items back before the end of the meeting; "
+                         "corrections made after that are included._")
+            done = meeting_actions.done_section([p for p in self.kb.store.pendings(self.team_id)
+                                                 if p["run_id"] in self.run_ids])
+            if done:
+                text += "\n\n" + done
+            root = self.conversation_id.split(";messageid=")[1] if ";messageid=" in self.conversation_id else None
+            self.kb.store.add_meeting_notes(self.team_id, self.title, root, getattr(self, "join_url", None),
+                                            self.clock.now().timestamp(), notes)   # for the next meeting's brief
+            task_ids = followups.save_meeting_tasks(self.kb.store, self.team_id, notes, self.title, root, self.clock)
+            if task_ids:
+                text += (f"\n\n_I've saved {len(task_ids)} action item(s) as tasks and will remind each owner "
+                         "the day before it's due._")
             sent = await self.app.send(self.conversation_id, text, service_url=self.service_url)
-            root = self.conversation_id.split(";messageid=")[-1]
             self.kb.add_message(sent.id, "Max", text, root)
-            log.info("Meeting notes posted in the meeting thread")
+            log.info("Meeting notes posted in the meeting thread (%d tasks saved)", len(task_ids))
         except (LLMError, Exception) as e:
             log.error("Could not write the notes: %s", e)
         self.on_finished(self)

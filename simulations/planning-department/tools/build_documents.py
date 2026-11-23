@@ -228,8 +228,8 @@ def doc01():
          Paragraph("3. Members and roles", H2),
          pdf_table([["Name", "Role", "Owns"],
                     ["Karthi M", "Planning Manager", "Final budget decisions, CFO submission, headcount plan"],
-                    ["Prince Raj", "Financial Analyst", "Budget drafts, actuals reports, cost reduction options"],
-                    ["Daniel Ito", "Operations Planner", "Logistics, vendor contracts, warehouse automation"],
+                    ["Prince Alex", "Financial Analyst", "Budget drafts, actuals reports, cost reduction options"],
+                    ["Daniel", "Operations Planner", "Logistics, vendor contracts, warehouse automation"],
                     ["Jacob Thomas", "Marketing & Demand Planner", "Demand forecast, campaign planning"]],
                    [35 * mm, 45 * mm, 94 * mm]),
          Paragraph("4. Ways of working", H2),
@@ -283,10 +283,10 @@ def doc02():
 # 03 Q3 actuals vs budget (XLSX)
 # ==========================================================================
 def doc03():
-    wb = new_wb("Q3 FY2026 Actuals vs Budget", "Prince Raj", datetime(2026, 10, 8, 16, 20))
+    wb = new_wb("Q3 FY2026 Actuals vs Budget", "Prince Alex", datetime(2026, 10, 8, 16, 20))
     ws = wb.active
     ws.title = "Summary"
-    sheet_title(ws, "Q3 FY2026 (Jul–Sep) Actuals vs Budget", "USD thousands · Prepared by Prince Raj · 8 Oct 2026")
+    sheet_title(ws, "Q3 FY2026 (Jul–Sep) Actuals vs Budget", "USD thousands · Prepared by Prince Alex · 8 Oct 2026")
     rows = []
     for c, b, a in zip(CENTRES, Q3_BUDGET, Q3_ACTUAL):
         rows.append([c, b, a, a - b, (a - b) / b])
@@ -311,10 +311,10 @@ def doc03():
 # 04 Budget draft v2 (XLSX)
 # ==========================================================================
 def doc04():
-    wb = new_wb("H1 FY2027 Budget Draft v2", "Prince Raj", datetime(2026, 11, 12, 18, 5))
+    wb = new_wb("H1 FY2027 Budget Draft v2", "Prince Alex", datetime(2026, 11, 12, 18, 5))
     ws = wb.active
     ws.title = "Summary"
-    sheet_title(ws, "H1 FY2027 Operating Budget: Draft v2", "USD thousands · Prepared by Prince Raj · 12 Nov 2026 · EXCLUDES open items")
+    sheet_title(ws, "H1 FY2027 Operating Budget: Draft v2", "USD thousands · Prepared by Prince Alex · 12 Nov 2026 · EXCLUDES open items")
     rows = []
     for c, b, v1, v2, n in zip(CENTRES, BASELINE, DRAFT_V1, DRAFT_V2, V2_NOTES):
         rows.append([c, b, v1, v2, v2 - b, n])
@@ -338,7 +338,7 @@ def doc04():
     ws2 = wb.create_sheet("Open items")
     sheet_title(ws2, "Open items NOT included in v2 (decide at 20 Nov review)", "USD thousands")
     write_table(ws2, 4, ["Item", "Owner", "H1 cost", "H1 savings / return", "Net H1 impact", "Notes"], [
-        ["Warehouse automation pilot (Vector, 2 sites)", "Daniel Ito", 380, 285, 95,
+        ["Warehouse automation pilot (Vector, 2 sites)", "Daniel", 380, 285, 95,
          "Go-live 1 Apr; savings 95K/month from Apr"],
         ["Fresh Home Spring campaign (Option A)", "Jacob Thomas", 300, 0, 300,
          "+4.5% Home Essentials revenue est.; revenue is not an opex saving"],
@@ -347,8 +347,8 @@ def doc04():
     ws3 = wb.create_sheet("Change log")
     sheet_title(ws3, "Change log", "")
     write_table(ws3, 4, ["Date", "Version", "Author", "Change"], [
-        ["3 Nov 2026", "v1", "Prince Raj", "First draft. Total 12,180 (-2.6%). Contingency set to 0 by mistake."],
-        ["12 Nov 2026", "v2", "Prince Raj", "Cuts across all lines; contingency restored to 50. Total 11,720 (-6.2%). Gap 220."],
+        ["3 Nov 2026", "v1", "Prince Alex", "First draft. Total 12,180 (-2.6%). Contingency set to 0 by mistake."],
+        ["12 Nov 2026", "v2", "Prince Alex", "Cuts across all lines; contingency restored to 50. Total 11,720 (-6.2%). Gap 220."],
     ], widths=[14, 10, 14, 80])
     wb.save(OUT / "04_H1_FY2027_Budget_Draft_v2.xlsx")
 
@@ -357,9 +357,9 @@ def doc04():
 # 05 Cost reduction options (DOCX)
 # ==========================================================================
 def doc05():
-    d = new_docx("Cost Reduction Options for H1 FY2027", "Prince Raj", datetime(2026, 11, 12, 18, 10))
+    d = new_docx("Cost Reduction Options for H1 FY2027", "Prince Alex", datetime(2026, 11, 12, 18, 10))
     d.add_heading("Cost Reduction Options: H1 FY2027", 0)
-    docx_meta(d, "Prepared by Prince Raj, Financial Analyst · 12 Nov 2026 · USD thousands")
+    docx_meta(d, "Prepared by Prince Alex, Financial Analyst · 12 Nov 2026 · USD thousands")
 
     d.add_heading("1. Where we are", 1)
     d.add_paragraph(f"Draft v2 totals {k(sum(DRAFT_V2))}K against the CFO target of {k(TARGET)}K. "
@@ -423,7 +423,7 @@ def doc06():
 def doc07():
     p = OUT / "07_Warehouse_Automation_Pilot_Proposal.pdf"
     s = [Paragraph("Warehouse Automation Pilot: Proposal", H1),
-         Paragraph("Author: Daniel Ito, Operations Planner · 30 Oct 2026 · For decision at the H1 FY2027 budget review", META),
+         Paragraph("Author: Daniel, Operations Planner · 30 Oct 2026 · For decision at the H1 FY2027 budget review", META),
          Spacer(1, 6),
          Paragraph("Problem", H2),
          Paragraph("Logistics was <b>12% over budget in Q3</b> (234K). Overtime (78K) and expedited shipping (60K) "
@@ -455,22 +455,22 @@ def doc07():
          Paragraph("Ask", H2),
          Paragraph("Approve the Vector Robotics pilot. If the full scope cannot be funded, I will look at a "
                    "smaller scope (one warehouse) with Vector.", BODY)]
-    build_pdf(p, "Warehouse Automation Pilot Proposal", "Daniel Ito", s, "Pilot proposal")
+    build_pdf(p, "Warehouse Automation Pilot Proposal", "Daniel", s, "Pilot proposal")
 
 
 # ==========================================================================
 # 08 Vendor contract summary (XLSX)
 # ==========================================================================
 def doc08():
-    wb = new_wb("Vendor Contract Summary", "Daniel Ito", datetime(2026, 10, 19, 17, 45))
+    wb = new_wb("Vendor Contract Summary", "Daniel", datetime(2026, 10, 19, 17, 45))
     ws = wb.active
     ws.title = "Contracts"
-    sheet_title(ws, "Vendor Contract Summary", "USD thousands · Prepared by Daniel Ito · 19 Oct 2026")
+    sheet_title(ws, "Vendor Contract Summary", "USD thousands · Prepared by Daniel · 19 Oct 2026")
     write_table(ws, 4, ["Vendor", "Category", "Annual value", "Renewal date", "Negotiation room", "Owner", "Notes"], [
-        ["Northgate Freight", "Freight", 2900, "31 Jan 2027", "~3% rate cut for 2-year term", "Daniel Ito", "Fuel surcharge raised in July"],
-        ["Brightpack Supplies", "Packaging", 410, "31 Mar 2027", "Volume discount if Corrin volume moves", "Daniel Ito", "Main packaging supplier"],
-        ["Corrin Packaging", "Packaging", 180, "Rolling (30 days)", "Can consolidate into Brightpack", "Daniel Ito", "Used for rush orders"],
-        ["Orbis Data Services", "Analytics software", 260, "30 Jun 2027", "Lower licence tier possible", "Prince Raj", "Forecasting dashboards"],
+        ["Northgate Freight", "Freight", 2900, "31 Jan 2027", "~3% rate cut for 2-year term", "Daniel", "Fuel surcharge raised in July"],
+        ["Brightpack Supplies", "Packaging", 410, "31 Mar 2027", "Volume discount if Corrin volume moves", "Daniel", "Main packaging supplier"],
+        ["Corrin Packaging", "Packaging", 180, "Rolling (30 days)", "Can consolidate into Brightpack", "Daniel", "Used for rush orders"],
+        ["Orbis Data Services", "Analytics software", 260, "30 Jun 2027", "Lower licence tier possible", "Prince Alex", "Forecasting dashboards"],
         ["Keystone Facilities Mgmt", "Facilities", 600, "31 Dec 2027", "Limited", "Karthi M", "Cleaning, maintenance, security"],
     ], num_cols=(3,), widths=[24, 18, 13, 16, 34, 13, 34])
 

@@ -18,6 +18,8 @@ import queue
 import re
 import sys
 import threading
+import time
+import uuid
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -30,16 +32,22 @@ import llm  # noqa: E402  (loads .env)
 import voices  # noqa: E402
 from calls import CallsService  # noqa: E402
 from connector import Connector  # noqa: E402
-from director import EventBus, Meeting  # noqa: E402
+from director import MSI, EventBus, Meeting  # noqa: E402
 from graph import Graph  # noqa: E402
 from httpx_types import Req, Router  # noqa: E402
 from identity import Identity  # noqa: E402
+from mail import GraphMail, MailData  # noqa: E402
 from meetings import GraphMeetings, MeetingsData  # noqa: E402
-from store import TeamsStore  # noqa: E402
+from store import TeamsStore, iso  # noqa: E402
 from subscriptions import Subscriptions  # noqa: E402
 from world import World, doc_text  # noqa: E402
 
 STATIC = HERE / "static"
+
+
+def ui_version() -> str:
+    """Changes whenever a UI file changes: open pages compare it and reload themselves (no stale scripts)."""
+    return str(max(int(f.stat().st_mtime) for f in STATIC.iterdir() if f.is_file()))
 AVATAR_JS = HERE.parents[1] / "bot-avatar" / "avatar.js"
 CATALOG_MANIFEST = HERE.parent / "teams" / "state" / "app_package" / "manifest.json"
 PORT = int(os.environ.get("RMEET_PORT", "8100"))
@@ -85,17 +93,101 @@ GRAPH_MEETINGS = GraphMeetings(BASE_URL, IDENTITY, STORE, MEETINGS, Graph._err)
 SUBSCRIPTIONS = Subscriptions(BASE_URL, IDENTITY, STORE, MEETINGS, Graph._err, CHANNEL_BUS.publish)
 CALLS = CallsService(BASE_URL, IDENTITY, STORE, MEETINGS, Graph._err, CHANNEL_BUS.publish)
 CONNECTOR.meetings = MEETINGS
+MAIL = MailData(STORE, HERE.parent / "teams" / "state")
+MAIL.listeners.append(CHANNEL_BUS.publish)
+MEETINGS.on_change(lambda ev: CHANNEL_BUS.publish(ev) if ev.get("type") == "calendar" else None)
+GRAPH_MAIL = GraphMail(BASE_URL, IDENTITY, STORE, MAIL, Graph._err)
 ROUTER = Router()
-for svc in (IDENTITY, CONNECTOR, GRAPH, GRAPH_MEETINGS, SUBSCRIPTIONS, CALLS):
+for svc in (IDENTITY, CONNECTOR, GRAPH, GRAPH_MEETINGS, GRAPH_MAIL, SUBSCRIPTIONS, CALLS):
     svc.routes(ROUTER)
 MEETING = Meeting(WORLD, BUS, IDENTITY, STORE, MEETINGS, CALLS, CONNECTOR)
 SAMPLES: dict[str, bytes] = {}
 
 
+class CalendarCall:
+    """Listener for a meeting started from the Calendar view (any Teams meeting, e.g. one Max booked),
+    as opposed to the scripted Budget Review run by the director. Text mode: people type their lines."""
+
+    def __init__(self, key: str, people: list[str] | None = None):
+        self.key, self.t0, self.people = key, time.time(), people or []
+        self.lines: list[dict] = []               # what was said (people's typed lines), for the meeting view
+        self.recording, self.bot = "", ""
+
+    def _ev(self, **kw) -> None:
+        CHANNEL_BUS.publish({"type": "calendar_call", "key": self.key, **kw})
+
+    def said(self, who: str, text: str) -> None:
+        line = {"speaker": who, "text": text, "t": round(time.time() - self.t0, 1)}
+        self.lines.append(line)
+        self._ev(line=line)
+
+    def on_recording(self, status: str) -> None:
+        self.recording = status
+        self._ev(recording=status)
+
+    def on_bot_joined(self, call) -> None:
+        self.bot = "joined"
+        self._ev(bot="joined")
+
+    def on_bot_left(self) -> None:
+        self.bot = "left"
+        self._ev(bot="left")
+
+    def on_bot_audio(self, data: bytes) -> None:
+        pass
+
+    def on_media_lost(self) -> None:
+        self._ev(bot="media-lost")
+
+
+def calendar_person(key: str) -> dict:
+    u = STORE.users[key]
+    return {"key": key, "name": u["name"], "aadObjectId": u["aadObjectId"], "msi": MSI[key],
+            "participantId": str(uuid.uuid5(uuid.NAMESPACE_URL, "participant/" + key))}
+
+
+THREAD_LINK = re.compile(r"teams\.microsoft\.com/l/message/[^/\s]+/(\d+)")
+
+
+def chat_root(body: str) -> str | None:
+    """The meeting's chat thread, from the Teams deep link Max puts in invites it books."""
+    m = THREAD_LINK.search(body or "")
+    return m.group(1) if m else None
+
+
+def calendar_live() -> dict:
+    """The calendar meeting running now (for the meeting view), or {"live": False}."""
+    live = CALLS.live or {}
+    m = MEETINGS.meetings.get(live.get("key") or "")
+    lst = live.get("listener")
+    if not m or not isinstance(lst, CalendarCall):
+        return {"live": False}
+    return {"live": True, "key": m["key"], "title": m["title"], "people": lst.people, "lines": lst.lines,
+            "t": round(time.time() - lst.t0, 1), "recording": lst.recording,
+            "botInCall": bool(CALLS.bot_call()), "threadRoot": chat_root(m.get("body") or "")}
+
+
+def calendar_view(user: str) -> list[dict]:
+    tu = STORE.tenant_users()
+    live = (CALLS.live or {}).get("key")
+    out = []
+    for m in sorted(MEETINGS.meetings.values(), key=lambda m: m["startMs"]):
+        if user != m["organizer"] and user not in m["attendees"]:
+            continue
+        out.append({"key": m["key"], "title": m["title"], "start": iso(m["startMs"]), "end": iso(m["endMs"]),
+                    "organizer": tu.get(m["organizer"], {}).get("name", m["organizer"]),
+                    "attendees": [tu.get(k, {}).get("name", k) for k in m["attendees"]],
+                    "online": m.get("online", True), "joinUrl": m["joinUrl"] if m.get("online", True) else None,
+                    "body": m.get("body") or "", "createdByMax": m["organizer"] == "max",
+                    "threadRoot": chat_root(m.get("body") or ""),
+                    "live": live == m["key"], "botInCall": bool(live == m["key"] and CALLS.bot_call())})
+    return out
+
+
 def admin_view() -> dict:
     reg = IDENTITY.registration
     return {"admin": STORE.admin, "requiredPermissions": reg.get("applicationPermissions", []),
-            "appName": reg.get("botName"), "subscriptions": SUBSCRIPTIONS.public(), "log": SUBSCRIPTIONS.log[-15:]}
+            "appName": reg.get("botName"), "subscriptions": SUBSCRIPTIONS.public(), "log": SUBSCRIPTIONS.log[-50:]}
 
 
 def app_catalog_entry() -> dict | None:
@@ -213,7 +305,7 @@ class Handler(BaseHTTPRequestHandler):
             data = (MEETING.clips if m.group(1) == "audio" else SAMPLES).get(m.group(2))
             return self._send(200, data, "audio/wav") if data else self._json(404, {"error": "Not found"})
         if path == "/api/voices":
-            return self._json(200, {"candidates": voices.CANDIDATES, "model": voices.TTS_MODEL,
+            return self._json(200, {"candidates": voices.candidates(), "model": voices.TTS_MODEL,
                                     "assigned": {k: m.get("voice") for k, m in WORLD.members.items()},
                                     "max": "Charon"})
 
@@ -228,13 +320,31 @@ class Handler(BaseHTTPRequestHandler):
             return self._file(AVATAR_JS)
         if path == "/api/world":
             return self._json(200, {**WORLD.public(), "meetingState": MEETING.snapshot(),
-                                    "models": {"brain": llm.QWEN_MODEL, "hearing": llm.GEMINI_MODEL,
-                                               "qwenReady": bool(llm.QWEN_KEY and llm.QWEN_BASE),
+                                    "models": {"brain": llm.BRAIN_MODEL, "hearing": llm.GEMINI_MODEL,
+                                               "qwenReady": llm.brain_ready(),
                                                "geminiReady": bool(llm.GEMINI_KEY)}})
+        if path == "/api/calendar/live":
+            return self._json(200, calendar_live())
+        if path == "/api/ui-version":
+            return self._json(200, {"uiVersion": ui_version()})
         if path == "/api/channel":
-            return self._json(200, {**STORE.ui_channel(), "app": app_catalog_entry()})
+            return self._json(200, {**STORE.ui_channel(), "app": app_catalog_entry(), "uiVersion": ui_version()})
         if path == "/api/admin":
             return self._json(200, admin_view())
+        if path == "/api/people":
+            return self._json(200, {"people": [{"key": k, "name": u["name"], "email": u["email"],
+                                                "member": k in STORE.users, "role": u.get("role")}
+                                               for k, u in STORE.tenant_users().items()]})
+        if path == "/api/calendar":
+            key = (qs.get("user") or ["karthi"])[0]
+            if key not in STORE.tenant_users():
+                return self._json(404, {"error": "Unknown person."})
+            return self._json(200, {"user": key, "events": calendar_view(key)})
+        if path == "/api/mail":
+            key = (qs.get("user") or ["karthi"])[0]
+            if key not in STORE.tenant_users():
+                return self._json(404, {"error": "Unknown person."})
+            return self._json(200, {"user": key, **MAIL.ui(key), "outbound": MAIL.outbound[-20:]})
         if path in ("/api/drive-doc", "/api/drive-file"):
             rec = STORE.files.get((qs.get("item") or [""])[0])
             if not rec:
@@ -293,8 +403,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(200, {"ok": True, "text": text})
             if path == "/api/voices/sample":
                 voice = body.get("voice") or "Puck"
-                if voice not in voices.CANDIDATES:
-                    return self._json(400, {"error": "Unknown voice."})
+                known = voices.candidates()
+                if voice not in known:
+                    return self._json(400, {"error": "Unknown voice." if known else
+                                            "Local voice server is not running (local-tts/server.py)."})
                 wav = voices.synthesize((body.get("text") or "Hello, this is a voice test.")[:300], voice,
                                         body.get("style") or None)
                 sid = __import__("hashlib").sha1(wav[:4096] + voice.encode()).hexdigest()[:20]
@@ -313,8 +425,44 @@ class Handler(BaseHTTPRequestHandler):
                 text = (body.get("text") or "").strip()
                 if not text:
                     return self._json(400, {"error": "Write something first."})
-                msg = CONNECTOR.user_posts("karthi", text, body.get("rootId") or None)
+                who = body.get("as") or "karthi"            # tests / demos can post as another team member
+                if who not in STORE.users:
+                    return self._json(400, {"error": "Unknown team member."})
+                msg = CONNECTOR.user_posts(who, text, body.get("rootId") or None)
                 return self._json(200, STORE.ui_message(msg))
+            if path in ("/api/calendar/start", "/api/calendar/say", "/api/calendar/end"):
+                m = MEETINGS.meetings.get(str(body.get("key") or ""))
+                if not m or not m.get("online", True):
+                    return self._json(404, {"error": "No such Teams meeting."})
+                if path == "/api/calendar/start":
+                    if CALLS.live or MEETING.status in ("live", "summarizing"):
+                        return self._json(409, {"error": "Another meeting is in progress."})
+                    people = [k for k in [m["organizer"], *m["attendees"]] if k in STORE.users]
+                    people = list(dict.fromkeys(people))
+                    CALLS.open_meeting(m["key"], [calendar_person(k) for k in people], "text",
+                                       CalendarCall(m["key"], people))
+                    CHANNEL_BUS.publish({"type": "calendar_call", "key": m["key"], "state": "live"})
+                    return self._json(200, {"ok": True, "key": m["key"]})
+                if (CALLS.live or {}).get("key") != m["key"]:
+                    return self._json(409, {"error": "That meeting isn't running."})
+                if path == "/api/calendar/say":
+                    who = body.get("as") or "karthi"
+                    text = (body.get("text") or "").strip()
+                    if who not in STORE.users or not text:
+                        return self._json(400, {"error": "Say something (as a team member)."})
+                    u = STORE.users[who]
+                    listener = CALLS.live["listener"]
+                    CALLS.transcript(MSI[who], u["name"], u["aadObjectId"], text, int((time.time() - listener.t0) * 1000))
+                    listener.said(who, text)
+                    return self._json(200, {"ok": True, "botInCall": bool(CALLS.bot_call())})
+                CALLS.close_meeting()
+                CHANNEL_BUS.publish({"type": "calendar_call", "key": m["key"], "state": "ended"})
+                return self._json(200, {"ok": True})
+            if path == "/api/channel/card-action":
+                who = body.get("as") or "karthi"            # the person clicking (UI 'Act as' switch)
+                res = CONNECTOR.card_action(who, str(body.get("messageId") or ""), str(body.get("verb") or ""),
+                                            body.get("data") or {}, body.get("inputs") or {})
+                return self._json(400 if res.get("error") else 200, res)
             if path == "/api/channel/install":
                 entry = app_catalog_entry()
                 if not entry or not entry["registered"]:
@@ -327,10 +475,16 @@ class Handler(BaseHTTPRequestHandler):
                     CONNECTOR.install("karthi", entry["rsc"])
                 return self._json(200, {"install": STORE.install})
             if path == "/api/channel/reset":
+                live = (CALLS.live or {})
+                if isinstance(live.get("listener"), CalendarCall):    # a calendar meeting left running: end it
+                    CALLS.close_meeting()
+                    CHANNEL_BUS.publish({"type": "calendar_call", "key": live.get("key"), "state": "ended"})
                 if STORE.install.get("installed"):
                     CONNECTOR.uninstall("karthi")
                 SUBSCRIPTIONS.remove_all("Channel reset.")
                 STORE.reset()
+                MAIL.reset()
+                MEETINGS.reset()
                 return self._json(200, {"ok": True})
             if path == "/api/channel/upload":
                 import base64 as _b64
@@ -351,7 +505,7 @@ class Handler(BaseHTTPRequestHandler):
                 changes = {}
                 if "consent" in body:
                     changes["consented"] = list(perms) if body["consent"] else []
-                for k in ("accessPolicy", "transcriptApiAccess"):
+                for k in ("accessPolicy", "transcriptApiAccess", "siteGrant"):
                     if k in body:
                         changes[k] = bool(body[k])
                 STORE.set_admin(**changes)
@@ -385,7 +539,7 @@ def main() -> None:
     server.daemon_threads = True
     threading.Thread(target=llm.qwen_warmup, daemon=True).start()
     print(f"rmeet-ai running at {BASE_URL}")
-    print(f"Brain (colleagues): {llm.QWEN_MODEL} ({'ready' if llm.QWEN_KEY and llm.QWEN_BASE else 'NOT configured'})")
+    print(f"Brain (colleagues): {llm.BRAIN_MODEL} ({'ready' if llm.brain_ready() else 'NOT configured'})")
     print(f"Hearing (mic): {llm.GEMINI_MODEL} ({'ready' if llm.GEMINI_KEY else 'NOT configured'})")
     reg = IDENTITY.registration
     print(f"Max app registration: {reg.get('appId', 'NONE (run simulations/teams/register_app.py)')}")

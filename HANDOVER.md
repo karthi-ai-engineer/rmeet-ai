@@ -1,6 +1,6 @@
 # Handover: rmeet-ai / Max
 
-Last updated: 20 Nov 2026. Read with `CLAUDE.md` (rules) and `README.md` (overview).
+Last updated: 21 Nov 2026 (Phase 4 done). Read with `CLAUDE.md` (rules) and `README.md` (overview).
 
 ## 1. The idea in one minute
 
@@ -16,7 +16,7 @@ Teams = change config (endpoints + real app registration), not code. The one rea
 (see 6).
 
 The simulated team: **Planning Department, Kestrel Home Goods**.
-- Karthi M (Planning Manager, the user, host) · Prince Raj (finance) · Daniel Ito (operations) ·
+- Karthi M (Planning Manager, the user, host) · Prince Alex (finance) · Daniel (operations) ·
   Jacob Thomas (marketing), all AI colleagues driven by Qwen with their own Gemini voices
 - the channel thread has 15 posts, 10+ documents (xlsx/pdf/docx/md), and 3 past meetings
   (minutes in the channel, transcripts in Graph)
@@ -33,7 +33,7 @@ The simulated team: **Planning Department, Kestrel Home Goods**.
 | 1. Messaging | Max as separate program (Teams SDK), install/RSC consent, `@Max` thread answers | Done, `tests/e2e_phase1_messaging.py` 17/17 |
 | 2. Graph knowledge | Change notifications, files + delta, calendars/onlineMeetings/VTT transcripts, admin gates, lifecycle recovery | Done, `tests/e2e_phase2_graph.py` 27/27 |
 | 3. Meetings via calling | meetingStart → Graph `POST /communications/calls` → callbacks → recording status → media; voices | **Text mode done**: `tests/e2e_phase3_meeting_call.py` 16/16 (notes 40/40), `tests/e2e_phase3_live_and_edges.py` 13/13 (you host, interjections, end early, Max remembers the meeting), `tests/test_quota_guard.py` 7/7 (offline). **Voice mode works but is limited by the free Gemini TTS quota** (see 5) |
-| 4. Agentic | Adaptive cards, Max drafts Budget v3, reminders/follow-ups | Not started |
+| 4. Agentic teammate | LangGraph agent with tools, approvals, email, meetings, files, reminders, RBAC | **Done** (see 3b). Offline: `tests/test_*.py` (8 suites, all pass, $0). Live: `tests/e2e_phase4_*.py` + `tests/eval_phase4_agent.py` all pass |
 
 ## 3. How a meeting works now (Phase 3)
 
@@ -57,6 +57,34 @@ The simulated team: **Planning Department, Kestrel Home Goods**.
 Voices (`simulations/planning-department/team.yaml`): Karthi = Alnilam, Prince = Iapetus,
 Daniel = Achird, Jacob = Puck; Max = Charon (`MAX_VOICE` in `max/.env`). UI has a **🎧 Voices** panel.
 
+## 3b. Max as a full teammate (Phase 4)
+
+Design: `docs/plans/phase4-max-teammate.md` (v2), graph diagram `docs/plans/max-agent-graph.html`, review
+`docs/plans/phase4-review.md`, build log `docs/plans/phase4-progress.md`.
+
+- **Agent** (`max/agent/graph.py`, LangGraph, 7 nodes): `intake → agent ⇄ tools`, external steps go
+  `prepare_approval (safety rules) → await_approval (interrupt) → execute`. @mentions are answered by the agent with
+  search tools instead of sending the whole memory (~4K instead of ~15K tokens per question). The model is a config
+  switch (`max/agent/models.py`); runs are saved in `max/data/checkpoints.db`.
+- **Tools** (`max/agent/tools.py`, `max/agent/actions.py`): memory search (SQLite FTS5), files, meetings/transcripts,
+  tasks; external: `send_email`, `create_meeting`, `cancel_meeting`, `upload_file`, `propose_task_update`.
+- **Approvals** (`max/approvals.py`): Adaptive Card (Action.Execute) with the full content; requester or team owner
+  approves (policy); one click wins; draft-then-send; meeting `transactionId`; 24 h expiry; restart recovery.
+  Rules in code: company recipients only, attachments only from team files, never overwrite files, runs started by
+  outside content get no sending tools, payload frozen by hash.
+- **Max's own account**: mailbox + calendar `max@…` (`MAX_MAILBOX`), limited to itself by Exchange RBAC.
+- **Initiative** (`max/jobs.py`, `max/followups.py`): action items → tasks; reminders the day before due, overdue
+  chase, meeting reminders (24 h / 15 min), Max joins meetings it booked; deadline-slip rule (code gate first).
+- **Memory** (`max/store.py`): one SQLite file `max/data/max.db` (schema v5: messages, files, meetings, people, tasks,
+  jobs, pending actions, runs, append-only audit, policies, search index). Old JSON files are imported once.
+- **Admin page**: http://localhost:3978/admin (this machine only): who may use what, who approves, team time zone,
+  activity log with each run's audit trail.
+- **Simulator additions**: company directory (CFO Elena Park, Max's account), mailboxes (`simulations/teams/mail.py`),
+  calendar events + getSchedule + busy blocks (`planning-department/calendar.yaml`), card clicks (invoke), Graph file
+  upload, admin switches (RBAC scope, site grant). UI: rendered cards with buttons, **As** switch (act as any team
+  member), Mail and Calendar views (start/say/end any Teams meeting). Max test hooks (`MAX_TEST_HOOKS=1`, simulator
+  only): move Max's clock, run due jobs, read state.
+
 ## 4. Setup on a new machine
 
 1. Install Python 3.12+ (developed on 3.13) and Git; clone this repo.
@@ -73,8 +101,13 @@ Daniel = Achird, Jacob = Puck; Max = Charon (`MAX_VOICE` in `max/.env`). UI has 
    switch. Then **Meet → Join** (Live = you host, Autopilot = all simulated + scored; Voice/Text).
 
 Tests (both servers running): `.venv\Scripts\python tests\e2e_phase3_meeting_call.py`, `tests\e2e_phase3_live_and_edges.py`
-(add `--voice` or `--only-voice` for the voice run), `tests\e2e_phase2_graph.py`,
+(add `--voice` or `--only-voice` for the voice run), `tests\e2e_phase2_graph.py` (`--no-meeting` skips its meeting),
 `tests\e2e_phase1_messaging.py`, `tests\check_voice_pipeline.py` (Gemini only), `tests\test_quota_guard.py` (offline).
+Phase 4 offline ($0, no servers): `tests\test_agent_plumbing.py`, `test_store.py`, `test_followups.py`,
+`test_agent_graph.py`, `test_approvals.py`, `test_meetings.py`, `test_uploads_rules.py`, `test_policies.py`.
+Phase 4 live (servers running, Max with `MAX_TEST_HOOKS=1`): `tests\e2e_phase4_followups.py` (no model calls),
+`eval_phase4_agent.py`, `e2e_phase4_approvals.py`, `e2e_phase4_meetings.py`, `e2e_phase4_files_rules.py`,
+`e2e_phase4_policies.py`. Agent lab (watch the graph step by step, replayed answers): `devtools\agent_lab\server.py` → :8500.
 Note: the tests reset the channel (Max is reinstalled).
 
 ## 5. Known issues / gotchas
@@ -106,17 +139,13 @@ Note: the tests reset the channel (Max is reinstalled).
 
 1. Voice run with the new Gemini key (`tests/e2e_phase3_meeting_call.py --only-voice`), tune segmenting
    (`END_SILENCE` in `max/calling.py`) and the TTS throttle if needed.
-2. Phase 4 (agentic): rebuild Max's brain as a **tool-calling agent** (Qwen picks tools, Max runs them,
-   loops until done) instead of "send all memory, get one answer". Connections become plug-ins
-   (prefer **MCP** connectors) so adding/removing Jira, SharePoint, calendar, DBs is configuration.
-   Plan for: test Qwen tool calling through the company gateway first; per-team allowed tools;
-   human confirmation for risky actions (sending, deleting); a log of tool calls.
-   First tools/tasks: search_memory, read_file, adaptive cards in threads, Max drafts "Budget v3",
-   reminders on action items, follow-up posts before the next meeting.
-3. Memory at scale: per-file/meeting summaries + search (keyword first; hybrid with embeddings in
-   PostgreSQL + pgvector only if Karthi approves an embedding model, e.g. Gemini's). Today the whole
-   team memory fits in one Qwen request.
-4. Later: real Teams (section 6) or a Daily.co demo (the original free-demo plan).
+2. Phase 4 follow-ups: test the agent with Qwen through the company gateway (tool calling needs the gateway's
+   tool-call parser); move the meeting brain (spoken answers) to the agent too; MCP wrappers for the connectors;
+   PostgreSQL instead of SQLite for production; embeddings only if Karthi approves an embedding model.
+3. Real Teams (section 6): licensed `max@` mailbox + Exchange RBAC role assignments, Sites.Selected grant,
+   CsApplicationAccessPolicy; Max joining meetings it books via the scheduler (no meetingStart for calendar
+   meetings); the admin page becomes a Teams tab with SSO.
+4. Later: a Daily.co demo (the original free-demo plan).
 
 ## 8. File map (most important)
 
@@ -124,7 +153,9 @@ Note: the tests reset the channel (Max is reinstalled).
 |---|---|
 | `max/app.py` | Max entry: Teams SDK handlers, Graph notifications, `/api/calling` callbacks, background jobs |
 | `max/calling.py` | Meeting call: join, callbacks, recording, media, STT segments, speaking with barge-in, notes |
-| `max/brain.py` | Qwen prompts: thread answers, meeting answers, notes |
+| `max/brain.py` | Classic prompts: meeting answers, notes (thread answers now go through the agent) |
+| `max/agent/` | Phase 4 agent: `graph.py` (LangGraph), `tools.py`, `actions.py`, `models.py`, `testing.py`, `clock.py` |
+| `max/store.py`, `approvals.py`, `jobs.py`, `followups.py`, `policies.py`, `admin.html` | Phase 4 database, approvals, job runner, reminders, RBAC, admin page |
 | `max/knowledge.py`, `meetings_sync.py`, `subscriptions.py` | Channel/files/meetings knowledge from Graph |
 | `max/voice.py`, `max/audio.py` | Gemini TTS/STT for Max, PCM helpers |
 | `simulations/rmeet/server.py` | rmeet-ai server: UI APIs + fake Microsoft routes + media WebSocket |

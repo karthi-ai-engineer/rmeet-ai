@@ -94,6 +94,45 @@ class Connector:
             self.notify({"type": "bot_error", "message": "Max is not reachable. Is the Max app running? "
                                                          "(python max/app.py)"})
 
+    def card_action(self, user_key: str, message_id: str, verb: str, data: dict, inputs: dict) -> dict:
+        """A person clicked an Action.Execute button on a bot card (Universal Actions):
+        send invoke 'adaptiveCard/action' to the bot and WAIT for its answer (Teams waits a few seconds);
+        a card answer replaces the card in the message, a text answer is shown to the clicker."""
+        msg = self.store.find(message_id)
+        if not msg:
+            return {"error": "That message no longer exists."}
+        if user_key not in self.store.users:
+            return {"error": "Unknown user."}
+        root_id = msg["replyToId"] or msg["id"]
+        now = int(datetime.now(timezone.utc).timestamp() * 1000)
+        ts, local = self._local_times(now)
+        act = {"type": "invoke", "name": "adaptiveCard/action", "id": f"f:{uuid.uuid4()}", "timestamp": ts,
+               "localTimestamp": local, "serviceUrl": self.service_url, "channelId": "msteams",
+               "from": self.user_account(user_key), "recipient": self.bot_account(),
+               "conversation": {"isGroup": True, "conversationType": "channel", "tenantId": TENANT_ID,
+                                "id": f"{CHANNEL_ID};messageid={root_id}"},
+               "replyToId": message_id, "channelData": self._channel_data(root_id), "locale": "en-US",
+               "value": {"action": {"type": "Action.Execute", "verb": verb, "data": {**(data or {}), **(inputs or {})}},
+                         "trigger": "manual"}}
+        endpoint = self.identity.registration.get("messagingEndpoint")
+        token = self.identity.connector_token_for_bot(self.service_url)
+        req = urllib.request.Request(endpoint, data=json.dumps(act).encode("utf-8"), method="POST", headers={
+            "Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8",
+            "x-ms-conversation-id": act["conversation"]["id"], "x-ms-tenant-id": TENANT_ID})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                body = json.loads(resp.read() or b"{}")
+        except urllib.error.HTTPError as e:
+            return {"error": f"Max answered HTTP {e.code} to the card action."}
+        except Exception:
+            return {"error": "Max didn't answer the card action in time (Teams waits only a few seconds)."}
+        if body.get("type") == CARD_TYPE and isinstance(body.get("value"), dict):
+            self.store.update_message(msg["id"], None, [body["value"]])
+            return {"ok": True, "card": body["value"]}
+        if body.get("type") == "application/vnd.microsoft.activity.message":
+            return {"ok": True, "message": body.get("value")}
+        return {"ok": True}
+
     def message_activity(self, msg: dict) -> dict:
         """Activity for a channel message posted by a person (L1 root or L2 reply)."""
         root_id = msg["replyToId"] or msg["id"]

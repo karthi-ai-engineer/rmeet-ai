@@ -3,7 +3,7 @@ import json, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 
 SIM, MAX = "http://127.0.0.1:8100", "http://127.0.0.1:3978"
-REG = json.loads(Path(__file__).resolve().parents[1] / "simulations" / "teams" / "state" / "registration.json".read_text())
+REG = json.loads((Path(__file__).resolve().parents[1] / "simulations" / "teams" / "state" / "registration.json").read_text())
 ok_all = True
 
 def check(name, cond, detail=""):

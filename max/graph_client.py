@@ -75,6 +75,20 @@ class GraphClient:
     async def delete(self, path: str) -> None:
         await self.request("DELETE", path)
 
+    async def put_bytes(self, path: str, data: bytes, content_type: str = "application/octet-stream",
+                        params: dict | None = None) -> dict:
+        """PUT raw content (small file upload: PUT /drives/{d}/items/{parent}:/{name}:/content)."""
+        url = path if path.startswith("http") else f"{self.cfg.graph_base_url}{path}"
+        r = await self.http.put(url, content=data, params=params,
+                                headers={"Authorization": f"Bearer {await self.token()}", "Content-Type": content_type})
+        if r.status_code >= 400:
+            try:
+                body = r.json().get("error", {})
+            except ValueError:
+                body = {}
+            raise GraphError(r.status_code, body.get("code", "error"), body.get("message", r.text[:200]))
+        return r.json() if r.content else {}
+
     async def get_all(self, path: str, params: dict | None = None, limit: int = 2000) -> list:
         """Follow @odata.nextLink pages."""
         out, data = [], await self.get(path, params)

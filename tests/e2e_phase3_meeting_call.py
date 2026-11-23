@@ -3,7 +3,7 @@ import json, sys, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 
 SIM, MAX = "http://127.0.0.1:8100", "http://127.0.0.1:3978"
-REG = json.loads(Path(__file__).resolve().parents[1] / "simulations" / "teams" / "state" / "registration.json".read_text())
+REG = json.loads((Path(__file__).resolve().parents[1] / "simulations" / "teams" / "state" / "registration.json").read_text())
 ok_all = True
 do_voice = "--voice" in sys.argv
 only_voice = "--only-voice" in sys.argv
@@ -79,6 +79,7 @@ def run_meeting(media, speed, timeout):
 http("POST", SIM + "/api/channel/reset", {})
 time.sleep(2)
 http("POST", SIM + "/api/admin", {"consent": False, "accessPolicy": True, "transcriptApiAccess": True})
+http("POST", MAX + "/test/tokens/reset", {})   # Max picks up the revoked consent with a new token (test hook)
 http("POST", SIM + "/api/channel/install", {"action": "add"})
 welcome, dt = wait_for(lambda: next((p for p in channel()["posts"] if p["isBot"]), None), 120)
 check("Max installed and welcomed", welcome is not None, f"{dt:.0f}s")
@@ -111,7 +112,7 @@ if not only_voice:
     for a in chat_answers[:6]:
         print("    Max:", a["text"][:150])
     check("[text] the meeting post shows 'ended'", mp and mp["meeting"]["state"] == "ended")
-    notes = mp and next((r for r in mp["replies"] if r["isBot"] and "meeting notes" in r["text"].lower()[:80]), None)
+    notes = mp and next((r for r in mp["replies"] if r["isBot"] and r["text"].lstrip("* ").startswith("📝 Meeting notes")), None)
     check("[text] Max posted the meeting notes in the meeting thread", notes is not None)
     sc = next((e["result"] for e in ev if e["type"] == "score"), None)
     check("[text] notes scored against the answer key", sc is not None, f"{sc['score']}/{sc['out_of']} ({sc['percent']}%)" if sc else "")
@@ -129,12 +130,12 @@ if do_voice or only_voice:
     ev, mp = run_meeting("voice", 1, 2400)
     clips = [e for e in ev if e["type"] == "utterance" and e["speaker"] != "max" and e.get("audio")]
     people = [e for e in ev if e["type"] == "utterance" and e["speaker"] != "max"]
-    check("[voice] people spoke with Gemini voices", len(clips) >= len(people) - 1 and clips, f"{len(clips)}/{len(people)}")
+    check("[voice] people spoke with real voices (TTS)", len(clips) >= len(people) - 1 and clips, f"{len(clips)}/{len(people)}")
     spoken = [e for e in ev if e["type"] == "utterance" and e["speaker"] == "max" and e.get("played")]
     check("[voice] Max answered OUT LOUD through the call (audio uplink, captioned)", len(spoken) >= 3, len(spoken))
     for a in spoken[:6]:
         print("    Max (heard):", a["text"][:150])
-    notes = mp and next((r for r in mp["replies"] if r["isBot"] and "meeting notes" in r["text"].lower()[:80]), None)
+    notes = mp and next((r for r in mp["replies"] if r["isBot"] and r["text"].lstrip("* ").startswith("📝 Meeting notes")), None)
     check("[voice] Max posted the meeting notes in the meeting thread", notes is not None)
     sc = next((e["result"] for e in ev if e["type"] == "score"), None)
     check("[voice] notes scored", sc is not None, f"{sc['score']}/{sc['out_of']} ({sc['percent']}%)" if sc else "")

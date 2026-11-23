@@ -279,7 +279,7 @@ class Subscriptions:
             time.sleep(2 * (attempt + 1))
         entry = {"time": time.strftime("%H:%M:%S"), "what": label, "status": status}
         with self.lock:
-            self.log = (self.log + [entry])[-30:]
+            self.log = (self.log + [entry])[-100:]
         self.notify_ui({"type": "notification_log", "entry": entry})
 
     def _send(self, sub: dict, items: list[dict], label: str) -> None:

@@ -3,7 +3,7 @@ import base64, json, sys, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 
 SIM, MAX = "http://127.0.0.1:8100", "http://127.0.0.1:3978"
-REG = json.loads(Path(__file__).resolve().parents[1] / "simulations" / "teams" / "state" / "registration.json".read_text())
+REG = json.loads((Path(__file__).resolve().parents[1] / "simulations" / "teams" / "state" / "registration.json").read_text())
 ok_all = True
 skip_meeting = "--no-meeting" in sys.argv
 
@@ -92,7 +92,8 @@ check("unsupported resource -> 400", s == 400, s)
 
 http("POST", SIM + "/api/admin", {"consent": True})
 s, b = G("GET", f"/users/{karthi_oid}/calendarView?startDateTime=2026-10-01T00:00:00Z&endDateTime=2026-12-01T00:00:00Z")
-check("calendarView after admin consent -> 4 Teams meetings", s == 200 and len(b["value"]) == 4, (s, len(b.get("value", [])) if isinstance(b, dict) else b))
+teams_meetings = [e for e in b.get("value", []) if e.get("isOnlineMeeting")] if isinstance(b, dict) else []
+check("calendarView after admin consent -> 4 Teams meetings (plus everyday busy blocks)", s == 200 and len(teams_meetings) == 4, (s, len(teams_meetings)))
 join = b["value"][1]["onlineMeeting"]["joinUrl"] if s == 200 else ""
 s, b = G("GET", f"/users/{karthi_oid}/onlineMeetings?$filter=" + urllib.parse.quote(f"JoinWebUrl eq '{join}'"))
 check("onlineMeetings without access policy -> 403 'No application access policy'", s == 403 and "access policy" in json.dumps(b), s)
@@ -108,7 +109,7 @@ http("POST", SIM + "/api/admin", {"transcriptApiAccess": True})
 s, b = G("GET", f"/users/{karthi_oid}/onlineMeetings/{mid}/transcripts")
 tid = b["value"][0]["id"] if s == 200 and b.get("value") else None
 s, vtt = G("GET", f"/users/{karthi_oid}/onlineMeetings/{mid}/transcripts/{tid}/content?$format=text/vtt", raw=True)
-check("transcript content is WebVTT with speaker tags", s == 200 and vtt.startswith("WEBVTT") and "<v Daniel Ito>" in vtt)
+check("transcript content is WebVTT with speaker tags", s == 200 and vtt.startswith("WEBVTT") and "<v Daniel>" in vtt)
 thanks, dt = wait_for(lambda: next((p for p in channel()["posts"] if p["isBot"] and "meeting access is working" in p["text"]), None), 200, 5)
 check("Max noticed the admin fix and announced it (re-check job)", thanks is not None, f"{dt:.0f}s")
 if thanks: print("   ", thanks["text"])

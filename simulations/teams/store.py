@@ -75,6 +75,15 @@ class TeamsStore:
                 "email": f"{first.lower()}@{DOMAIN}.com", "role": m.get("role", ""),
                 "userRole": "owner" if m["id"] == "karthi" else "user",
             }
+        # Other tenant accounts (not team members): the CFO, and Max's own licensed account (mailbox + calendar).
+        self.directory = {}
+        for d in team.get("directory") or []:
+            first = d["name"].split()[0]
+            self.directory[d["id"]] = {
+                "key": d["id"], "name": d["name"], "givenName": first, "surname": " ".join(d["name"].split()[1:]),
+                "aadObjectId": str(uuid.uuid5(NS, f"kestrel/user/{d['id']}")),
+                "email": d.get("email") or f"{first.lower()}@{DOMAIN}.com", "role": d.get("role", ""),
+                "userRole": "user"}
         self.files = {}          # itemId -> driveItem record (+ local path)
         self.roots = {}          # rootId -> {"msg": msg, "replies": [msg]}
         self.install = {"installed": False}
@@ -91,7 +100,21 @@ class TeamsStore:
             "consented": [],                 # tenant-wide Graph application permissions granted to the app
             "accessPolicy": False,           # CsApplicationAccessPolicy assigned (needed for onlineMeetings APIs)
             "transcriptApiAccess": False,    # Teams admin: "Graph API access to transcripts" (off by default)
+            # Exchange "RBAC for Applications": the only mailboxes/calendars the app may write to (Max's own).
+            "mailboxScope": ["max"],
+            # SharePoint: Sites.Selected is useless until an admin grants the app 'write' on the team's site.
+            "siteGrant": False,
         }
+
+    def tenant_users(self) -> dict:
+        """Everyone in the company tenant: team members + other accounts (CFO, Max's own account)."""
+        return {**self.users, **self.directory}
+
+    def tenant_user(self, uid: str) -> str | None:
+        """User key by AAD object id, email/UPN or key (case-insensitive)."""
+        uid = (uid or "").lower()
+        return next((k for k, u in self.tenant_users().items()
+                     if u["aadObjectId"] == uid or u["email"].lower() == uid or k == uid), None)
 
     def next_seq(self) -> int:
         with self.lock:
@@ -284,7 +307,7 @@ class TeamsStore:
         return self.install.get("installed") and perm in self.install.get("rsc", [])
 
     # -------------------------------------------------------------- messages
-    MENTION_RE = re.compile(r"@(Max|Karthi(?: M)?|Prince(?: Raj)?|Daniel(?: Ito)?|Jacob(?: Thomas)?)\b", re.IGNORECASE)
+    MENTION_RE = re.compile(r"@(Max|Karthi(?: M)?|Prince(?: Alex)?|Daniel|Jacob(?: Thomas)?)\b", re.IGNORECASE)
 
     def parse_user_text(self, text: str, app: dict | None):
         """Turn '@Max hello' typed in the UI into mentions like the Teams client does."""

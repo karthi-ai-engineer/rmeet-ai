@@ -23,6 +23,20 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+try:  # optional, per machine: Gemini usage log + budget guard (gemini_usage/meter.py)
+    from gemini_usage import meter  # noqa: E402
+except ImportError:
+    class meter:  # noqa: N801  (no meter installed: send Gemini calls directly)
+        class Blocked(Exception):
+            pass
+
+        @staticmethod
+        def post(url, body, key, model, kind, source, timeout):
+            req = urllib.request.Request(url, data=body, method="POST",
+                                         headers={"Content-Type": "application/json", "x-goog-api-key": key})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.load(r)
 ROOT = HERE.parent  # project root, so both /voice-chat and /bot-avatar are served
 
 
@@ -152,9 +166,10 @@ def call_gemini(audio_b64: str, mime: str, history: list) -> dict:
     data = None
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
-            with urllib.request.urlopen(req, timeout=ATTEMPT_TIMEOUT) as resp:
-                data = json.load(resp)
+            data = meter.post(url, req.data, API_KEY, MODEL, "voice-chat", "voice-chat", ATTEMPT_TIMEOUT)
             break
+        except meter.Blocked as b:
+            raise GeminiError(429, f"Not sent to Gemini: {b}")
         except urllib.error.HTTPError as e:
             body_text = e.read().decode("utf-8", "replace")
             if e.code in (500, 503) and attempt < MAX_ATTEMPTS:

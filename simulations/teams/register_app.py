@@ -34,7 +34,10 @@ SIM = "http://localhost:8100"
 RSC = ["ChannelMessage.Read.Group", "TeamMember.Read.Group", "ChannelSettings.Read.Group",
        "TeamSettings.Read.Group", "File.Read.Group", "ChannelMeeting.ReadBasic.Group"]
 APP_PERMISSIONS = ["Calendars.Read", "OnlineMeetings.Read.All", "OnlineMeetingTranscript.Read.All",
-                   "Calls.JoinGroupCall.All", "Calls.AccessMedia.All"]
+                   "Calls.JoinGroupCall.All", "Calls.AccessMedia.All",
+                   # Phase 4 (teammate): directory lookup, Max's own mailbox + calendar (Exchange RBAC limits
+                   # Mail.* / Calendars.ReadWrite to Max's mailbox), and writing files to the team's site only.
+                   "User.ReadBasic.All", "Mail.ReadWrite", "Mail.Send", "Calendars.ReadWrite", "Sites.Selected"]
 
 
 def png(size: int, rgba: tuple, transparent_bg: bool = False) -> bytes:
@@ -155,14 +158,22 @@ def main() -> None:
         f"MAX_CALLBACK_URL=http://localhost:3978/api/calling",
         f"MEDIA_RELAY_URL=ws://localhost:8100/media",
         "",
-        "# Max's voice (Gemini TTS) and hearing (Gemini speech-to-text)",
+        "# Simulator only: test hooks (move Max's clock, run due jobs now, read Max's state). Never in real Teams.",
+        "MAX_TEST_HOOKS=1",
+        "",
+        "# Max's own licensed account (mailbox + calendar), used app-only and limited to itself by Exchange RBAC",
+        "MAX_MAILBOX=max@kestrelhomegoods.com",
+        "",
+        "# Max's voice (local Kokoro on the GPU by default, or Gemini TTS) and hearing (Gemini speech-to-text)",
         "GEMINI_TTS_MODEL=gemini-3.8-flash-lite-tts",
         "MAX_VOICE=Charon",
         "",
-        "# Models (Qwen = brain, Gemini = hearing/voice)",
+        "# Models (brain = Qwen or Gemini, hearing = Gemini, voices = local or Gemini)",
     ]
-    for k in ("TW_API_KEY", "TW_BASE_URL", "TW_MODEL", "GEMINI_API_KEY", "GEMINI_MODEL"):
-        v = existing.get(k) or keys.get(k)
+    switches = ("BRAIN_PROVIDER", "GEMINI_BRAIN_MODEL", "TTS_PROVIDER", "LOCAL_TTS_URL")
+    for k in ("TW_API_KEY", "TW_BASE_URL", "TW_MODEL", "GEMINI_API_KEY", "GEMINI_MODEL") + switches:
+        # voice-chat/.env is the source of truth; the switches only ever come from there
+        v = keys.get(k) if k in switches else (keys.get(k) or existing.get(k))
         if v:
             lines.append(f"{k}={v}")
     env_file.write_text("\n".join(lines) + "\n", encoding="utf-8")

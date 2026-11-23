@@ -145,7 +145,7 @@ class CallsService:
         if not meeting:
             return self._err(404, "NotFound", "The meeting was not found (chatInfo.threadId).")
         org = (((b.get("meetingInfo") or {}).get("organizer") or {}).get("user") or {}).get("id")
-        if org and org != self.store.users[meeting["organizer"]]["aadObjectId"]:
+        if org and org != self.store.tenant_users()[meeting["organizer"]]["aadObjectId"]:
             return self._err(400, "BadRequest", "meetingInfo.organizer does not match the meeting.")
         with self.lock:
             if not self.live or self.live["key"] != meeting["key"]:

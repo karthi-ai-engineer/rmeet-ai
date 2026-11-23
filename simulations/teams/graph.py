@@ -58,6 +58,8 @@ class Graph:
         r.add("GET", d, self._item)
         r.add("GET", d + r"/children", self._children)
         r.add("GET", d + r"/content", self._content)
+        # Phase 4: Max uploads a new file into the channel folder (Sites.Selected + the admin's site grant)
+        r.add("PUT", r"/graph/v1\.0/drives/([^/?]+)/items/([^/?:]+):/([^/?]+):/content", self._upload)
         r.add("GET", r"/graph/_download/([^/?]+)", self._download)
 
     @staticmethod
@@ -154,8 +156,30 @@ class Graph:
             "messageHistory": [],
         }
 
+    def _upload(self, req: Req, drive_id: str, parent_id: str, name: str) -> Resp:
+        """PUT /drives/{d}/items/{parent}:/{name}:/content  (<= 250 MB; Max uses it for small text files)."""
+        claims = self.identity.verify_app_token(req.bearer(), GRAPH_AUDIENCE)
+        if not claims:
+            return self._err(401, "InvalidAuthenticationToken", "Access token validation failure.")
+        if "Sites.Selected" not in claims.get("roles", []) and "Files.ReadWrite.All" not in claims.get("roles", []):
+            return self._err(403, "accessDenied", "Either scp or roles claim need to be present in the token "
+                                                  "(Sites.Selected / Files.ReadWrite.All).")
+        if "Files.ReadWrite.All" not in claims.get("roles", []) and not self.store.admin.get("siteGrant"):
+            return self._err(403, "accessDenied", "Access denied: the app has Sites.Selected but no permission "
+                                                  "on this site (an admin must grant it 'write').")
+        if unquote(drive_id) != DRIVE_ID or unquote(parent_id) != FOLDER_ID:
+            return self._err(404, "itemNotFound", "The resource could not be found.")
+        name = unquote(name)
+        if (req.q("@microsoft.graph.conflictBehavior") or "replace") == "fail" and any(
+                f["name"].lower() == name.lower() and not f.get("deleted") for f in self.store.files.values()):
+            return self._err(409, "nameAlreadyExists", "The specified item name already exists.")
+        if len(req.body) > 250 * 1024 * 1024:
+            return self._err(413, "requestTooLarge", "Use an upload session for files over 250 MB.")
+        rec, change = self.store.upload_file("max", name, req.body)
+        return Resp.json(201 if change == "created" else 200, self._drive_item(rec))
+
     def _drive_item(self, rec: dict) -> dict:
-        author = self.store.users.get(rec["author"], {})
+        author = self.store.tenant_users().get(rec["author"], {})
         user = {"email": author.get("email"), "id": author.get("aadObjectId"), "displayName": author.get("name")}
         when = iso(rec["createdMs"]).replace(".000Z", "Z")
         modified = iso(rec.get("modifiedMs", rec["createdMs"])).replace(".000Z", "Z")

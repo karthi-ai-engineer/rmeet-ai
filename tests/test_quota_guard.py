@@ -29,7 +29,12 @@ def fake_urlopen(req, timeout=None):
 sys.path[:0] = [str(ROOT / "simulations" / "rmeet"), str(ROOT / "simulations" / "teams")]
 import os
 os.environ.setdefault("GEMINI_API_KEY", "test")
+os.environ["TTS_PROVIDER"] = "gemini"                                 # this test covers the Gemini voice path
 import voices                                                         # noqa: E402
+import tempfile                                                       # noqa: E402
+voices.llm.meter.DATA = Path(tempfile.mkdtemp())                      # keep fake calls out of the real usage log
+voices.llm.meter.LIMITS_FILE = voices.llm.meter.DATA / "limits.json"
+voices.llm.meter.PAUSE_FILE = voices.llm.meter.DATA / "paused"
 voices.urllib.request.urlopen = fake_urlopen
 t = time.perf_counter()
 try:

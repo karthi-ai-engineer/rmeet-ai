@@ -93,7 +93,7 @@ e, dt = wait_for(lambda: status() == "ended" or None, 240, 3)
 check("meeting ended early", e, f"{dt:.0f}s")
 mp = meeting_post()
 check("the meeting post shows 'ended'", mp and mp["meeting"]["state"] == "ended")
-notes = mp and next((r for r in mp["replies"] if r["isBot"] and "meeting notes" in r["text"].lower()[:80]), None)
+notes = mp and next((r for r in mp["replies"] if r["isBot"] and r["text"].lstrip("* ").startswith("📝 Meeting notes")), None)
 check("Max still posted notes for the part that happened", notes is not None)
 if notes:
     print("    " + notes["text"][:300].replace("\n", " | "))

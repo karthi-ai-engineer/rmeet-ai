@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Max · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try { const t = localStorage.getItem("max.theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<style>
+/* "Calm enterprise" design system (same tokens as the rmeet app): neutral greys, indigo actions, orange only for Max. */
+:root {
+  --bg: #F6F7F9; --surface: #FFFFFF; --surface-2: #F9FAFB; --surface-3: #F2F4F7;
+  --text: #101828; --text-2: #344054; --muted: #667085; --subtle: #98A2B3; --line: #EAECF0; --line-strong: #D0D5DD;
+  --primary: #4F46E5; --primary-hover: #4338CA; --primary-soft: #EEF2FF; --primary-text: #4338CA; --focus: 0 0 0 3px rgba(79,70,229,.28);
+  --max: #FF6B00; --max-soft: #FFF4EB; --max-text: #C4320A;
+  --ok: #067647; --ok-soft: #ECFDF3; --warn: #B54708; --warn-soft: #FFFAEB; --bad: #B42318; --bad-soft: #FEF3F2;
+  --info: #175CD3; --info-soft: #EFF8FF; --bar: #101828;
+  --shadow-xs: 0 1px 2px rgba(16,24,40,.05);
+  --font: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1115; --surface: #161A22; --surface-2: #1B2029; --surface-3: #222833;
+  --text: #E6E8EC; --text-2: #C4C9D2; --muted: #8B93A1; --subtle: #6B7383; --line: #252B36; --line-strong: #323946;
+  --primary: #6366F1; --primary-hover: #818CF8; --primary-soft: rgba(99,102,241,.14); --primary-text: #A5B4FC; --focus: 0 0 0 3px rgba(129,140,248,.35);
+  --max-soft: rgba(255,107,0,.13); --max-text: #FDBA74;
+  --ok: #75E0A7; --ok-soft: rgba(7,148,85,.16); --warn: #FEC84B; --warn-soft: rgba(220,104,3,.16); --bad: #FDA29B; --bad-soft: rgba(217,45,32,.16);
+  --info: #84CAFF; --info-soft: rgba(21,112,239,.16); --bar: #0B0E14; --shadow-xs: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1115; --surface: #161A22; --surface-2: #1B2029; --surface-3: #222833;
+  --text: #E6E8EC; --text-2: #C4C9D2; --muted: #8B93A1; --subtle: #6B7383; --line: #252B36; --line-strong: #323946;
+  --primary: #6366F1; --primary-hover: #818CF8; --primary-soft: rgba(99,102,241,.14); --primary-text: #A5B4FC; --focus: 0 0 0 3px rgba(129,140,248,.35);
+  --max-soft: rgba(255,107,0,.13); --max-text: #FDBA74;
+  --ok: #75E0A7; --ok-soft: rgba(7,148,85,.16); --warn: #FEC84B; --warn-soft: rgba(220,104,3,.16); --bad: #FDA29B; --bad-soft: rgba(217,45,32,.16);
+  --info: #84CAFF; --info-soft: rgba(21,112,239,.16); --bar: #0B0E14; --shadow-xs: none; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--bar); color: #fff; }
+.topbar-in { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; letter-spacing: -.01em; }
+.brand svg { width: 30px; height: 30px; }
+.brand small { color: #98A2B3; font-weight: 500; font-size: 13px; }
+.topbar .sp { flex: 1; }
+.topbar select { background-color: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); color: #fff; }
+.topbar .meta { color: #98A2B3; font-size: 12.5px; }
+.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: transparent; color: #CBD2DC; cursor: pointer; padding: 0; }
+.icon-btn:hover { background: rgba(255,255,255,.08); color: #fff; }
+.icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.75; }
+main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 64px; display: grid; gap: 16px; }
+h2 { font-size: 12px; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.sub { color: var(--muted); font-size: 13px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; min-width: 0; box-shadow: var(--shadow-xs); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.tile { padding: 16px 18px; }
+.tile b { display: block; font-size: 24px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.25; overflow-wrap: anywhere; }
+.tile span { color: var(--muted); font-size: 12.5px; }
+select, input, button { font: inherit; color: var(--text); }
+select, input { border: 1px solid var(--line-strong); border-radius: 10px; height: 36px; padding: 0 10px; background: var(--surface); }
+select { appearance: none; padding-right: 30px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; }
+table select { height: 32px; font-size: 13px; }
+button { border: 1px solid var(--line-strong); border-radius: 10px; height: 36px; padding: 0 14px; background: var(--surface); cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--text-2); }
+button:hover { background: var(--surface-3); }
+button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+button.primary:hover { background: var(--primary-hover); }
+:focus-visible { outline: none; box-shadow: var(--focus); }
+label { color: var(--text-2); font-size: 13.5px; display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-right: 8px; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding: 8px 10px; background: var(--surface-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child { border-top-left-radius: 8px; } th:last-child { border-top-right-radius: 8px; }
+td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--text-2); }
+tr:last-child td { border-bottom: 0; }
+code, .mono { font-family: var(--mono); font-size: 12px; }
+td.mono { color: var(--muted); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.read { color: var(--muted); background: var(--surface-3); }
+.internal { color: var(--info); background: var(--info-soft); }
+.external { color: var(--warn); background: var(--warn-soft); }
+.ok { color: var(--ok); background: var(--ok-soft); }
+.bad { color: var(--bad); background: var(--bad-soft); }
+.wait { color: var(--warn); background: var(--warn-soft); }
+.runrow { cursor: pointer; }
+.runrow:hover td { background: var(--surface-2); }
+.audit { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 860px) { .two { grid-template-columns: 1fr; } .topbar .meta { display: none; } }
+.saved { color: var(--ok); font-size: 12.5px; font-weight: 600; margin-left: 4px; }
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-in">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><g fill="#FF6B00"><circle cx="20" cy="22" r="11"/><circle cx="11" cy="24" r="7"/><circle cx="29" cy="24" r="7"/><circle cx="15" cy="15" r="7"/><circle cx="25" cy="13" r="8"/></g><rect x="15.5" y="18" width="3" height="6" rx="1.5" fill="#fff"/><rect x="22" y="18" width="3" height="6" rx="1.5" fill="#fff"/></svg>
+    <span>Max <small>Admin</small></span>
+  </div>
+  <select id="team" aria-label="Team"></select>
+  <span class="sp"></span>
+  <span class="meta" id="meta"></span>
+  <button class="icon-btn" id="themeBtn" title="Theme: System" aria-label="Switch theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg></button>
+</div></header>
+<main>
+  <section class="tiles" id="tiles"></section>
+
+  <section class="card">
+    <h2>Team settings</h2>
+    <label>Time zone (dates like "tomorrow" and reminder times)
+      <input id="tz" list="tzlist" size="22" aria-label="Team time zone"></label>
+    <datalist id="tzlist"><option>UTC</option><option>Asia/Kolkata</option><option>Europe/London</option>
+      <option>Europe/Berlin</option><option>America/New_York</option><option>America/Los_Angeles</option><option>Asia/Singapore</option></datalist>
+    <button class="primary" id="tzSave">Save</button><span class="saved" id="tzSaved" hidden>Saved</span>
+  </section>
+
+  <section class="card">
+    <h2>Who may use what (RBAC)</h2>
+    <p class="sub" style="margin:-4px 0 14px">Max only offers a tool to people allowed to use it. Anything marked <span class="pill external">external</span>
+      also needs an approval click on a card before it happens.</p>
+    <div class="scroll"><table id="pol"></table></div>
+  </section>
+
+  <section class="two">
+    <div class="card"><h2>Approvals</h2><div class="scroll"><table id="pending"></table></div></div>
+    <div class="card"><h2>Tasks</h2><div class="scroll"><table id="tasks"></table></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Activity (every request Max worked on)</h2>
+    <div class="scroll"><table id="runs"></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Scheduled (reminders, meeting joins, approval expiry)</h2>
+    <div class="scroll"><table id="jobs"></table></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const when = (ts) => ts ? new Date(ts * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC' : '–';
+const STATUS = { ok: 'ok', done: 'ok', pending: 'wait', approved: 'wait', executing: 'wait', running: 'wait',
+  error: 'bad', failed: 'bad', cancelled: 'read', expired: 'read', superseded: 'read', open: 'wait' };
+let TEAM = null, open = {};
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || 'Request failed');
+  return j;
+}
+
+function render(s) {
+  if (!s.team) { $('meta').textContent = 'Max is not installed in any team yet.'; return; }
+  TEAM = s.team.id;
+  $('team').innerHTML = s.teams.map((t) => `<option value="${esc(t.id)}" ${t.id === TEAM ? 'selected' : ''}>${esc(t.name || t.id)}</option>`).join('');
+  $('meta').textContent = `Model: ${s.model} · now ${s.now.slice(0, 16).replace('T', ' ')} UTC`;
+  if (document.activeElement !== $('tz')) $('tz').value = s.team.timeZone;
+  const u = s.usage, owners = s.people.filter((p) => p.role === 'owner').map((p) => p.name);
+  $('tiles').innerHTML = [[u.runs, 'requests handled'], [u.modelCalls, 'model calls'], [u.tokens.toLocaleString(), 'tokens'],
+    ['$' + u.costUsd.toFixed(4), 'model cost (paid-tier price)'], [s.pending.filter((p) => p.status === 'pending').length, 'waiting for approval'],
+    [owners.join(', ') || '–', 'team owners (approve)']]
+    .map(([v, l]) => `<div class="card tile"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('');
+
+  if (!document.activeElement || !document.activeElement.closest('#pol')) {
+    $('pol').innerHTML = `<tr><th>What</th><th>Tools</th><th>Kind</th><th>Microsoft permission</th><th>Who can ask</th><th>Who approves</th></tr>` +
+      s.policies.map((p) => `<tr><td>${esc(p.label)}</td><td class="mono">${esc(p.tools.join(', '))}</td>
+        <td><span class="pill ${esc(p.risk)}">${esc(p.risk)}</span></td><td class="sub">${esc(p.permission)}</td>
+        <td><select data-tag="${esc(p.tag)}" data-k="who" aria-label="Who can ask: ${esc(p.label)}">
+          ${[['everyone', 'Everyone in the team'], ['owners', 'Team owners only'], ['nobody', 'Nobody (off)']].map(([v, n]) => `<option value="${v}" ${p.who === v ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
+        <td>${p.risk === 'external' ? `<select data-tag="${esc(p.tag)}" data-k="approvers" aria-label="Who approves: ${esc(p.label)}">
+          ${[['requester_or_owner', 'The requester or an owner'], ['owners', 'Team owners only']].map(([v, n]) => `<option value="${v}" ${p.approvers === v ? 'selected' : ''}>${n}</option>`).join('')}</select>` : '<span class="sub">no approval needed</span>'}</td></tr>`).join('');
+  }
+
+  $('pending').innerHTML = `<tr><th>When</th><th>What</th><th>Asked by</th><th>Status</th></tr>` + (s.pending.slice().reverse().map((p) => {
+    const pv = JSON.parse(p.preview || '{}'), f = Object.fromEntries(pv.facts || []);
+    const what = f.Subject || f.Title || f.File || f.Task || f.Cancel || p.tool;
+    return `<tr><td>${when(p.created_at)}</td><td>${esc(p.tool)}: ${esc(what)}</td><td>${esc(p.requester)}</td>
+      <td><span class="pill ${STATUS[p.status] || 'read'}">${esc(p.status)}</span>${p.decided_by ? ` <span class="sub">by ${esc(p.decided_by)}</span>` : ''}</td></tr>`;
+  }).join('') || '<tr><td colspan="4" class="sub">None yet.</td></tr>');
+
+  $('tasks').innerHTML = `<tr><th>#</th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th></tr>` + (s.tasks.map((t) =>
+    `<tr><td>${t.id}</td><td>${esc(t.title)}</td><td>${esc(t.owner)}</td><td>${esc(t.due || '–')}</td>
+     <td><span class="pill ${STATUS[t.status] || 'read'}">${esc(t.status)}</span></td></tr>`).join('') || '<tr><td colspan="5" class="sub">No tasks.</td></tr>');
+
+  $('runs').innerHTML = `<tr><th>When</th><th>Trigger</th><th>Asked by</th><th>Status</th><th>Model calls</th><th>Tokens</th><th>Cost</th><th>Result</th></tr>` +
+    (s.runs.map((r) => `<tr class="runrow" data-run="${esc(r.id)}"><td>${when(r.started_at)}</td><td>${esc(r.trigger)}</td><td>${esc(r.requester || '–')}</td>
+      <td><span class="pill ${STATUS[r.status] || 'read'}">${esc(r.status)}</span></td><td>${r.model_calls}</td><td>${r.tokens}</td>
+      <td>$${(r.cost_usd || 0).toFixed(4)}</td><td>${esc((r.summary || '').replace(/\*\*|__|\*/g, '').slice(0, 110))}</td></tr>
+      ${open[r.id] ? `<tr><td colspan="8"><div class="audit">${esc(open[r.id])}</div></td></tr>` : ''}`).join('') || '<tr><td colspan="8" class="sub">No activity yet.</td></tr>');
+
+  $('jobs').innerHTML = `<tr><th>When</th><th>Kind</th><th>Details</th></tr>` + (s.jobs.map((j) =>
+    `<tr><td>${when(j.run_at)}</td><td>${esc(j.kind)}</td><td class="mono">${esc(j.payload)}</td></tr>`).join('') || '<tr><td colspan="3" class="sub">Nothing scheduled.</td></tr>');
+}
+
+async function refresh() {
+  try { render(await api(`/admin/api/state${TEAM ? `?team=${encodeURIComponent(TEAM)}` : ''}`)); }
+  catch (e) { $('meta').textContent = `Can't reach Max: ${e.message}`; }
+}
+
+$('pol').addEventListener('change', async (e) => {
+  const sel = e.target.closest('select[data-tag]');
+  if (!sel) return;
+  try { await api('/admin/api/policy', { team: TEAM, tag: sel.dataset.tag, [sel.dataset.k]: sel.value }); sel.blur(); refresh(); }
+  catch (err) { alertLine(err.message); }
+});
+$('tzSave').addEventListener('click', async () => {
+  try { await api('/admin/api/team', { team: TEAM, timeZone: $('tz').value.trim() }); $('tzSaved').hidden = false; setTimeout(() => { $('tzSaved').hidden = true; }, 1500); }
+  catch (err) { alertLine(err.message); }
+});
+$('team').addEventListener('change', (e) => { TEAM = e.target.value; refresh(); });
+$('runs').addEventListener('click', async (e) => {
+  const row = e.target.closest('[data-run]');
+  if (!row) return;
+  const id = row.dataset.run;
+  if (open[id]) { delete open[id]; return refresh(); }
+  const a = await api(`/admin/api/audit/${encodeURIComponent(id)}`);
+  open[id] = a.map((x) => `${when(x.at)}  ${x.kind.padEnd(18)} ${x.detail}`).join('\n') || '(no entries)';
+  refresh();
+});
+function alertLine(msg) { $('meta').textContent = msg; }
+const THEMES = ['system', 'light', 'dark'];
+function setTheme(t) {
+  if (t === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  $('themeBtn').title = `Theme: ${t[0].toUpperCase()}${t.slice(1)}`;
+  try { if (t === 'system') localStorage.removeItem('max.theme'); else localStorage.setItem('max.theme', t); } catch (e) { /* storage off */ }
+}
+setTheme(document.documentElement.dataset.theme || 'system');
+$('themeBtn').addEventListener('click', () => setTheme(THEMES[(THEMES.indexOf(document.documentElement.dataset.theme || 'system') + 1) % 3]));
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

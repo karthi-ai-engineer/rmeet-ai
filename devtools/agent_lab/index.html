@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Lab</title>
+<style>
+/* Layout: controls + step timeline on the left, the approval card and the world on the right. */
+:root {
+  color-scheme: light;
+  --bg: #f4f5f7; --surface: #ffffff; --border: #dde0e6; --text: #14171c; --text-2: #4a5160; --muted: #7a818e;
+  --accent: #1f5fcc; --accent-weak: #e8effc; --amber: #9a5b06; --amber-weak: #fbf1df;
+  --guard: #8a2c3b; --guard-weak: #fbecee; --ok: #1d7a46; --ok-weak: #e6f4ec; --err: #b42318;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --bg: #0f1216; --surface: #171b21; --border: #2f3540; --text: #e8ebf0; --text-2: #c0c6d0; --muted: #8e96a3;
+  --accent: #7aa8ff; --accent-weak: #18263d; --amber: #f0b45c; --amber-weak: #33260f;
+  --guard: #f08b9b; --guard-weak: #3a1a20; --ok: #5cc98a; --ok-weak: #15301f; --err: #ff8a80; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, "Segoe UI", sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; margin-bottom: 14px; }
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.sub { color: var(--muted); font-size: 13px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+.col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+button { font: inherit; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--text-2); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.approve { background: var(--ok); border-color: var(--ok); color: #fff; }
+button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea, input[type=text] { font: inherit; width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+textarea { min-height: 72px; resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent-weak); color: var(--accent); font-weight: 600; }
+.scen { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 10px 0; }
+.scen button { text-align: left; display: grid; gap: 2px; }
+.scen b { font-size: 13px; }
+.scen span { font-size: 12px; color: var(--muted); }
+.warn { font-size: 12.5px; color: var(--amber); }
+.nodes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.node { font: 600 12px var(--mono); padding: 5px 9px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+.node.seen { color: var(--text); border-color: var(--text-2); }
+.node.now { background: var(--accent-weak); border-color: var(--accent); color: var(--accent); }
+.node i { font-style: normal; font-weight: 500; opacity: .75; }
+ol.tl { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+ol.tl li { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--bg); }
+.tag { font: 600 12px var(--mono); }
+.tag small { display: block; font: 400 11px system-ui, sans-serif; color: var(--muted); }
+.tag.agent { color: var(--accent); } .tag.prepare_approval { color: var(--guard); } .tag.await_approval, .tag.click { color: var(--amber); }
+.tag.execute, .tag.respond { color: var(--ok); } .tag.error { color: var(--err); }
+.body { min-width: 0; overflow-wrap: anywhere; }
+.call { font: 12.5px var(--mono); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; margin-top: 4px; white-space: pre-wrap; }
+.res { font-size: 13px; color: var(--text-2); margin-top: 4px; white-space: pre-wrap; }
+.res b { font: 600 12px var(--mono); color: var(--text); }
+.blocked { color: var(--guard); font-weight: 600; }
+.approval { border: 1.5px dashed var(--amber); background: var(--amber-weak); }
+.approval .preview { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 8px 0 10px; white-space: pre-wrap; }
+.empty { color: var(--muted); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+td { padding: 5px 4px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.stat { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; font-size: 13px; color: var(--text-2); }
+.stat b { color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+.reply { background: var(--bg); border-radius: 8px; padding: 8px 10px; margin-top: 6px; white-space: pre-wrap; }
+@media (prefers-reduced-motion: no-preference) { ol.tl li { animation: in .18s ease-out; } @keyframes in { from { opacity: .4; transform: translateY(3px); } } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Agent lab</h1>
+    <span class="sub">Max's agent graph (step 4.0 spike) on a small pretend world: no Microsoft calls, nothing really sent.</span>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card">
+        <h2>Ask Max</h2>
+        <div class="row">
+          <div class="seg" role="group" aria-label="Model mode">
+            <button id="mReplay" aria-pressed="true">Replay · $0</button>
+            <button id="mLive" aria-pressed="false">Live · uses Gemini</button>
+          </div>
+          <span class="sub" id="modeNote">Recorded Gemini answers. Only the recorded requests and clicks have answers.</span>
+        </div>
+        <div class="scen" id="scen"></div>
+        <label for="req" class="sub">Request (as if typed after @Max in the channel; today is Mon 23 Nov 2026 09:00)</label>
+        <textarea id="req"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="primary" id="runBtn">Run</button>
+          <span class="warn" id="liveWarn" hidden>Live: each step is one Gemini request (usually 3-5 per request), shown on the usage dashboard.</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>What Max did, step by step</h2>
+        <div class="nodes" id="nodes"></div>
+        <ol class="tl" id="tl"><li><span class="tag">ready</span><span class="body empty">Pick a scenario above and press Run.</span></li></ol>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card approval" id="approval" hidden>
+        <h2>Approval card</h2>
+        <div class="sub">Nothing is sent until someone approves. Approver: the requester or the manager.</div>
+        <div class="preview" id="preview"></div>
+        <div class="row">
+          <button class="approve" id="aBtn">Approve</button>
+          <button id="xBtn">Cancel</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <input type="text" id="edit" placeholder="Change… e.g. Make it 14:00 instead" aria-label="What to change">
+          <button id="cBtn">Change</button>
+        </div>
+        <div class="sub" id="recHint" style="margin-top:6px"></div>
+      </section>
+
+      <section class="card">
+        <h2>Max's calendar (pretend)</h2>
+        <div id="cal" class="empty">No meetings created.</div>
+      </section>
+
+      <section class="card">
+        <h2>Max's reply in the thread</h2>
+        <div id="replies" class="empty">Nothing posted yet.</div>
+      </section>
+
+      <section class="card">
+        <h2>This run</h2>
+        <div class="stat" id="stats"><span>Model</span><b>–</b></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const NODES = ['agent', 'tools', 'prepare_approval', 'await_approval', 'execute', 'respond'];
+const LABEL = { request: 'request', agent: 'agent', tools: 'tools', prepare_approval: 'safety gate', await_approval: 'await_approval',
+  click: 'card click', execute: 'execute', respond: 'respond', error: 'stopped' };
+let mode = 'replay', session = null, scenarios = [], current = null, busy = false;
+
+function setMode(m) {
+  mode = m;
+  $('mReplay').setAttribute('aria-pressed', m === 'replay');
+  $('mLive').setAttribute('aria-pressed', m === 'live');
+  $('liveWarn').hidden = m !== 'live';
+  $('modeNote').textContent = m === 'replay'
+    ? 'Recorded Gemini answers. Only the recorded requests and clicks have answers.'
+    : 'Real model calls, metered as "lab" on the usage dashboard (localhost:8300).';
+}
+$('mReplay').onclick = () => setMode('replay');
+$('mLive').onclick = () => setMode('live');
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+
+function fmtArgs(a) {
+  return Object.entries(a || {}).map(([k, v]) => `${k}=${Array.isArray(v) ? '[' + v.join(', ') + ']' : JSON.stringify(v)}`).join(', ');
+}
+
+function entry(e) {
+  let body = '';
+  if (e.node === 'request') body = `<b>Karthi M:</b> ${esc(e.text)}`;
+  else if (e.node === 'agent') {
+    body = e.calls.length ? `Model asked for ${e.calls.length} tool${e.calls.length > 1 ? 's' : ''}:` + e.calls.map((c) => `<div class="call">${esc(c.name)}(${esc(fmtArgs(c.args))})</div>`).join('')
+      : `Model answered: ${esc(e.text)}`;
+  } else if (e.node === 'click') body = `Karthi clicked <b>${esc(e.action)}</b>${e.edit ? `: “${esc(e.edit)}”` : ''}`;
+  else if (e.node === 'await_approval' && e.waiting) body = 'Paused. The run is saved and waits for a person to click the card.';
+  else if (e.node === 'respond') body = `Posted the reply in the thread.`;
+  else if (e.node === 'error') body = `<span class="blocked">${esc(e.error)}</span>`;
+  if (e.results?.length) body += e.results.map((r) => `<div class="res"><b>${esc(r.name)}</b> → <span class="${r.content.startsWith('blocked') ? 'blocked' : ''}">${esc(r.content)}</span></div>`).join('');
+  if (e.card) body += `<div class="res">Rules passed. Card posted for approval.</div>`;
+  if (e.node === 'await_approval' && e.decision) body = body || `Resumed with “${esc(e.decision.action)}”.`;
+  if (!body) body = '<span class="empty">(no change)</span>';
+  return `<li><span class="tag ${e.node}">${esc(LABEL[e.node] || e.node)}<small>${esc(e.t)}</small></span><span class="body">${body}</span></li>`;
+}
+
+function render(v) {
+  session = v.session;
+  $('tl').innerHTML = v.events.map(entry).join('');
+  const counts = {};
+  v.events.forEach((e) => { if (NODES.includes(e.node)) counts[e.node] = (counts[e.node] || 0) + 1; });
+  const last = [...v.events].reverse().find((e) => NODES.includes(e.node))?.node;
+  $('nodes').innerHTML = NODES.map((n) => `<span class="node ${counts[n] ? 'seen' : ''} ${n === last ? 'now' : ''}">${n}${counts[n] ? ` <i>×${counts[n]}</i>` : ''}</span>`).join('');
+  $('approval').hidden = !v.paused;
+  if (v.paused) {
+    $('preview').textContent = v.paused;
+    $('recHint').textContent = v.mode === 'replay' && current ? `Recorded click for this scenario: ${current.recorded}` : '';
+    if (v.mode === 'replay' && current?.id === 'B' && !v.events.some((e) => e.node === 'click')) $('edit').value = 'Make it 14:00 instead';
+  }
+  $('cal').innerHTML = v.calendar.length ? `<table>${v.calendar.map((m) => `<tr><td><b>${esc(m.title)}</b><br>${esc(m.start)} · ${esc(m.minutes)} min<br><span class="sub">${esc((m.attendees || []).join(', '))} · approved by ${esc(m.approved_by)}</span></td></tr>`).join('')}</table>` : 'No meetings created.';
+  $('cal').className = v.calendar.length ? '' : 'empty';
+  $('replies').innerHTML = v.replies.length ? v.replies.map((r) => `<div class="reply">${esc(r)}</div>`).join('') : 'Nothing posted yet.';
+  $('replies').className = v.replies.length ? '' : 'empty';
+  const s = v.stats;
+  $('stats').innerHTML = `<span>Mode</span><b>${v.mode === 'replay' ? 'Replay ($0)' : 'Live'}</b>
+    <span>Model</span><b>${esc(v.model || '–')}</b>
+    <span>Model calls</span><b>${s.modelCalls}</b>
+    <span>Answered from the recording</span><b>${s.replayed}</b>
+    <span>Gemini requests (live)</span><b>${s.live}</b>
+    <span>Cost at paid price</span><b>$${s.costUsd.toFixed(5)}</b>
+    <span>Status</span><b>${v.paused ? 'waiting for approval' : v.done ? 'finished' : 'running'}</b>`;
+}
+
+function setBusy(b) {
+  busy = b;
+  ['runBtn', 'aBtn', 'xBtn', 'cBtn'].forEach((id) => $(id).disabled = b);
+  $('runBtn').textContent = b ? 'Working…' : 'Run';
+}
+
+$('runBtn').onclick = async () => {
+  if (busy) return;
+  setBusy(true);
+  try { render(await api('/api/run', { text: $('req').value, mode })); }
+  catch (e) { $('tl').innerHTML = `<li><span class="tag error">stopped</span><span class="body blocked">${esc(e.message)}</span></li>`; }
+  finally { setBusy(false); }
+};
+async function decide(action) {
+  if (busy) return;
+  setBusy(true);
+  try { render(await api('/api/decide', { session, action, edit: $('edit').value })); }
+  catch (e) { alertBox(e.message); }
+  finally { setBusy(false); }
+}
+function alertBox(msg) { $('recHint').textContent = msg; }
+$('aBtn').onclick = () => decide('approve');
+$('xBtn').onclick = () => decide('cancel');
+$('cBtn').onclick = () => decide('change');
+
+(async () => {
+  const s = await api('/api/scenarios');
+  scenarios = s.scenarios;
+  $('scen').innerHTML = scenarios.map((x) => `<button data-id="${x.id}"><b>${x.id} · ${esc(x.title)}</b><span>Recorded click: ${esc(x.recorded)}</span></button>`).join('');
+  $('scen').onclick = (ev) => {
+    const b = ev.target.closest('button[data-id]');
+    if (!b) return;
+    current = scenarios.find((x) => x.id === b.dataset.id);
+    $('req').value = current.text;
+    $('edit').value = '';
+  };
+  current = scenarios[0];
+  $('req').value = current.text;
+  if (!s.recordingExists) $('modeNote').textContent = 'No recording found: Replay has no answers. Use Live, or run tests/spike_gemini_tools.py --record.';
+})();
+</script>
+</body>
+</html>

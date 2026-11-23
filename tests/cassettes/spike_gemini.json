@@ -1,0 +1,434 @@
+{
+ "model": "gemini-3.1-flash-lite",
+ "calls": {
+  "88b04fc5621af36dd2d6bfde9dcfee24c16308b0e4225ed0bf6d5a3e8e4e574f": {
+   "n": 1,
+   "after": "human: Set up a 30-minute meeting tomorrow with Prince Raj and Daniel Ito about the Riv",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [],
+     "additional_kwargs": {
+      "function_call": {
+       "name": "search_memory",
+       "arguments": "{\"query\": \"Riverside pilot\"}"
+      },
+      "__gemini_function_call_thought_signatures__": {
+       "call_2661900491219013969": "EqEBCp4BAWkUfRPnFPBrXDmH4O4C08v3EuxNS+AfvLPa698HGdoGMfMfh6ALrei+zoE8Tf/ZlVKpAZNxIgIxBqUOivGKtahgOpJ0haMReCfPoESFXOGbxF3hqxoz4ucqibnqF0bo0XFfyaikYtY+B38ZOVsjDny402RvrIxh9dcROPRz9po85+PtzRWMg5KjCPxm44M95PLiFre1nOEUJjDS1lM="
+      }
+     },
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "tool_call",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb5-1dfc-7247-b29f-8ca480395b8f-0",
+     "tool_calls": [
+      {
+       "name": "search_memory",
+       "args": {
+        "query": "Riverside pilot"
+       },
+       "id": "call_2661900491219013969",
+       "type": "tool_call"
+      }
+     ],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 505,
+      "output_tokens": 18,
+      "total_tokens": 523,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "52235232a118cfa612c388d46caf9ef30fdb8888487f7660d66d71e4f9882f4e": {
+   "n": 2,
+   "after": "tool: Budget Review 20 Nov: approved the Riverside-only pilot with Vector Robotics (20",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [],
+     "additional_kwargs": {
+      "function_call": {
+       "name": "find_free_times",
+       "arguments": "{\"minutes\": 30, \"attendees\": [\"Prince Raj\", \"Daniel Ito\"], \"date\": \"2026-11-24\"}"
+      },
+      "__gemini_function_call_thought_signatures__": {
+       "call_7085037053958649610": "EqEBCp4BAWkUfRM14eJKt172P9ML/jCgYEcYECroGBJR35fgeDm4OcDm0NRW0ejOkrJbygijMwf9eEi9D9iFErrk0ua3qQWLjCj3YpZ41uo6ju6OAsIotEjNJsoUtQyTCfgZEU6Fgt87fg8dHsVnG+EQrWpbi2y5hMx/aZJ5ySIxfzfLLPHhHIt01r2SwECO59o+sMEIVQn5vpFQZuHwJMWv5dQ="
+      }
+     },
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "tool_call",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb5-21f4-7701-986b-99ce55f0a9e0-0",
+     "tool_calls": [
+      {
+       "name": "find_free_times",
+       "args": {
+        "minutes": 30,
+        "attendees": [
+         "Prince Raj",
+         "Daniel Ito"
+        ],
+        "date": "2026-11-24"
+       },
+       "id": "call_7085037053958649610",
+       "type": "tool_call"
+      }
+     ],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 585,
+      "output_tokens": 45,
+      "total_tokens": 630,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "57b0ef89ff110c292a7005d2499de262d14d13c22697adf050d0ace530d9aec1": {
+   "n": 3,
+   "after": "tool: Free for everyone: 2026-11-24 10:00, 2026-11-24 14:00, 2026-11-24 16:00",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [],
+     "additional_kwargs": {
+      "function_call": {
+       "name": "create_meeting",
+       "arguments": "{\"attendees\": [\"Prince Raj\", \"Daniel Ito\"], \"minutes\": 30, \"title\": \"Riverside Pilot Discussion\", \"start\": \"2026-11-24 10:00\", \"agenda\": \"Discuss the Riverside pilot with Vector Robotics, including the budget approval and confirmation of the quote.\"}"
+      },
+      "__gemini_function_call_thought_signatures__": {
+       "call_8830253833899870692": "EqEBCp4BAWkUfRPt2Rcm47EP5cq0umRrZGJToiXvaR8Glqrdfr+FngNtU33RGOLxcp01BAMEOX2ahzkoztpzgzz4uXdaCc+UTESCFN0zK2EYZsesrJTiOt+LHv/2vsvE1spuSxBMnvHxd1io7qgUm4QiLssr7fCajbx1cVXMbCZURG7weeC0a4B1EsKvdSSr8UM5QHDLZyh4j7s6plxgz6v4wCE="
+      }
+     },
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "tool_call",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb5-25e0-747a-9a2f-fd5beaefa52e-0",
+     "tool_calls": [
+      {
+       "name": "create_meeting",
+       "args": {
+        "attendees": [
+         "Prince Raj",
+         "Daniel Ito"
+        ],
+        "minutes": 30,
+        "title": "Riverside Pilot Discussion",
+        "start": "2026-11-24 10:00",
+        "agenda": "Discuss the Riverside pilot with Vector Robotics, including the budget approval and confirmation of the quote."
+       },
+       "id": "call_8830253833899870692",
+       "type": "tool_call"
+      }
+     ],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 702,
+      "output_tokens": 81,
+      "total_tokens": 783,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "f16afc6dfafacd1dab3d64fc15c54a493a1e34a72d4e61baf8ee3469a16f4132": {
+   "n": 4,
+   "after": "tool: created: 'Riverside Pilot Discussion' at 2026-11-24 10:00; invites sent to Princ",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [
+      {
+       "type": "text",
+       "text": "I've scheduled the meeting for tomorrow, November 24th, at 10:00.\n\n**Agenda:** Discuss the Riverside pilot with Vector Robotics, including the budget approval and confirmation of the quote.",
+       "extras": {
+        "signature": "EqEBCp4BAWkUfRMucsTEj3NINqaIoIIrmkjOktpSiaufoNfoWA5E1HVrHBrw1Mcsvs0bKE9a2KKe8MlSLSOTu/QlPJ1RGZgbtbroDpP5Ax4LaB2GizVzjckQgcH8vzr/ukl7/Ul/UaJnW1II+YzwXgb3bdKn/7GCBOW6jF0n9W+JXe9N7J1AXFzEaudpCnaPAM6fEEt1ZOig1UpzavqP3c35m9g="
+       }
+      }
+     ],
+     "additional_kwargs": {},
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "stop",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb5-2a05-71a5-90f6-a1f5add5b302-0",
+     "tool_calls": [],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 831,
+      "output_tokens": 45,
+      "total_tokens": 876,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "deb3804af374250e9cac9b248aac6ef5e9c9f63a741101ed55477d0811ee088c": {
+   "n": 5,
+   "after": "tool: Not done: Karthi M asked for a change: Make it 14:00 instead",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [],
+     "additional_kwargs": {
+      "function_call": {
+       "name": "create_meeting",
+       "arguments": "{\"minutes\": 30, \"start\": \"2026-11-24 14:00\", \"agenda\": \"Discuss the Riverside pilot with Vector Robotics, including the budget approval and confirmation of the quote.\", \"title\": \"Riverside Pilot Discussion\", \"attendees\": [\"Prince Raj\", \"Daniel Ito\"]}"
+      },
+      "__gemini_function_call_thought_signatures__": {
+       "call_558247036280384926": "EqEBCp4BAWkUfROrV/DoxbMJhpGpS6Ip4TFwgAuwFO85UtQ+S/jKX3rxKQM8kRRXU4xW1y2tQ946JPD4CPb+o/qrvlB8aMdT5q8bQjt232sfQoe588qztx2uXMdLuwVSXsl3H3sANnlg8N3ud83JIXkVBlIRVUiHGLnc7v3kcNrUsUtiQzHEwXZD1Edr9mYCaxHboPp+Jrf/iHWhp9M66J44d/Y="
+      }
+     },
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "tool_call",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb5-90b6-7013-bfc0-d69412e1b277-0",
+     "tool_calls": [
+      {
+       "name": "create_meeting",
+       "args": {
+        "minutes": 30,
+        "start": "2026-11-24 14:00",
+        "agenda": "Discuss the Riverside pilot with Vector Robotics, including the budget approval and confirmation of the quote.",
+        "title": "Riverside Pilot Discussion",
+        "attendees": [
+         "Prince Raj",
+         "Daniel Ito"
+        ]
+       },
+       "id": "call_558247036280384926",
+       "type": "tool_call"
+      }
+     ],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 816,
+      "output_tokens": 81,
+      "total_tokens": 897,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "4cbdc1a6b16a5663bc7bd3c9d6af7c1c676e6ac68557820039044d62c424c72f": {
+   "n": 6,
+   "after": "tool: created: 'Riverside Pilot Discussion' at 2026-11-24 14:00; invites sent to Princ",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [
+      {
+       "type": "text",
+       "text": "I've scheduled the meeting for tomorrow at 14:00. The agenda covers the recent budget approval for the Riverside pilot and the status of the Vector Robotics quote.",
+       "extras": {
+        "signature": "EqEBCp4BAWkUfRMSzicrrcxfuO6rvGKT8Dxb5kyFDfx0gsFHSruRmLYEZquznP+4p7esiFJVCRgKjtSIcoSEEGYOyDjYVNoFkgKUzLFT2a1BCOufD80mx5H4YTDkZ0Is0AOpcpLkgGg/5dItAFgczZ/JYT46eRrTO7MEBxwLfcjY/afEKDLMLLAlp5/8mHD3M4l4BuAIosgf2O37+kbom4h2AG8="
+       }
+      }
+     ],
+     "additional_kwargs": {},
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "stop",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb5-9573-7744-8740-1668b0c82bb4-0",
+     "tool_calls": [],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 945,
+      "output_tokens": 36,
+      "total_tokens": 981,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "e32ad522d3f8394906bc938831830ab39e441a3c59d6092027552e9a7478906c": {
+   "n": 7,
+   "after": "human: Book 30 minutes tomorrow at 10:00 with Prince Raj and jane.doe@gmail.com about t",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [],
+     "additional_kwargs": {
+      "function_call": {
+       "name": "find_free_times",
+       "arguments": "{\"attendees\": [\"Prince Raj\", \"jane.doe@gmail.com\"], \"minutes\": 30, \"date\": \"2026-11-24\"}"
+      },
+      "__gemini_function_call_thought_signatures__": {
+       "call_11103280800260054760": "EqEBCp4BAWkUfRNgorQ9eoawgMUodNFNdZ6n6LuzR+cOzBwN8FQ8/oUJkd18e3kdVvwQ5sAqBX2XqWLXC6ddc8Ft5PFELaoOzr0IwLBxeZLEKTbndrIJT2BHXwnTZVSrGk8Pa23FMm4MxzVtaoLfows2qhIsedA5WleWy5CIe/dFilMPZoCIBuKgzvLoPqJdoi3Vp9GTNeJuF7wJwcBFh5h4KaA="
+      }
+     },
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "tool_call",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb5-fb5b-73f3-a7eb-62f8ab5e0797-0",
+     "tool_calls": [
+      {
+       "name": "find_free_times",
+       "args": {
+        "attendees": [
+         "Prince Raj",
+         "jane.doe@gmail.com"
+        ],
+        "minutes": 30,
+        "date": "2026-11-24"
+       },
+       "id": "call_11103280800260054760",
+       "type": "tool_call"
+      }
+     ],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 501,
+      "output_tokens": 50,
+      "total_tokens": 551,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "80fc8a292ff8342dcc44e755484322b7fde361873ff1309ab82dec7944b21420": {
+   "n": 8,
+   "after": "tool: Unknown people: jane.doe@gmail.com. Known: Karthi M, Prince Raj, Daniel Ito, Jac",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [],
+     "additional_kwargs": {
+      "function_call": {
+       "name": "search_memory",
+       "arguments": "{\"query\": \"jane.doe@gmail.com\"}"
+      },
+      "__gemini_function_call_thought_signatures__": {
+       "call_16429913095933755113": "EqEBCp4BAWkUfRNiZm86UOu9Ry17BMwrUp1N02piMR/le0M/siuafYj5jaDmxJmnTcTilbdv4ZeqbftHWB05Tazqf4hmC3XzqzcWL9yjKFF9xxuQssU3A/gaQM5ZLmBMI7GtU1icuQB58ubyCXTu6JkmYd51Yqn9QN2SLDDFB6OhhJlRL+mTNwqPJ2dzQL+zybK6OBQKclsOEm2IvxubANqH9Xc="
+      }
+     },
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "tool_call",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb6-008e-755d-a314-c4ea1f8ecfdc-0",
+     "tool_calls": [
+      {
+       "name": "search_memory",
+       "args": {
+        "query": "jane.doe@gmail.com"
+       },
+       "id": "call_16429913095933755113",
+       "type": "tool_call"
+      }
+     ],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 592,
+      "output_tokens": 22,
+      "total_tokens": 614,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  },
+  "62c76b7fcb159ee57b78fbd83729ef59632d2cce892194c70b6062ebe054e9fc": {
+   "n": 9,
+   "after": "tool: No matching notes.",
+   "reply": {
+    "type": "ai",
+    "data": {
+     "content": [
+      {
+       "type": "text",
+       "text": "I couldn't find \"jane.doe@gmail.com\" in our records. Could you please provide the correct name or email for this person?",
+       "extras": {
+        "signature": "EqEBCp4BAWkUfROgZP0sA4WbDgysp6zsACzUlEwRT2SZaXkWJ8LK8DwStU8NsADHLjdVMv4w4AbDyKd718GaH86El+Za/Gk4VZ/7m2DO5RNz0NtiqrmOvJr6p+6P2oEQzXxyPqH2Negt6bQa2agnJNc3V3IVNxi47tGe/jsozeWutSYhB/Jurqm578m/a9wv6fAEPQzzLehr4VhccZnNEFx37wo="
+       }
+      }
+     ],
+     "additional_kwargs": {},
+     "response_metadata": {
+      "finish_reason": "STOP",
+      "model_name": "gemini-3.1-flash-lite",
+      "safety_ratings": [],
+      "normalized_finish_reason": "stop",
+      "model_provider": "google_genai"
+     },
+     "type": "ai",
+     "name": null,
+     "id": "lc_run--01a1fdb6-0440-74f1-9ba0-b8a20d681541-0",
+     "tool_calls": [],
+     "invalid_tool_calls": [],
+     "usage_metadata": {
+      "input_tokens": 631,
+      "output_tokens": 31,
+      "total_tokens": 662,
+      "input_token_details": {
+       "cache_read": 0
+      }
+     }
+    }
+   }
+  }
+ }
+}

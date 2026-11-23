@@ -36,10 +36,10 @@ members:
     notes: The real user. Hosts the meetings and makes final decisions.
 
   - id: prince
-    name: Prince Raj
+    name: Prince Alex
     role: Financial Analyst
     human: false
-    colour: "#1E88FF"
+    colour: "#2E6BE6"
     voice: Iapetus          # Gemini: "Clear"
     personality: >
       Careful, precise, numbers-first. Protective of the 8% target. Polite but
@@ -50,10 +50,10 @@ members:
     owns: [budget drafts, cost reduction options, actuals reports]
 
   - id: daniel
-    name: Daniel Ito
+    name: Daniel
     role: Operations Planner
     human: false
-    colour: "#00C875"
+    colour: "#0E9F6E"
     voice: Achird           # Gemini: "Friendly"
     personality: >
       Practical and optimistic. Champions the warehouse automation pilot because
@@ -68,7 +68,7 @@ members:
     name: Jacob Thomas
     role: Marketing & Demand Planner
     human: false
-    colour: "#8B5CF6"
+    colour: "#7A5AF8"
     voice: Puck             # Gemini: "Upbeat"
     personality: >
       Energetic and persuasive. Wants budget for the "Fresh Home Spring"
@@ -78,6 +78,15 @@ members:
       Enthusiastic, talks in customer terms and percentages ("plus 4.5 percent
       on Home Essentials"), sometimes interrupts with ideas.
     owns: [spring campaign plan, demand forecast]
+
+directory:            # other accounts in the company tenant (not team members): reachable by email
+  - id: elena
+    name: Elena Park
+    role: CFO
+  - id: max
+    name: Max (AI)
+    email: max@kestrelhomegoods.com
+    role: AI teammate account (licensed mailbox + calendar; the Max app uses it app-only, limited by Exchange RBAC)
 
 bot:
   id: max

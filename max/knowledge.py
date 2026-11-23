@@ -5,8 +5,10 @@ Max's knowledge of a team's channel, built only through Microsoft Graph
   posts + replies  <- GET /teams/{id}/channels/{id}/messages?$expand=replies
   files            <- filesFolder -> children -> content (download + text extraction)
 
-Saved to max/data/teams/<team-id>.json so Max remembers after a restart, and kept
-up to date as new channel messages arrive (RSC delivers every message to Max).
+Saved in Max's database (max/data/max.db, see store.py), one row per post / file / meeting, so Max
+remembers after a restart. Kept up to date as new channel messages arrive (RSC delivers every message).
+`data` holds the same dict in memory (posts with replies, files, meetings) for the prompt and stats;
+every change is written through to the database at once.
 """
 
 import asyncio
@@ -19,6 +21,7 @@ from pathlib import Path
 
 from docs import extract_text
 from graph_client import GraphClient
+from store import Store
 
 
 def html_to_text(body: dict) -> str:
@@ -54,21 +57,36 @@ async def read_file(graph: GraphClient, drive_id: str, item: dict) -> dict:
             "time": short_time(item.get("lastModifiedDateTime") or item.get("createdDateTime", "")), "text": text}
 
 
+def author_id_of(msg: dict) -> str | None:
+    frm = msg.get("from") or {}
+    who = frm.get("user") or frm.get("application") or {}
+    return who.get("id")
+
+
+def author_kind_of(msg: dict) -> str:
+    frm = msg.get("from") or {}
+    return "person" if frm.get("user") else "app"
+
+
 def to_post(msg: dict) -> dict:
     return {"id": msg["id"], "author": author_of(msg), "time": short_time(msg.get("createdDateTime", "")),
             "text": html_to_text(msg.get("body")),
             "attachments": [a.get("name") for a in msg.get("attachments", []) if a.get("contentType") == "reference"],
-            "replies": []}
+            "replies": [], "authorId": author_id_of(msg), "authorKind": author_kind_of(msg)}
 
 
 class TeamKnowledge:
-    def __init__(self, data: dict, path: Path):
+    def __init__(self, data: dict, store: Store):
         self.data = data
-        self.path = path
+        self.store = store
+
+    @property
+    def team_id(self) -> str:
+        return self.data["teamId"]
 
     # ------------------------------------------------------------------ build
     @classmethod
-    async def build(cls, graph: GraphClient, team_id: str, channel_id: str, path: Path, extra: dict) -> "TeamKnowledge":
+    async def build(cls, graph: GraphClient, team_id: str, channel_id: str, store: Store, extra: dict) -> "TeamKnowledge":
         team = await graph.team(team_id)
         roots = await graph.get_all(f"/teams/{team_id}/channels/{graph._q(channel_id)}/messages",
                                     {"$top": "50", "$expand": "replies"})
@@ -97,38 +115,67 @@ class TeamKnowledge:
         files = await asyncio.gather(*(read(i) for i in items))
         # Baseline for change tracking: later file notifications ask "what changed since this token?"
         delta = await graph.get(f"/drives/{drive_id}/root/delta", {"token": "latest"})
+        previous = store.team(team_id) or {}
         data = {"teamId": team_id, "teamName": team.get("displayName"), "channelId": channel_id,
                 "driveId": drive_id, "driveDelta": delta.get("@odata.deltaLink"),
                 "builtAt": time.strftime("%Y-%m-%dT%H:%M:%S"), "posts": posts, "files": list(files),
-                "meetings": [], "meetingAccess": {}, **extra}
-        kb = cls(data, path)
-        kb.save()
-        return kb
+                "meetings": [], "meetingAccess": {}, "timeZone": previous.get("timeZone") or "UTC",
+                "announcedProblems": previous.get("announcedProblems") or [], **extra}
+        store.replace_team_content(data)
+        return cls(data, store)
 
     @classmethod
-    def load(cls, path: Path) -> "TeamKnowledge | None":
-        if not path.exists():
+    def load(cls, store: Store, team_id: str) -> "TeamKnowledge | None":
+        """Rebuild the in-memory dict from the database (None if Max doesn't know this team)."""
+        data = store.team(team_id)
+        if data is None:
             return None
-        return cls(json.loads(path.read_text(encoding="utf-8")), path)
+        posts, by_id = [], {}
+        for r in store.messages(team_id):
+            m = {"id": r["id"], "author": r["author"], "time": r["time"], "text": r["text"],
+                 "attachments": json.loads(r["attachments"] or "[]"), "replies": []}
+            if r["edited"]:
+                m["edited"] = True
+            root = by_id.get(r["root_id"]) if r["root_id"] else None
+            if root is not None:
+                root["replies"].append(m)
+            else:
+                posts.append(m)
+                by_id[m["id"]] = m
+        data["posts"] = posts
+        data["files"] = [{"id": f["id"], "name": f["name"], "author": f["author"], "time": f["time"],
+                          "text": f["text"]} for f in store.files(team_id)]
+        data["meetings"] = store.meetings(team_id)
+        return cls(data, store)
+
+    @classmethod
+    def import_json(cls, store: Store, path: Path) -> "TeamKnowledge":
+        """One-time move of an old max/data/teams/<id>.json file into the database."""
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data.setdefault("timeZone", "UTC")
+        store.replace_team_content(data)
+        return cls.load(store, data["teamId"])
 
     def save(self) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self.data, indent=1, ensure_ascii=False), encoding="utf-8")
+        """Persist the team-level fields (drive delta, announced problems, ...). Content is written as it changes."""
+        self.store.save_team(self.data)
 
     # ------------------------------------------------------------ live update
-    def add_message(self, msg_id: str, author: str, text: str, root_id: str | None, when: str | None = None) -> None:
+    def add_message(self, msg_id: str, author: str, text: str, root_id: str | None, when: str | None = None,
+                    author_id: str | None = None) -> None:
         post = {"id": msg_id, "author": author, "time": when or time.strftime("%Y-%m-%d %H:%M"), "text": text,
                 "attachments": [], "replies": []}
+        row = {**post, "authorId": author_id}
         if root_id and root_id != msg_id:
             root = next((p for p in self.data["posts"] if p["id"] == root_id), None)
             if root is not None:
                 if not any(r["id"] == msg_id for r in root["replies"]):
                     root["replies"].append(post)
-                self.save()
+                self.store.add_message(self.team_id, row, root_id)
                 return
         if not any(p["id"] == msg_id for p in self.data["posts"]):
             self.data["posts"].append(post)
-        self.save()
+        self.store.add_message(self.team_id, row, None)
 
     def _find(self, msg_id: str):
         for p in self.data["posts"]:
@@ -144,7 +191,7 @@ class TeamKnowledge:
         if m is None:
             return False
         m["text"], m["edited"] = text, True
-        self.save()
+        self.store.update_message(self.team_id, msg_id, text)
         return True
 
     def delete_message(self, msg_id: str) -> bool:
@@ -155,39 +202,45 @@ class TeamKnowledge:
             parent["replies"] = [r for r in parent["replies"] if r["id"] != msg_id]
         else:
             self.data["posts"] = [p for p in self.data["posts"] if p["id"] != msg_id]
-        self.save()
+        self.store.delete_message(self.team_id, msg_id)     # soft delete: the text is wiped
         return True
 
     def upsert_file(self, rec: dict) -> str:
+        """Match by id first; a different id with the same name replaces that file (re-upload)."""
         files = self.data["files"]
-        i = next((n for n, f in enumerate(files) if f.get("id") == rec["id"] or f["name"] == rec["name"]), None)
+        i = next((n for n, f in enumerate(files) if f.get("id") == rec["id"]), None)
+        if i is None:
+            i = next((n for n, f in enumerate(files) if f["name"] == rec["name"]), None)
+        replaced = files[i]["id"] if i is not None else None
         if i is None:
             files.append(rec)
             change = "new"
         else:
             files[i] = rec
             change = "updated"
-        self.save()
+        self.store.upsert_file(self.team_id, rec, replaces_id=replaced)
         return change
 
     def remove_file(self, item_id: str) -> None:
         self.data["files"] = [f for f in self.data["files"] if f.get("id") != item_id]
-        self.save()
+        self.store.remove_file(self.team_id, item_id)
 
     def set_meetings(self, result: dict) -> None:
         self.data["meetings"] = result["meetings"]
         self.data["meetingAccess"] = result["access"]
-        self.save()
+        self.store.replace_meetings(self.team_id, self.data["meetings"], self.data["meetingAccess"])
 
     def add_transcript(self, online_meeting_id: str, transcript: dict, meeting_info: dict | None = None) -> dict:
         m = next((m for m in self.data.get("meetings", []) if m.get("onlineMeetingId") == online_meeting_id), None)
         if m is None:
             m = {**(meeting_info or {}), "onlineMeetingId": online_meeting_id, "transcripts": [], "transcriptNote": None}
             self.data.setdefault("meetings", []).append(m)
+            self.store.add_meeting(self.team_id, m)            # sets m["_seq"]
         if not any(t["id"] == transcript["id"] for t in m["transcripts"]):
             m["transcripts"].append(transcript)
+            self.store.add_transcript(self.team_id, m["_seq"], transcript)
         m["transcriptNote"] = None
-        self.save()
+        self.store.update_meeting(self.team_id, m)
         return m
 
     # ---------------------------------------------------------------- views

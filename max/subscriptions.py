@@ -9,6 +9,7 @@ Each subscription has a secret clientState; notifications without it are ignored
 Subscriptions are renewed before they expire and recreated after 'subscriptionRemoved'.
 """
 
+import asyncio
 import json
 import logging
 import secrets
@@ -39,10 +40,16 @@ def _ts(value: str) -> float:
 
 
 class SubscriptionManager:
-    def __init__(self, graph: GraphClient, cfg=CONFIG):
-        self.graph, self.cfg = graph, cfg
-        self.file = cfg.data_dir / "subscriptions.json"
-        self.subs: dict[str, dict] = json.loads(self.file.read_text("utf-8")) if self.file.exists() else {}
+    def __init__(self, graph: GraphClient, store, cfg=CONFIG):
+        self.graph, self.cfg, self.store = graph, cfg, store
+        self._lock = asyncio.Lock()        # one ensure() at a time: install and recovery can race
+        self.subs: dict[str, dict] = store.subscriptions()
+        old = cfg.data_dir / "subscriptions.json"             # one-time move from the old JSON file
+        if old.exists():
+            if not self.subs:
+                self.subs = json.loads(old.read_text("utf-8"))
+                self._save()
+            old.replace(old.with_suffix(".json.imported"))
 
     @property
     def notification_url(self) -> str:
@@ -53,8 +60,7 @@ class SubscriptionManager:
         return f"{self.cfg.public_url}/graph/lifecycle"
 
     def _save(self) -> None:
-        self.file.parent.mkdir(parents=True, exist_ok=True)
-        self.file.write_text(json.dumps(self.subs, indent=1), "utf-8")
+        self.store.save_subscriptions(self.subs)
 
     def get(self, sub_id: str, client_state: str | None) -> dict | None:
         s = self.subs.get(sub_id)
@@ -74,6 +80,10 @@ class SubscriptionManager:
 
     async def ensure(self, team_id: str, kind: str, resource: str, change_type: str) -> str | None:
         """Create the subscription if we don't have a live one. Returns an error text or None."""
+        async with self._lock:
+            return await self._ensure(team_id, kind, resource, change_type)
+
+    async def _ensure(self, team_id: str, kind: str, resource: str, change_type: str) -> str | None:
         now = datetime.now(timezone.utc)
         live = next((s for s in self.subs.values() if s["resource"] == resource and s["expires"] > now.timestamp()), None)
         if live:
@@ -97,6 +107,8 @@ class SubscriptionManager:
         except Exception as e:      # GraphError, network errors: report, never crash the caller
             log.warning("Subscription for %s failed: %s", resource, e)
             return str(e)
+        for old_id in [i for i, s in self.subs.items() if s["resource"] == resource]:
+            self.subs.pop(old_id)          # replaced on Graph (409 path) or expired: never keep a stale copy
         self.subs[r["id"]] = {"id": r["id"], "teamId": team_id, "kind": kind, "resource": resource,
                               "changeType": change_type, "clientState": body["clientState"],
                               "expires": _ts(r["expirationDateTime"])}

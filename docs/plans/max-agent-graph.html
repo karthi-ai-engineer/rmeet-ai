@@ -1,0 +1,408 @@
+<title>Max Agent Graph</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column; the diagrams break out wider and scroll sideways on phones. */
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --fg: #15181d; --fg-2: #3d4450; --muted: #646c79; --line: #cdd2da;
+  --accent: #1f5fcc; --accent-weak: #e7effc; --amber: #9a5b06; --amber-weak: #fbf1df; --guard: #8a2c3b; --guard-weak: #fbecee;
+  --edge: #4a5260;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1216; --surface: #171b21; --fg: #e7eaef; --fg-2: #c3c9d3; --muted: #98a1af; --line: #363d48;
+  --accent: #7aa8ff; --accent-weak: #18263d; --amber: #f0b45c; --amber-weak: #33260f; --guard: #f08b9b; --guard-weak: #3a1a20;
+  --edge: #a9b1bd; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --fg: #e7eaef; --fg-2: #c3c9d3; --muted: #98a1af; --line: #363d48;
+  --accent: #7aa8ff; --accent-weak: #18263d; --amber: #f0b45c; --amber-weak: #33260f; --guard: #f08b9b; --guard-weak: #3a1a20;
+  --edge: #a9b1bd; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--f-body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.col { max-width: 68ch; }
+header { display: grid; gap: 6px; margin-bottom: 28px; }
+.eyebrow { font: 600 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 600 34px/1.15 var(--f-display); margin: 0; text-wrap: balance; }
+h2 { font: 600 22px/1.25 var(--f-display); margin: 44px 0 10px; text-wrap: balance; }
+p { margin: 0 0 12px; }
+.lede { font-size: 17px; color: var(--fg-2); }
+code, .mono { font-family: var(--f-mono); font-size: .88em; }
+.status { display: inline-flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.chip { font: 500 12px/1 var(--f-body); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg-2); background: var(--surface); }
+
+figure { margin: 18px 0 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.scroll { overflow-x: auto; }
+figure svg { display: block; width: 100%; height: auto; min-width: 760px; color: var(--edge); }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; max-width: 80ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--fg-2); margin-top: 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 26px; height: 0; border-top: 2px solid var(--edge); }
+.sw.dash { border-top-style: dashed; }
+.sw.box { width: 16px; height: 12px; border: 1.5px solid var(--accent); background: var(--accent-weak); border-radius: 3px; }
+.sw.box.human { border-color: var(--amber); background: var(--amber-weak); border-style: dashed; }
+.sw.box.guard { border-color: var(--guard); background: var(--guard-weak); }
+
+/* SVG parts (styled from the page so both themes work) */
+.n { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.n-ai { fill: var(--accent-weak); stroke: var(--accent); stroke-width: 1.8; }
+.n-human { fill: var(--amber-weak); stroke: var(--amber); stroke-width: 1.8; stroke-dasharray: 6 4; }
+.n-guard { fill: var(--guard-weak); stroke: var(--guard); stroke-width: 1.8; }
+.n-io { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.n-store { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.t-name { font: 600 14px var(--f-mono); fill: var(--fg); }
+.t-sub { font: 400 11.5px var(--f-body); fill: var(--muted); }
+.t-io { font: 500 12.5px var(--f-body); fill: var(--fg-2); }
+.t-badge { font: 600 10px var(--f-mono); fill: var(--accent); letter-spacing: .06em; }
+.t-badge.h { fill: var(--amber); }
+.t-badge.g { fill: var(--guard); }
+.e { fill: none; stroke: var(--edge); stroke-width: 1.6; }
+.e.c { stroke-dasharray: 5 4; }
+.lbl { font: 500 11.5px var(--f-body); fill: var(--fg-2); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.lbl.m { fill: var(--muted); }
+.lane { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 5; }
+.band { fill: var(--bg); }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+th { text-align: left; font: 600 12px/1.3 var(--f-body); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { white-space: nowrap; }
+.pill { display: inline-block; font: 600 11px/1 var(--f-mono); padding: 4px 7px; border-radius: 6px; white-space: nowrap; }
+.pill.ai { color: var(--accent); background: var(--accent-weak); }
+.pill.no { color: var(--muted); background: var(--bg); }
+.pill.h { color: var(--amber); background: var(--amber-weak); }
+.pill.g { color: var(--guard); background: var(--guard-weak); }
+ol.steps { padding-left: 22px; margin: 0; display: grid; gap: 8px; }
+ol.steps b { font-family: var(--f-mono); font-weight: 600; font-size: .9em; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 12px; }
+.rule { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.rule b { display: block; font: 600 14px/1.3 var(--f-display); margin-bottom: 4px; }
+.rule span { font-size: 13.5px; color: var(--fg-2); }
+.note { border-left: 3px solid var(--line); padding: 4px 0 4px 14px; color: var(--fg-2); }
+ul.tight { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">rmeet-ai · Phase 4 · design v2 · after review by 4 reviewers</div>
+  <h1>Max agent graph</h1>
+  <p class="lede col">How Max works as a teammate on LangGraph: seven nodes, the tool loop, the pause for a human approval,
+  the safety rules that sit in code, and the parts around the graph that keep it fast and safe to repeat.</p>
+  <div class="status"><span class="chip">No code yet</span><span class="chip">Model: config switch (Gemini here, Qwen elsewhere)</span><span class="chip">State: SQLite (max.db + checkpoints.db)</span></div>
+</header>
+
+<h2>What changed since v1</h2>
+<ul class="tight col">
+  <li>9 nodes → 7: intake now also picks the tools; respond now also writes the audit record.</li>
+  <li>Simple reminders left the graph: the job runner posts them with no AI and no saved run.</li>
+  <li>A safety gate in <span class="mono">prepare_approval</span> checks recipients, attachments and links in code. A blocked step goes back to the agent as a result.</li>
+  <li>Email is drafted before approval and only that draft is sent, once. One click wins.</li>
+  <li>Teams gets an answer straight away; the work runs in the background, one run per thread.</li>
+  <li>Every tool call gets a result before the model is called again (Change, Cancel and blocks included).</li>
+  <li>Dates ("tomorrow", "Friday") are worked out in code, in the team's time zone. (v1's "Sat 22 Nov" was a Sunday.)</li>
+</ul>
+
+<h2>The graph</h2>
+<p class="col">Every request that needs thinking runs through this graph. Max thinks in <span class="mono">agent</span>, uses
+read tools in a loop, and stops at <span class="mono">await_approval</span> before anything leaves the team.</p>
+
+<figure>
+  <div class="scroll">
+  <svg viewBox="0 0 980 760" role="img" aria-label="LangGraph for Max, version 2. Start goes to intake, then agent. The agent loops with tools for read and internal calls. Email, meeting and upload calls go to prepare_approval, the safety gate, which either sends a blocked result back to the agent or moves on to await_approval, which waits for a person. Approve goes to execute and back to the agent; change goes back to the agent; cancel or expired goes to respond. The agent's final answer goes to respond, then end.">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+      </marker>
+    </defs>
+
+    <rect class="n-io" x="210" y="24" width="540" height="44" rx="22"/>
+    <text class="t-io" x="480" y="51" text-anchor="middle">START · from the run queue: @mention, meeting question, event</text>
+
+    <!-- edges -->
+    <path class="e" d="M480,68 V111" marker-end="url(#ah)"/>
+    <path class="e" d="M480,167 V231" marker-end="url(#ah)"/>
+    <path class="e c" d="M385,248 H247" marker-end="url(#ah)"/>
+    <text class="lbl" x="316" y="239" text-anchor="middle">read / internal calls</text>
+    <path class="e" d="M245,272 H383" marker-end="url(#ah)"/>
+    <text class="lbl" x="316" y="290" text-anchor="middle">results</text>
+    <text class="lbl m" x="150" y="312" text-anchor="middle">loop · max 6 steps</text>
+    <path class="e c" d="M575,248 H713" marker-end="url(#ah)"/>
+    <text class="lbl" x="645" y="239" text-anchor="middle">email · meeting · upload</text>
+    <path class="e c" d="M715,272 H577" marker-end="url(#ah)"/>
+    <text class="lbl" x="645" y="290" text-anchor="middle">blocked by a rule</text>
+    <path class="e" d="M810,287 V351" marker-end="url(#ah)"/>
+    <text class="lbl" x="820" y="324">passes the gate</text>
+    <path class="e c" d="M810,407 V471" marker-end="url(#ah)"/>
+    <text class="lbl" x="820" y="444">approve</text>
+    <path class="e c" d="M715,380 H540 V289" marker-end="url(#ah)"/>
+    <text class="lbl" x="628" y="372" text-anchor="middle">change + edit</text>
+    <path class="e" d="M715,500 H540 V380"/>
+    <text class="lbl" x="628" y="492" text-anchor="middle">result</text>
+    <path class="e c" d="M480,287 V591" marker-end="url(#ah)"/>
+    <text class="lbl" x="470" y="440" text-anchor="end">final answer · step or budget cap</text>
+    <path class="e c" d="M905,390 H945 V560 H530 V591" marker-end="url(#ah)"/>
+    <text class="lbl" x="738" y="576" text-anchor="middle">cancel · expired</text>
+    <path class="e" d="M480,647 V694" marker-end="url(#ah)"/>
+
+    <!-- nodes -->
+    <rect class="n" x="385" y="113" width="190" height="54" rx="10"/>
+    <text class="t-name" x="480" y="136" text-anchor="middle">intake</text>
+    <text class="t-sub" x="480" y="154" text-anchor="middle">who · where · tools · RBAC filter</text>
+
+    <rect class="n-ai" x="385" y="233" width="190" height="54" rx="10"/>
+    <text class="t-badge" x="565" y="227" text-anchor="end">AI CALL</text>
+    <text class="t-name" x="480" y="256" text-anchor="middle">agent</text>
+    <text class="t-sub" x="480" y="274" text-anchor="middle">answer, or ask for tools</text>
+
+    <rect class="n" x="55" y="233" width="190" height="54" rx="10"/>
+    <text class="t-name" x="150" y="256" text-anchor="middle">tools</text>
+    <text class="t-sub" x="150" y="274" text-anchor="middle">run read / internal tools</text>
+
+    <rect class="n-guard" x="715" y="233" width="190" height="54" rx="10"/>
+    <text class="t-badge g" x="903" y="227" text-anchor="end">SAFETY GATE</text>
+    <text class="t-name" x="810" y="256" text-anchor="middle">prepare_approval</text>
+    <text class="t-sub" x="810" y="274" text-anchor="middle">rules · draft · card · expiry job</text>
+
+    <rect class="n-human" x="715" y="353" width="190" height="54" rx="10"/>
+    <text class="t-badge h" x="903" y="347" text-anchor="end">PERSON</text>
+    <text class="t-name" x="810" y="376" text-anchor="middle">await_approval</text>
+    <text class="t-sub" x="810" y="394" text-anchor="middle">interrupt(): pause, state saved</text>
+
+    <rect class="n" x="715" y="473" width="190" height="54" rx="10"/>
+    <text class="t-name" x="810" y="496" text-anchor="middle">execute</text>
+    <text class="t-sub" x="810" y="514" text-anchor="middle">send the approved draft, once</text>
+
+    <rect class="n" x="385" y="593" width="190" height="54" rx="10"/>
+    <text class="t-name" x="480" y="616" text-anchor="middle">respond</text>
+    <text class="t-sub" x="480" y="634" text-anchor="middle">reply · update card · audit</text>
+
+    <rect class="n-io" x="420" y="696" width="120" height="36" rx="18"/>
+    <text class="t-io" x="480" y="719" text-anchor="middle">END</text>
+  </svg>
+  </div>
+  <div class="legend">
+    <span><i class="sw"></i>always goes this way</span>
+    <span><i class="sw dash"></i>a router chooses</span>
+    <span><i class="sw box"></i>calls the model</span>
+    <span><i class="sw box guard"></i>safety rules in code</span>
+    <span><i class="sw box human"></i>waits for a person</span>
+  </div>
+  <figcaption>The only model call is the agent node. Anything that leaves the team (email, meeting invite, file upload)
+  must pass the safety gate and a person's approval. Every route back to the agent carries a result for the tool call it
+  answers, so the model's history stays valid.</figcaption>
+</figure>
+
+<h2>Nodes</h2>
+<div class="tablewrap"><table>
+  <tr><th>Node</th><th>What it does</th><th>Model</th></tr>
+  <tr><td class="mono">intake</td><td>Works out who asked, in which team and thread, and why. Loads the thread, open tasks, the team's time zone and policies. Picks a small tool set (≤ 12) and removes tools the person may not use. Runs started by an email or a file change get no sending tools.</td><td><span class="pill no">none</span></td></tr>
+  <tr><td class="mono">agent</td><td>Sends the request, short context and tool list to the model. Checks the Gemini budget first and logs tokens after. Outside content (files, emails) is marked as untrusted.</td><td><span class="pill ai">1 call per pass</span></td></tr>
+  <tr><td class="mono">tools</td><td>Runs read tools and internal writes (search memory, read a file, find free times, save a task) and returns one result per call.</td><td><span class="pill no">none</span></td></tr>
+  <tr><td class="mono">prepare_approval</td><td>Runs any read calls from the same batch, then applies the safety rules. If a rule fails, returns "blocked: why" to the agent. Otherwise creates the email draft (or the meeting proposal), freezes the payload, posts the card and schedules the 24-hour expiry.</td><td><span class="pill g">rules</span></td></tr>
+  <tr><td class="mono">await_approval</td><td>Only <span class="mono">interrupt()</span>. The run stops and is saved. A click (or the expiry job) resumes it with the decision.</td><td><span class="pill h">waits</span></td></tr>
+  <tr><td class="mono">execute</td><td>Claims the action (only one click can), checks the slot is still free, sends exactly the frozen draft or creates the event with a <span class="mono">transactionId</span>, stores the Microsoft id, schedules reminders, returns the result.</td><td><span class="pill no">none</span></td></tr>
+  <tr><td class="mono">respond</td><td>Posts the reply or updates the card, and writes the audit record for the run (tool calls, approvals, model calls, tokens, cost).</td><td><span class="pill no">none</span></td></tr>
+</table></div>
+
+<h2>Routing rules</h2>
+<div class="tablewrap"><table>
+  <tr><th>After</th><th>If</th><th>Go to</th></tr>
+  <tr><td class="mono">agent</td><td>only read or internal tool calls</td><td class="mono">tools</td></tr>
+  <tr><td class="mono">agent</td><td>any email, meeting or upload call</td><td class="mono">prepare_approval</td></tr>
+  <tr><td class="mono">agent</td><td>a final answer, 6 passes reached, or the Gemini budget used up</td><td class="mono">respond</td></tr>
+  <tr><td class="mono">prepare_approval</td><td>a safety rule fails (result: "blocked: outside recipient")</td><td class="mono">agent</td></tr>
+  <tr><td class="mono">prepare_approval</td><td>all rules pass</td><td class="mono">await_approval</td></tr>
+  <tr><td class="mono">await_approval</td><td>Approve (and this click won the claim)</td><td class="mono">execute</td></tr>
+  <tr><td class="mono">await_approval</td><td>Change, with the edit typed on the card (result: "rejected, person asked: …")</td><td class="mono">agent</td></tr>
+  <tr><td class="mono">await_approval</td><td>Cancel, or the 24-hour expiry job fired (result: "cancelled" / "expired")</td><td class="mono">respond</td></tr>
+  <tr><td class="mono">execute</td><td>done or failed (result: Microsoft id, or the error)</td><td class="mono">agent</td></tr>
+</table></div>
+
+<h2>Safety rules in code</h2>
+<p class="col">The approval click is the last check, not the only one. These run in <span class="mono">prepare_approval</span>
+and <span class="mono">execute</span> no matter what the model says, so a file or email that tries to steer Max can't get
+anything out.</p>
+<div class="rules">
+  <div class="rule"><b>Company recipients only</b><span>Every to, cc and bcc must be a person in the company. Outside addresses are always blocked.</span></div>
+  <div class="rule"><b>Attachments from the team drive</b><span>Only files from the team's SharePoint folder, each listed on the card by name and size.</span></div>
+  <div class="rule"><b>The card shows everything</b><span>Plain text: to, cc, bcc, reply-to, subject, full body, every link written out, and a note if outside content was read.</span></div>
+  <div class="rule"><b>Send what was shown</b><span>The approved payload is frozen and matched by hash. No model call between Approve and send.</span></div>
+  <div class="rule"><b>Events can't send</b><span>Runs started by an incoming email or a file change get no sending tools. They can only suggest something in the thread.</span></div>
+  <div class="rule"><b>Approver checked on the server</b><span>The click's user id must be the requester or the manager. Hiding buttons is only a convenience.</span></div>
+</div>
+
+<h2>Around the graph</h2>
+<p class="col">Three pieces keep the graph fast and safe to repeat: a gate that answers Teams at once and drops
+duplicates, a queue that runs one request per thread, and a job runner for anything timed.</p>
+
+<figure>
+  <div class="scroll">
+  <svg viewBox="0 0 990 440" role="img" aria-label="Teams messages and card clicks, and Graph notifications, go to the inbound gate, which drops duplicates, skips Max's own posts and replies at once. The gate feeds the run queue, one run per thread, which starts the agent graph. The graph posts replies and cards back to Teams and saves its runs in checkpoints.db. A job runner every 30 seconds posts template reminders to Teams with no AI, expires old approvals in the graph, and sends file changes found by delta polling to the gate. Everything stores its data in max.db.">
+    <defs>
+      <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+      </marker>
+    </defs>
+    <!-- edges -->
+    <path class="e" d="M860,94 V28 H125 V42" marker-end="url(#ah3)"/>
+    <text class="lbl" x="492" y="22" text-anchor="middle">replies · approval cards · "Sending…"</text>
+    <path class="e" d="M215,70 H245 V120 H278" marker-end="url(#ah3)"/>
+    <path class="e" d="M215,170 H245 V120"/>
+    <path class="e" d="M460,120 H528" marker-end="url(#ah3)"/>
+    <path class="e" d="M710,120 H768" marker-end="url(#ah3)"/>
+    <path class="e c" d="M280,300 H14 V70 H33" marker-end="url(#ah3)"/>
+    <text class="lbl" x="150" y="294" text-anchor="middle">template reminders · no AI</text>
+    <path class="e c" d="M370,264 V148" marker-end="url(#ah3)"/>
+    <text class="lbl" x="380" y="214">file changes (delta polling)</text>
+    <path class="e c" d="M460,290 H840 V148" marker-end="url(#ah3)"/>
+    <text class="lbl" x="650" y="282" text-anchor="middle">expire approvals after 24 h</text>
+    <path class="e c" d="M900,146 V350" marker-end="url(#ah3)"/>
+    <text class="lbl" x="908" y="230">saves runs</text>
+
+    <!-- boxes -->
+    <rect class="n" x="35" y="44" width="180" height="52" rx="10"/>
+    <text class="t-name" x="125" y="66" text-anchor="middle">Teams</text>
+    <text class="t-sub" x="125" y="84" text-anchor="middle">messages · card clicks</text>
+    <rect class="n" x="35" y="144" width="180" height="52" rx="10"/>
+    <text class="t-name" x="125" y="166" text-anchor="middle">Graph events</text>
+    <text class="t-sub" x="125" y="184" text-anchor="middle">email replies · calendar</text>
+    <rect class="n-guard" x="280" y="94" width="180" height="52" rx="10"/>
+    <text class="t-name" x="370" y="116" text-anchor="middle">inbound gate</text>
+    <text class="t-sub" x="370" y="134" text-anchor="middle">dedupe · skip own · reply now</text>
+    <rect class="n" x="530" y="94" width="180" height="52" rx="10"/>
+    <text class="t-name" x="620" y="116" text-anchor="middle">run queue</text>
+    <text class="t-sub" x="620" y="134" text-anchor="middle">one run per thread</text>
+    <rect class="n-ai" x="770" y="94" width="180" height="52" rx="10"/>
+    <text class="t-name" x="860" y="116" text-anchor="middle">agent graph</text>
+    <text class="t-sub" x="860" y="134" text-anchor="middle">the 7 nodes above</text>
+    <rect class="n" x="280" y="264" width="180" height="52" rx="10"/>
+    <text class="t-name" x="370" y="286" text-anchor="middle">job runner</text>
+    <text class="t-sub" x="370" y="304" text-anchor="middle">every 30 s · locks · dedupe keys</text>
+
+    <rect class="n-store" x="35" y="352" width="690" height="64" rx="10"/>
+    <text class="t-name" x="55" y="378">max.db</text>
+    <text class="t-sub" x="55" y="398">SQLite, WAL · people · messages · files · meetings · tasks · pending_actions · jobs · runs · audit · inbound_events</text>
+    <rect class="n-store" x="770" y="352" width="180" height="64" rx="10"/>
+    <text class="t-name" x="860" y="378" text-anchor="middle">checkpoints.db</text>
+    <text class="t-sub" x="860" y="398" text-anchor="middle">LangGraph run state</text>
+  </svg>
+  </div>
+  <figcaption>Every message reaches Max twice (once to the bot, once as a Graph notification), so the gate keeps a unique
+  key per event. Teams expects an answer within seconds, so the gate replies at once and the graph runs afterwards.
+  Simple reminders never enter the graph.</figcaption>
+</figure>
+
+<h2>The approval pause</h2>
+<p class="col">Waiting can take hours, so the run is saved and ends. The click is answered at once, and the run resumes in
+the background.</p>
+
+<figure>
+  <div class="scroll">
+  <svg viewBox="0 0 960 450" role="img" aria-label="Sequence: Max posts the card with the full email draft and saves the run plus a 24-hour expiry job, then the run ends. Later the approver clicks Approve, Teams sends the click to Max, Max claims the action so only one click wins and checks the approver, answers the click at once with Sending, then loads the saved run, sends the draft and updates the card.">
+    <defs>
+      <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+      </marker>
+    </defs>
+    <rect class="n" x="40" y="16" width="160" height="38" rx="8"/>
+    <text class="t-name" x="120" y="40" text-anchor="middle">Max</text>
+    <rect class="n" x="270" y="16" width="190" height="38" rx="8"/>
+    <text class="t-name" x="365" y="40" text-anchor="middle">max.db + checkpoints</text>
+    <rect class="n" x="530" y="16" width="170" height="38" rx="8"/>
+    <text class="t-name" x="615" y="40" text-anchor="middle">Teams card</text>
+    <rect class="n-human" x="770" y="16" width="160" height="38" rx="8"/>
+    <text class="t-name" x="850" y="40" text-anchor="middle">Approver</text>
+
+    <line class="lane" x1="120" y1="54" x2="120" y2="434"/>
+    <line class="lane" x1="365" y1="54" x2="365" y2="434"/>
+    <line class="lane" x1="615" y1="54" x2="615" y2="434"/>
+    <line class="lane" x1="850" y1="54" x2="850" y2="434"/>
+
+    <path class="e" d="M120,90 H613" marker-end="url(#ah2)"/>
+    <text class="lbl" x="250" y="82" text-anchor="middle">post card with the full email draft</text>
+    <path class="e" d="M120,130 H363" marker-end="url(#ah2)"/>
+    <text class="lbl" x="242" y="122" text-anchor="middle">save run + 24 h expiry job</text>
+
+    <rect class="band" x="24" y="152" width="922" height="40" rx="6"/>
+    <text class="lbl m" x="485" y="177" text-anchor="middle">run has ended · nothing runs while the card waits</text>
+
+    <path class="e" d="M850,226 H617" marker-end="url(#ah2)"/>
+    <text class="lbl" x="733" y="218" text-anchor="middle">clicks Approve</text>
+    <path class="e" d="M615,262 H122" marker-end="url(#ah2)"/>
+    <text class="lbl" x="368" y="254" text-anchor="middle">card click (who clicked)</text>
+    <path class="e" d="M120,284 H160 V306 H122" marker-end="url(#ah2)"/>
+    <text class="lbl" x="170" y="300">claim: one click wins · check approver</text>
+    <path class="e" d="M120,340 H613" marker-end="url(#ah2)"/>
+    <text class="lbl" x="368" y="332" text-anchor="middle">answer at once: "Sending…"</text>
+    <path class="e" d="M365,376 H122" marker-end="url(#ah2)"/>
+    <text class="lbl" x="243" y="368" text-anchor="middle">load run · resume in background</text>
+    <path class="e" d="M120,414 H613" marker-end="url(#ah2)"/>
+    <text class="lbl" x="368" y="406" text-anchor="middle">send draft · card → "Sent · approved by Karthi"</text>
+  </svg>
+  </div>
+  <figcaption>Each request gets its own run id; each pending action stores that run id. A second click, or a click after
+  Change, finds the action already claimed or out of date and is refused.</figcaption>
+</figure>
+
+<h2>Example: on Monday 23 Nov, "@Max set up 30 minutes tomorrow with Prince and Daniel about the pilot"</h2>
+<ol class="steps col">
+  <li><b>gate</b>: replies at once (typing), queues the run for this thread.</li>
+  <li><b>intake</b>: Karthi asked in the Budget thread; tools = <span class="mono">find_free_times</span>, <span class="mono">search_memory</span>, <span class="mono">create_meeting</span>. Code works out that tomorrow is <b>Tuesday 24 Nov</b> (team time zone).</li>
+  <li><b>agent</b> (model call 1): asks for free times and for notes about the pilot.</li>
+  <li><b>tools</b>: free slots for all three on Tue 24 Nov at 10:00 and 14:00; two pilot notes.</li>
+  <li><b>agent</b> (model call 2): proposes 10:00 with a short agenda.</li>
+  <li><b>prepare_approval</b>: all three are company people, so rules pass. Card: "Pilot follow-up · Tue 24 Nov 10:00-10:30 · Karthi, Prince, Daniel · Teams link · agenda". Expiry job set.</li>
+  <li><b>await_approval</b>: paused. Karthi clicks Approve; the click is answered at once.</li>
+  <li><b>execute</b>: slot still free; Max creates the event in its own calendar (invites go out), schedules the 15-minute reminder in the thread (Tue 09:45); the 24-hour one is skipped because the meeting is less than a day away.</li>
+  <li><b>agent</b> (model call 3) writes the confirmation; <b>respond</b> posts it and logs 3 model calls, 3 tool calls, 1 approval.</li>
+</ol>
+
+<h2>What starts what</h2>
+<div class="tablewrap"><table>
+  <tr><th>Trigger</th><th>Comes from</th><th>Path</th></tr>
+  <tr><td>@Max in the channel</td><td>Teams → gate → queue</td><td>graph</td></tr>
+  <tr><td>"Max…" in a meeting</td><td>meeting session (Phase 3)</td><td>graph; risky steps post their card in the meeting chat</td></tr>
+  <tr><td>Meeting in 24 h / 15 min</td><td>job runner</td><td>template post, no graph, no AI</td></tr>
+  <tr><td>Task due tomorrow / overdue</td><td>job runner</td><td>template post, no graph, no AI</td></tr>
+  <tr><td>Meeting ended</td><td>notes written</td><td>tasks saved, reminders scheduled (code)</td></tr>
+  <tr><td>Deadline moves ("I need till Friday")</td><td>channel message rule</td><td>graph; task update card</td></tr>
+  <tr><td>Reply to Max's email</td><td>Graph notification → gate</td><td>graph with no sending tools</td></tr>
+  <tr><td>New or changed file</td><td>job runner (delta polling)</td><td>memory update; graph only if a rule is on</td></tr>
+  <tr><td>Approval not answered in 24 h</td><td>job runner</td><td>resume graph with "expired"</td></tr>
+</table></div>
+
+<h2>How it maps to LangGraph</h2>
+<div class="tablewrap"><table>
+  <tr><th>Piece</th><th>LangGraph</th></tr>
+  <tr><td>Graph</td><td><span class="mono">StateGraph(MaxState)</span>, 7 nodes, routers via <span class="mono">add_conditional_edges</span>; our own tools node (not the prebuilt agent)</td></tr>
+  <tr><td>Run id</td><td>a new <span class="mono">thread_id</span> per request; each pending action stores it with the interrupt id</td></tr>
+  <tr><td>Approval</td><td><span class="mono">interrupt()</span> alone in await_approval; resume with <span class="mono">Command(resume=decision)</span></td></tr>
+  <tr><td>Saved runs</td><td><span class="mono">AsyncSqliteSaver</span> in its own <span class="mono">checkpoints.db</span>; cleanup job; <span class="mono">LANGGRAPH_STRICT_MSGPACK=true</span>; only ids and plain data in state</td></tr>
+  <tr><td>Model</td><td><span class="mono">langchain-google-genai</span> (thought signatures kept by never rebuilding model messages) or <span class="mono">ChatOpenAI</span> for the Qwen gateway, chosen by config</td></tr>
+  <tr><td>Gemini meter</td><td>check before and record after each model call in the agent node; library retries off, LangGraph <span class="mono">RetryPolicy</span> on</td></tr>
+  <tr><td>Packages</td><td>langgraph 1.2.24 · langgraph-checkpoint-sqlite 3.1.3 · langchain-core 1.8.4 · langchain-google-genai 4.5.2 · langchain-openai 1.8.5 (pinned; checked on this PC); LangSmith tracing never turned on</td></tr>
+</table></div>
+
+<h2>Build order</h2>
+<div class="tablewrap"><table>
+  <tr><th>Step</th><th>What</th><th>Gemini</th></tr>
+  <tr><td>4.0</td><td>Test plumbing + spike: model adapter, scripted fake model, recorded replies, fake clock; LangGraph + Gemini tool calling incl. two calls at once</td><td>~10</td></tr>
+  <tr><td>4.1</td><td>Data store: max.db, import today's JSON, people + time zones, gate dedupe, runs, audit</td><td>~0</td></tr>
+  <tr><td>4.2</td><td>Tasks + reminders, no AI: action items → tasks, job runner, meeting / due / overdue reminders</td><td>~0</td></tr>
+  <tr><td>4.3</td><td>Agent graph + read tools + search</td><td>~20</td></tr>
+  <tr><td>4.4</td><td>Approvals + email (company only) + the safety rules</td><td>~25</td></tr>
+  <tr><td>4.5</td><td>Meetings: free/busy, create, Max joins meetings it creates</td><td>~20</td></tr>
+  <tr><td>4.6</td><td>SharePoint upload, file changes, deadline-slip rule</td><td>~15</td></tr>
+  <tr><td>4.7</td><td>RBAC admin page</td><td>~0</td></tr>
+</table></div>
+
+<h2>Decisions (Karthi, 21 Nov)</h2>
+<p class="note col">Approver: the requester or the manager. Emails outside the company: blocked. No working-hours
+rules; dates use one team time zone. Reminders: in the channel thread with an @mention.</p>
+</div>

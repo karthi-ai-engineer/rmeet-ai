@@ -185,17 +185,20 @@ class Meeting:
 
     def _on_store_event(self, ev: dict) -> None:
         """Max's posts in the meeting chat (text mode answers, and the notes)."""
-        if ev.get("type") != "message" or self.status not in ("live", "summarizing"):
+        if ev.get("type") not in ("message", "message_updated") or self.status not in ("live", "summarizing"):
             return
         m = ev["message"]
         if not m.get("isBot") or not self.root_id or m.get("rootId") != self.root_id:
             return
-        if "meeting notes" in m["text"].lower()[:80]:
+        if ev["type"] == "message_updated":          # an approval card changed (approved, done, cancelled…)
+            self._emit("chat_update", id=m["id"], text=m["text"], cards=m.get("cards") or [])
+            return
+        if m["text"].lstrip("* ").startswith("📝 Meeting notes"):   # the notes, not a reply mentioning them
             self.notes_text = m["text"]
             self.notes_event.set()
             return
-        self._emit("chat", speaker="max", text=m["text"])
-        if self.status == "live":
+        self._emit("chat", speaker="max", text=m["text"], id=m["id"], cards=m.get("cards") or [])
+        if self.status == "live" and m["text"].strip():
             self._record_max(m["text"], played=False)
 
     def _record_max(self, text: str, played: bool) -> None:
@@ -223,12 +226,12 @@ class Meeting:
                 "participantId": str(uuid.uuid5(uuid.NAMESPACE_URL, "participant/" + key))}
 
     def _voice(self, text: str, speaker: str, emotion: str | None) -> bytes | None:
-        """Speaker's voice as WAV (Gemini TTS), or None if TTS is unavailable."""
+        """Speaker's voice as WAV (local Kokoro or Gemini TTS), or None if TTS is unavailable."""
         voice = self.world.members[speaker].get("voice") or "Puck"
         try:
             return synthesize(text, voice, EMOTION_STYLE.get(emotion or "idle"))
         except TTSError as e:
-            if "quota" in str(e).lower():
+            if "quota" in str(e).lower() or "not reachable" in str(e):
                 if time.time() >= getattr(self, "_quota_warned_until", 0):       # tell people once per pause
                     self._quota_warned_until = time.time() + max(30.0, voices.cooldown_left())
                     self._emit("error", message=f"{e}. Using the backup voice meanwhile.", keep=False)
@@ -299,7 +302,7 @@ class Meeting:
         system = (
             f"You are {m['name']}, {m['role']} at {self.world.team['company']['name']}, in the Planning "
             f"Department's live Teams meeting \"{meeting['title']}\" on Friday 20 Nov 2026.\n"
-            f"Attendees: Karthi M (Planning Manager, host), Prince Raj, Daniel Ito, Jacob Thomas, and Max (AI teammate).\n"
+            f"Attendees: Karthi M (Planning Manager, host), Prince Alex, Daniel, Jacob Thomas, and Max (AI teammate).\n"
             f"Personality: {m['personality']}\nSpeaking style: {m['speaking_style']}\n\n"
             "Rules:\n"
             "- Talk like a real person in a meeting: 1-3 short sentences, natural spoken English. A light filler\n"

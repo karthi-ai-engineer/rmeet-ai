@@ -19,16 +19,16 @@ final_numbers:
   on_target: true
 
 action_items:
-  - owner: Prince Raj
+  - owner: Prince Alex
     task: Update the budget to v3 with the agreed changes
     due: 2026-11-24
-  - owner: Daniel Ito
+  - owner: Daniel
     task: Confirm Vector Robotics' Riverside-only quote (200K)
     due: 2026-11-25
   - owner: Jacob Thomas
     task: Update the campaign plan to Option B
     due: 2026-11-25
-  - owner: Prince Raj
+  - owner: Prince Alex
     task: Start the Northgate Freight renegotiation call
     due: 2026-12-04
   - owner: Karthi M

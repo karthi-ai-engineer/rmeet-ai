@@ -17,3 +17,12 @@ httpx>=0.27
 
 # Max media connection (WebSocket client)
 websockets>=13
+
+# Max's agent (Phase 4): LangGraph + model adapters. Pinned: these libraries change fast.
+langgraph==1.2.24
+langgraph-checkpoint-sqlite==3.1.3
+langchain-core==1.8.4
+langchain-google-genai==4.5.2
+langchain-openai==1.8.5
+# Time zones on Windows (Python's zoneinfo needs this database there)
+tzdata==2025.2

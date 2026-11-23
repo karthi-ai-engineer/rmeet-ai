@@ -1,0 +1,9 @@
+{
+  "name": "max-film",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Max: animated product film (deterministic web timeline rendered frame by frame)",
+  "scripts": { "render": "node render.mjs", "stills": "node render.mjs --stills" },
+  "dependencies": { "playwright": "1.56.1" }
+}

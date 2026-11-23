@@ -29,6 +29,10 @@ def fact_in(fact: str, text: str) -> bool:
 
 JUDGE_PROMPT = """You are grading an AI note-taker's meeting notes against an answer key.
 For each expected item, decide if the notes contain it with the same meaning (wording may differ).
+Judge meaning, not wording. Read the notes as a whole: a decision may be split over several lines or sections.
+Numbers that are mathematically equivalent count (e.g. "80K project, 30K net covered by option X" = "80K project
+funded by its own 50K savings plus option X", since 80 - 50 = 30). An item is MISSING (false) if it is absent, contradicted,
+or has a different number, option, vendor, site, owner or date.
 
 ANSWER KEY:
 {key}
