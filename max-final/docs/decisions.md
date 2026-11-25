@@ -26,7 +26,7 @@ Based on `docs/research/` (teams-access, storage, ai-stack, app-stack, prototype
 | Installs | pip with exact versions | Simple |
 | Launcher | `python run.py` (start), `run.py test`, `run.py e2e`, `run.py stop` | One command for everything |
 | Config | One root `.env`, checked at startup, values never printed | |
-| Tests | pytest (unit, offline, free) + Playwright (full demo in a browser) | One "run all" command |
+| Tests | pytest (unit, offline, free) + Playwright (full end-to-end run in a browser) | One "run all" command |
 
 ## 3. AI stack (proposed)
 
@@ -43,9 +43,9 @@ Risk: Gemini free-tier limits (HTTP 429). A paid key with a daily cap is strongl
 | Voice (text to speech) | **Local Kokoro**, sentence by sentence (about 1 s per sentence) | Gemini TTS |
 | Live meeting pipeline (later) | Small hand-written pipeline + Silero (voice detection) | |
 | Search | Keyword search (SQLite FTS5) first | Local `bge-small` "meaning search" only if tests show it's needed |
-| Simulated colleagues | **Scripted replay by default** (same every demo); live Gemini as an option | |
+| Simulated colleagues | **Scripted replay by default** (same every run); live Gemini as an option | |
 
-Cost per demo run: about $0.15 on Gemini (estimated in the research while Qwen was still the main model; to be re-measured).
+Cost per full end-to-end run: about $0.15 on Gemini (estimated in the research while Qwen was still the main model; to be re-measured).
 
 **Swap-ready agent framework.** Karthi may want LangGraph later. So Pydantic AI is used in **one file only**
 (`max/agent/runner.py`). Everything else is plain Python that any framework can call:
@@ -85,7 +85,7 @@ permissions and approval rules. Not now.
 1. Every model call has a time limit and a fallback message. Max never goes silent.
 2. A question is never dropped. If Max is busy, it queues the question.
 3. If notes fail, Max says so in the chat.
-4. Tests never touch the demo's data (separate test data folder).
+4. Tests never touch real working data (separate test data folder).
 5. Timeouts line up end to end (the UI waits longer than Max).
 6. No `sys.path` hacks and no global state. Runtime files only go in `data/`.
 7. A test fails if `max/` imports anything from `teams_sim/` or `world/`.
@@ -103,15 +103,15 @@ max/             the bot (real Microsoft contracts only)
   agent/         the brain: agent loop, tools, prompts
   llm/           model clients (Gemini now), time limits, fallback
   store/         database (raw, working, app) + search
-teams_sim/       demo only: fake Teams
+teams_sim/       simulated Teams for development
   server.py      starts the fake Teams
   cloud/         fake Microsoft: sign-in, bot messages, Graph, calls
   actors/        simulated colleagues (scripted or live)
   web/           the Teams-like interface (React)
-world/           demo data: team, posts, files, past meetings
+world/           simulated team data: team, posts, files, past meetings
 voice/           local voice server (Kokoro)
 tests/unit/      fast, offline, free
-tests/e2e/       full demo runs in a browser
+tests/e2e/       full end-to-end runs in a browser
 docs/            decisions, research, plans
 data/            runtime: database, logs, files (not in git)
 ```

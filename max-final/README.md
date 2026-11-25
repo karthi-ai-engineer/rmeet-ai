@@ -28,9 +28,9 @@ Rules for Claude: `CLAUDE.md`. Approved stack: `docs/decisions.md`. Step plans: 
 |---|---|
 | `max/` | Max, the bot (`config`, `log`, `llm/` model client, `store/` database) |
 | `gemini_cost/` | Gemini usage meter, prices, cost dashboard (shared by every program) |
-| `teams_sim/` | Fake Teams + fake Microsoft cloud (demo only, later step) |
-| `world/` | Demo data (later step) |
+| `teams_sim/` | Simulated Teams + fake Microsoft cloud for development (later step) |
+| `world/` | Simulated team data (later step) |
 | `voice/` | Local voice server (later step) |
-| `tests/unit/` | Offline tests · `tests/e2e/` full demo runs (later) |
+| `tests/unit/` | Offline tests · `tests/e2e/` full end-to-end runs (later) |
 | `docs/` | Decisions, research, step plans |
 | `data/` | Runtime data: database, logs, cost log (not in git) |
