@@ -1,0 +1,18 @@
+# Exact versions: these libraries change fast. Upgrade on purpose, then run `python run.py test`.
+# Add new libraries only when a step needs them (see docs/decisions.md).
+
+# Gemini (official SDK) + its HTTP libraries
+google-genai==3.6.1
+httpx==0.28.1
+httpx2==2.16.2
+
+# Settings from .env
+pydantic==2.14.4
+pydantic-settings==2.16.3
+
+# Web server (Gemini cost dashboard now; Max and the fake Teams later)
+fastapi==0.165.0
+uvicorn==0.54.0
+
+# Tests
+pytest==9.2.0

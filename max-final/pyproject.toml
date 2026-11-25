@@ -1,0 +1,10 @@
+[project]
+name = "max-final"
+version = "0.1.0"
+description = "Max, an AI teammate for Microsoft Teams"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+pythonpath = ["."]
+addopts = "-q"

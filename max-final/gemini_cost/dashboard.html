@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gemini Cost</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #17202a; --muted: #66707c; --line: #e3e6ea;
+    --accent: #2f6fde; --accent-soft: #e5eefc; --ok: #1f8a4c; --warn: #b7791f; --bad: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161b; --card: #1a2027; --ink: #e8ecf0; --muted: #98a2ad; --line: #2a323b;
+      --accent: #6a9cf0; --accent-soft: #1f2d44; --ok: #4cc27f; --warn: #e0a84a; --bad: #ef6b5e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); background: var(--card); flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; }
+  .live { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .dot.off { background: var(--bad); }
+  header .spacer { flex: 1; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  button.danger { border-color: var(--bad); color: var(--bad); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { padding: 16px 20px 40px; max-width: 1200px; margin: 0 auto; }
+  .banner { display: none; padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); font-weight: 600; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .card .value { font-size: 26px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .card .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  h2 { font-size: 15px; margin: 22px 0 10px; }
+  .bar { height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--accent); transition: width .4s; }
+  .bar.warn > div { background: var(--warn); } .bar.bad > div { background: var(--bad); }
+  .budget { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .budget .row { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+  svg { width: 100%; height: 120px; display: block; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; }
+  .err { color: var(--bad); }
+  .muted { color: var(--muted); }
+  .wrap { overflow-x: auto; }
+  .limits { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-top: 10px; }
+  .limits label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  .limits input { font: inherit; width: 120px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  @media (max-width: 640px) { .budget { grid-template-columns: 1fr; } main { padding: 12px 16px 32px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Gemini cost</h1>
+  <span class="live"><span class="dot" id="dot"></span><span id="updated">connecting…</span></span>
+  <span class="spacer"></span>
+  <button id="pauseBtn" class="danger">Pause Gemini</button>
+</header>
+<main>
+  <div class="banner" id="banner">Gemini is paused: Max and the fake Teams will not call Gemini until you resume.</div>
+
+  <div class="cards">
+    <div class="card"><div class="label">Cost today</div><div class="value" id="cToday">–</div><div class="sub" id="cTodaySub"></div></div>
+    <div class="card"><div class="label">Requests today</div><div class="value" id="rToday">–</div><div class="sub" id="rTodaySub"></div></div>
+    <div class="card"><div class="label">Last 60 minutes</div><div class="value" id="cHour">–</div><div class="sub" id="cHourSub"></div></div>
+    <div class="card"><div class="label">Forecast end of today</div><div class="value" id="fToday">–</div><div class="sub">today so far + current pace</div></div>
+    <div class="card"><div class="label">Forecast this month</div><div class="value" id="fMonth">–</div><div class="sub" id="fMonthSub"></div></div>
+  </div>
+
+  <h2>Daily budget</h2>
+  <div class="card">
+    <div class="budget">
+      <div><div class="row"><span>Cost</span><span id="bCostTxt"></span></div><div class="bar" id="bCost"><div></div></div></div>
+      <div><div class="row"><span>Requests</span><span id="bReqTxt"></span></div><div class="bar" id="bReq"><div></div></div></div>
+    </div>
+    <div class="limits">
+      <label>Daily budget (USD)<input id="limUsd" type="number" step="0.1" min="0"></label>
+      <label>Daily requests<input id="limReq" type="number" step="50" min="0"></label>
+      <button class="primary" id="saveLim">Save limits</button>
+    </div>
+    <div class="note">When a limit is reached, new Gemini calls are refused (Max falls back or says so). 0 = no limit.</div>
+  </div>
+
+  <h2>Requests per minute (last hour)</h2>
+  <div class="card"><svg id="chart" viewBox="0 0 600 120" preserveAspectRatio="none" role="img" aria-label="Requests per minute"></svg></div>
+
+  <h2>Today by feature</h2>
+  <div class="wrap"><table>
+    <thead><tr><th>Program</th><th>Feature</th><th>Model</th><th class="num">Requests</th><th class="num">Tokens in</th><th class="num">Tokens out</th><th class="num">Avg time</th><th class="num">Cost</th></tr></thead>
+    <tbody id="features"></tbody>
+  </table></div>
+
+  <h2>Latest calls</h2>
+  <div class="wrap"><table>
+    <thead><tr><th>Time</th><th>Program</th><th>Feature</th><th>Model</th><th class="num">Status</th><th class="num">Time</th><th class="num">Tokens</th><th class="num">Cost</th></tr></thead>
+    <tbody id="recent"></tbody>
+  </table></div>
+  <div class="note" id="priceNote"></div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const usd = (v) => v == null ? '–' : (v < 0.01 && v > 0 ? '$' + v.toFixed(5) : '$' + v.toFixed(v < 1 ? 4 : 2));
+const num = (v) => (v || 0).toLocaleString();
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let limitsLoaded = false, paused = false;
+
+function bar(el, used, limit) {
+  const pct = limit ? Math.min(100, used / limit * 100) : 0;
+  el.firstElementChild.style.width = pct + '%';
+  el.className = 'bar' + (pct >= 100 ? ' bad' : pct >= 75 ? ' warn' : '');
+}
+
+function chart(minutes) {
+  const max = Math.max(1, ...minutes.map((m) => m.requests));
+  const w = 600 / 60;
+  $('chart').innerHTML = minutes.map((m, i) => {
+    const h = m.requests / max * 104;
+    return `<rect x="${i * w + 1}" y="${116 - h}" width="${w - 2}" height="${h}" rx="2" fill="var(--accent)"><title>${60 - i} min ago: ${m.requests} requests, ${usd(m.cost)}</title></rect>`;
+  }).join('') + `<line x1="0" y1="116.5" x2="600" y2="116.5" stroke="var(--line)"/>`;
+}
+
+function render(d) {
+  const t = d.today, h = d.lastHour, f = d.forecast, lim = d.limits;
+  $('cToday').textContent = usd(t.cost);
+  $('cTodaySub').textContent = `${num(t.in)} tokens in · ${num(t.out)} out` + (t.audio ? ` · ${num(t.audio)} audio` : '');
+  $('rToday').textContent = num(t.requests);
+  $('rTodaySub').innerHTML = t.errors ? `<span class="err">${t.errors} failed</span>` : 'no failures';
+  $('cHour').textContent = usd(h.cost);
+  $('cHourSub').textContent = `${h.requests} requests · pace ${usd(f.dayAtPace)}/day`;
+  $('fToday').textContent = usd(f.todayEnd);
+  $('fMonth').textContent = usd(f.monthEnd ?? f.monthAtPace);
+  $('fMonthSub').textContent = `month so far ${usd(d.month.cost)} · at current pace ${usd(f.monthAtPace)}`;
+  $('bCostTxt').textContent = `${usd(t.cost)} of ${lim.daily_usd ? '$' + lim.daily_usd : 'no limit'}`;
+  $('bReqTxt').textContent = `${num(t.requests)} of ${lim.daily_requests ? num(lim.daily_requests) : 'no limit'}`;
+  bar($('bCost'), t.cost, lim.daily_usd); bar($('bReq'), t.requests, lim.daily_requests);
+  if (!limitsLoaded) { $('limUsd').value = lim.daily_usd; $('limReq').value = lim.daily_requests; limitsLoaded = true; }
+  paused = d.paused;
+  $('banner').style.display = paused ? 'block' : 'none';
+  $('pauseBtn').textContent = paused ? 'Resume Gemini' : 'Pause Gemini';
+  $('pauseBtn').className = paused ? 'primary' : 'danger';
+  chart(d.minutes);
+  $('features').innerHTML = d.byFeature.length ? d.byFeature.map((r) => `<tr><td>${esc(r.source)}</td><td>${esc(r.kind)}</td><td class="muted">${esc(r.model)}</td>
+    <td class="num">${num(r.requests)}${r.errors ? ` <span class="err">(${r.errors} failed)</span>` : ''}</td><td class="num">${num(r.in)}</td>
+    <td class="num">${num(r.out)}</td><td class="num">${(r.avgMs / 1000).toFixed(1)}s</td><td class="num">${usd(r.cost)}${r.unpriced ? ' <span class="muted" title="model not in prices.py: counted at the highest known price">(est.)</span>' : ''}</td></tr>`).join('')
+    : '<tr><td colspan="8" class="muted">No Gemini calls today yet.</td></tr>';
+  $('recent').innerHTML = d.recent.length ? d.recent.map((e) => `<tr><td>${new Date(e.ts * 1000).toLocaleTimeString()}</td><td>${esc(e.source)}</td>
+    <td>${esc(e.kind)}</td><td class="muted">${esc(e.model)}</td><td class="num ${e.status === 200 ? '' : 'err'}" title="${esc(e.note)}">${e.status || 'error'}</td>
+    <td class="num">${(e.ms / 1000).toFixed(1)}s</td><td class="num">${num((e.in || 0) + (e.out || 0) + (e.think || 0))}</td>
+    <td class="num">${e.cost == null ? '<span class="muted">–</span>' : usd(e.cost)}</td></tr>`).join('')
+    : '<tr><td colspan="8" class="muted">Waiting for the first call…</td></tr>';
+  $('priceNote').textContent = 'Costs use Gemini paid-tier prices (gemini_cost/prices.py): ' +
+    Object.entries(d.prices).map(([m, p]) => `${m} $${p.in} in / $${p.out} out per 1M tokens`).join(' · ') +
+    '.';
+  $('updated').textContent = 'live · ' + new Date(d.now * 1000).toLocaleTimeString();
+  $('dot').className = 'dot';
+}
+
+async function refresh() {
+  try { render(await (await fetch('/api/usage', { cache: 'no-store' })).json()); }
+  catch { $('dot').className = 'dot off'; $('updated').textContent = 'dashboard server not reachable'; }
+}
+async function post(path, body) {
+  await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Dashboard': '1' }, body: JSON.stringify(body) });
+  refresh();
+}
+$('pauseBtn').onclick = () => post('/api/pause', { paused: !paused });
+$('saveLim').onclick = () => post('/api/limits', { daily_usd: $('limUsd').value, daily_requests: $('limReq').value });
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>

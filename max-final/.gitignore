@@ -1,0 +1,55 @@
+# ---- Secrets: keys stay in .env files, never in git ----
+.env
+.env.*
+*.env
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+secrets/
+credentials*.json
+service-account*.json
+token*.json
+
+# ---- Local data: databases, logs, caches, run outputs ----
+data/
+logs/
+runs/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+.tts_cache/
+*.wav
+*.mp3
+
+# ---- Local models (big files, per machine) ----
+voice/models/
+*.onnx
+*.bin
+*.gguf
+*.safetensors
+
+# ---- Generated ----
+max/appPackage/
+
+# ---- Python ----
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Frontend (if we use a build tool) ----
+node_modules/
+dist/
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
