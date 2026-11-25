@@ -1,0 +1,20 @@
+# Everyday busy times in people's Outlook calendars (not Teams meetings). The fake Graph serves them in
+# calendarView and getSchedule, so when Max books a meeting it has real free/busy to work around.
+# Times are wall-clock in the simulator's "UTC" (same convention as the seeded meetings).
+# Mon 23 Nov 2026 is a public holiday in Japan (勤労感謝の日), so nothing is booked that day.
+# The live meeting (Thu 26 Nov 10:00-11:00) is a Teams meeting and is not listed here.
+busy:
+  - {who: karthi, title: "1:1 with Robert", start: "2026-11-24 16:00", minutes: 30}
+  - {who: daniel, title: "Call with Sarah: Q1 memory contract", start: "2026-11-25 10:00", minutes: 60}
+  - {who: jacob, title: "Price committee pre-read", start: "2026-11-25 14:00", minutes: 60}
+  - {who: prince, title: "Landing v2 model review", start: "2026-11-25 15:00", minutes: 90}
+  - {who: karthi, title: "Tender bid review with Tom", start: "2026-11-26 14:00", minutes: 60}
+  - {who: daniel, title: "Weekly S&OP", start: "2026-11-27 09:30", minutes: 90}
+  - {who: jacob, title: "Black Friday week-2 review", start: "2026-11-27 11:00", minutes: 60}
+  - {who: prince, title: "Month-end close", start: "2026-11-30 13:00", minutes: 180}
+  - {who: karthi, title: "Leadership sync", start: "2026-11-30 14:00", minutes: 60}
+  - {who: daniel, title: "Ayase factory visit", start: "2026-12-01 09:00", minutes: 240}
+  - {who: karthi, title: "1:1 with Robert", start: "2026-12-02 16:00", minutes: 30}
+  - {who: prince, title: "Management meeting deck dry run", start: "2026-12-03 15:00", minutes: 60}
+  - {who: jacob, title: "Price committee", start: "2026-12-04 10:00", minutes: 60}
+  - {who: karthi, title: "Price committee", start: "2026-12-04 10:00", minutes: 60}

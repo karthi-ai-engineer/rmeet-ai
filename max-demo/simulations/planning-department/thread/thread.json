@@ -1,0 +1,1585 @@
+{
+  "team": "Business Planning",
+  "channel": "General",
+  "posts": [
+    {
+      "id": "p01",
+      "author": "karthi",
+      "time": "2026-08-03T09:10:00",
+      "text": "Good morning all, and welcome to FY2027/7, our 44th term 🎉 Sharing Robert's budget memo. Headline numbers:\n• Full year: revenue ¥108.0B, gross margin 19.0%, operating margin 4.0%\n• H1 (Aug–Jan): ¥55.0B = Q1 ¥26.0B + Q2 ¥29.0B (Nov ¥8.6B / Dec ¥11.2B / Jan ¥9.2B)\n• About 300,000 PCs for the year, 75,000 in Q1\nH1 closes 31 Jan, so the 半期決算セール is our last lever. Please read it before the next sync.",
+      "attachments": [
+        "files/02_FY2027-7_Budget_and_H1_Targets.pdf"
+      ],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ],
+        "💪": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-08-03T09:32:00",
+          "text": "Thank you. Note the phasing: Q2 is ¥29.0B and December alone is ¥11.2B, so H1 depends heavily on Black Friday and the New Year. I'll set up the monthly tracking sheet against this."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-08-03T09:41:00",
+          "text": "Q2 = Black Friday + 初売り + 半期決算セール. Challenge accepted 🔥"
+        },
+        {
+          "author": "daniel",
+          "time": "2026-08-03T10:05:00",
+          "text": "300k units is roughly 600k DIMMs a year at our current memory mix. I'll rebuild the parts plan on the new budget and show it in the S&OP."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-08-03T10:12:00",
+          "text": "Thanks. One rule for this term: when we're off plan, we say it early, with a 対策."
+        },
+        {
+          "author": "prince",
+          "time": "2026-08-03T10:20:00",
+          "text": "Understood 🙇"
+        }
+      ]
+    },
+    {
+      "id": "p02",
+      "author": "jacob",
+      "time": "2026-08-05T13:20:00",
+      "text": "Competitor watch: MCJ (Mouse / G-Tune) is fully private since the June delisting. Their stated focus is mini PCs and gaming. With no quarterly results to report, I expect G-Tune to be more aggressive on price this winter. FRONTIER also never brought prices back down after its +16–41% rise last December.",
+      "attachments": [],
+      "reactions": {
+        "👀": [
+          "karthi",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-08-05T13:45:00",
+          "text": "MCJ passed most of its costs through last year and still made record profit. I doubt they'll start a price war, but it's worth watching weekly."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-08-05T13:52:00",
+          "text": "Jacob, can you add a competitor line to the price committee pack every two weeks? Just price moves on comparable RTX 5070 / 5080 configs."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-08-05T14:01:00",
+          "text": "Will do 👍"
+        }
+      ]
+    },
+    {
+      "id": "p03",
+      "author": "daniel",
+      "time": "2026-08-17T10:15:00",
+      "text": "Weekly S&OP W33 highlights (Obon week, so take with a pinch of salt):\n1. PC orders 91% of plan.\n2. DRAM coverage 9.0 weeks, SSD 8 weeks, GPUs fine across RTX 5060–5090.\n3. Lead times shown on the site: GALLERIA X / E 2 days, RTX 5080/5090 models 3 days (target ≤ 5).\nFull sheet in the S&OP folder as usual.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "karthi",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-08-17T10:30:00",
+          "text": "Obon is always quiet. The September trade-in campaign (+10% points on GALLERIA trade-ins) should help."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-08-17T10:41:00",
+          "text": "Noted. I'll watch whether trade-ins lift the X series."
+        }
+      ]
+    },
+    {
+      "id": "p04",
+      "author": "prince",
+      "time": "2026-08-26T17:25:00",
+      "text": "FX note: USD/JPY was about ¥159.5 yesterday vs our ¥156 budget rate. Rule of thumb: a ¥5 move ≈ 3% on parts cost. Not dangerous yet, but if we drift back toward the July high (≈ ¥164), Q2 margins get tight.",
+      "attachments": [],
+      "reactions": {
+        "😬": [
+          "daniel"
+        ],
+        "👀": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-08-26T17:40:00",
+          "text": "Who owns the hedge question, us or Finance?"
+        },
+        {
+          "author": "prince",
+          "time": "2026-08-26T17:48:00",
+          "text": "Treasury executes, but they will ask us for the purchase volumes. I'll keep an FX line in the landing file and flag it if we cross ¥160."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-08-26T17:55:00",
+          "text": "Memory and GPUs are all USD-priced. I'll share the Q4 and Q1 purchase forecasts with you once Sarah has the contract timing."
+        }
+      ]
+    },
+    {
+      "id": "p05",
+      "author": "jacob",
+      "time": "2026-08-27T11:50:00",
+      "text": "Lunch run to the curry place behind the Main Store at 12:15, anyone? 🍛 I want to check the new E-series display at the GALLERIA Lounge on the way back.",
+      "attachments": [],
+      "reactions": {
+        "🙋": [
+          "daniel",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-08-27T11:58:00",
+          "text": "Go ahead, I'm stuck in a call. Send me a photo of the display."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-08-27T12:01:00",
+          "text": "On my way down."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-08-27T13:10:00",
+          "text": "Display looks great, photo in your chat Karthi. Curry was too spicy for Prince 😄"
+        },
+        {
+          "author": "prince",
+          "time": "2026-08-27T13:14:00",
+          "text": "It was fine. Mostly fine 🥵"
+        }
+      ]
+    },
+    {
+      "id": "p06",
+      "author": "daniel",
+      "time": "2026-08-31T10:05:00",
+      "text": "S&OP W35:\n• Orders 89% of plan. Units weak, ASP holding (+9% vs budget).\n• DRAM coverage 8.5 weeks. Sarah starts the Q4 (Oct–Dec) contract talks this week.\n• TrendForce's Q3 PC DRAM forecast (+18–23%) landed as expected. Suppliers are hinting at another double-digit rise for Q4.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "prince"
+        ],
+        "😟": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-08-31T10:20:00",
+          "text": "Units at 89% in August… that may be a little difficult for Q1. ASP covers part of it in revenue, not in units. I'll show both in the tracker."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-08-31T10:26:00",
+          "text": "Thanks. Let's go through it at the sync."
+        }
+      ]
+    },
+    {
+      "id": "p07",
+      "author": "karthi",
+      "time": "2026-09-01T09:00:00",
+      "text": "Business Planning Charter v4 is up. Main changes:\n1. Decision rights: any commitment above ¥100M or any price change needs my sign-off and goes to Robert before the Monthly Management Meeting.\n2. Thread first: post the 資料 here before every meeting. Drafts are fine, just put \"draft\" in the file name.\n3. Planning sync stays every other Tuesday 10:00–11:00, plus decision meetings when needed.\nPlease read it and react when done.",
+      "attachments": [
+        "files/01_Business_Planning_Charter_v4.pdf"
+      ],
+      "reactions": {
+        "✅": [
+          "daniel",
+          "jacob",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-09-01T09:20:00",
+          "text": "Does \"any price change\" include campaign coupons, or only base prices?"
+        },
+        {
+          "author": "karthi",
+          "time": "2026-09-01T09:28:00",
+          "text": "Base prices and paid customisation prices (memory / SSD upgrades). Coupons inside an approved campaign budget stay with you and Sales Promotion."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-09-01T09:30:00",
+          "text": "Clear, thanks!"
+        },
+        {
+          "author": "prince",
+          "time": "2026-09-01T09:44:00",
+          "text": "Memory contracts are usually above ¥100M, so those will come through here too. Good to have it written down."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-09-01T09:50:00",
+          "text": "Read ✅"
+        }
+      ]
+    },
+    {
+      "id": "p08",
+      "author": "daniel",
+      "time": "2026-09-14T10:10:00",
+      "text": "S&OP W37:\n• Orders 85% of plan, the weakest week this term. Desktops softer than notebooks.\n• DRAM coverage 8 weeks. Sarah expects the Q4 contract to land at about +15% vs Q3.\n• Lead times on the site: all GALLERIA models 2–3 days.",
+      "attachments": [],
+      "reactions": {
+        "😟": [
+          "prince"
+        ],
+        "👀": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-09-14T10:30:00",
+          "text": "This matches the market data. I'm afraid Q1 units could end around −10% or worse vs budget."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-09-14T10:42:00",
+          "text": "People are also waiting for the TGS announcements. Should pick up after this week 🤞"
+        },
+        {
+          "author": "karthi",
+          "time": "2026-09-14T10:50:00",
+          "text": "Prince, please bring a first Q1 landing view to the next sync."
+        }
+      ]
+    },
+    {
+      "id": "p09",
+      "author": "jacob",
+      "time": "2026-09-18T18:20:00",
+      "text": "TGS report 🎮 Our Apex Legends and Persona 4 Revival collaboration models were announced this week and the SNS reaction is really good. The GALLERIA Lounge had its busiest Friday since the relaunch. Pre-order numbers next week.",
+      "attachments": [],
+      "reactions": {
+        "🎉": [
+          "karthi",
+          "daniel"
+        ],
+        "🔥": [
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-09-18T18:40:00",
+          "text": "Congratulations. Please tie the panel orders to real pre-orders; collab side panels can't be reused."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-09-18T18:46:00",
+          "text": "Yes yes, I know 😅 Batch 1 only for now."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-09-18T19:02:00",
+          "text": "Great news. I'll add the collab SKUs to the S&OP from W39."
+        }
+      ]
+    },
+    {
+      "id": "p10",
+      "author": "prince",
+      "time": "2026-09-24T08:10:00",
+      "text": "Good morning. Sorry, I have a fever after the long weekend and will rest today. I'll check the thread this evening. If anything is urgent on the Q1 tracker, Karthi has the file 🙇",
+      "attachments": [],
+      "reactions": {
+        "🙏": [
+          "daniel",
+          "jacob",
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-09-24T08:25:00",
+          "text": "Rest well, Prince. Nothing urgent."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-09-24T08:31:00",
+          "text": "お大事に! 🍵"
+        },
+        {
+          "author": "prince",
+          "time": "2026-09-25T09:05:00",
+          "text": "Back today. Thank you all."
+        }
+      ]
+    },
+    {
+      "id": "p11",
+      "author": "daniel",
+      "time": "2026-09-28T10:00:00",
+      "text": "S&OP W39:\n1. Orders 88% of plan. TGS collab pre-orders helped the F series.\n2. Sarah signed the Q4 (Oct–Dec) DRAM contract at +15% vs Q3. Coverage is now 75 weeks.\n3. GPUs: no issues; RTX 5080/5090 shown at 3 days.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "karthi"
+        ],
+        "😮": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-09-28T10:05:00",
+          "text": "75 weeks?! We're set until 2028 😂"
+        },
+        {
+          "author": "daniel",
+          "time": "2026-09-28T10:07:00",
+          "text": "7.5 weeks, sorry 🙇 Typo. Coverage is 7.5 weeks."
+        },
+        {
+          "author": "prince",
+          "time": "2026-09-28T10:15:00",
+          "text": "I was about to ask about the cash 😅"
+        },
+        {
+          "author": "karthi",
+          "time": "2026-09-28T10:20:00",
+          "text": "+15% on Q4 hurts but was expected. Prince, please put it into the Q2 margin view."
+        },
+        {
+          "author": "prince",
+          "time": "2026-09-28T10:31:00",
+          "text": "Yes. Roughly 1pt of gross-margin pressure in Q2 if prices stay where they are. I'll show the detail."
+        }
+      ]
+    },
+    {
+      "id": "p12",
+      "author": "prince",
+      "time": "2026-09-30T15:30:00",
+      "text": "Store & Digital Dock plan for FY2027/7 is attached (draft with Retail). Two options:\nA) 3 new Dospara stores (≈ ¥150M each incl. fit-out) + 6 new Digital Docks inside existing stores\nB) Freeze new stores this year and do only the 6 Digital Docks\nMy view: repair and support subscriptions are counter-cyclical. People keep old PCs longer when new ones are expensive. New stores are harder to justify while PC units are down.",
+      "attachments": [
+        "files/12_Store_and_Digital_Dock_Plan_FY2027-7.xlsx"
+      ],
+      "reactions": {
+        "👀": [
+          "karthi"
+        ],
+        "🤔": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-09-30T15:55:00",
+          "text": "Stores still matter for first-time buyers and for the GALLERIA experience. I'd keep at least one new store in a gaming-heavy area."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-09-30T16:10:00",
+          "text": "Supply side: no parts constraint on either option. Digital Dock needs some repair-parts stock, but it's small."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-09-30T16:22:00",
+          "text": "Each new store is ≈ ¥150M, so above the ¥100M line; it goes to Robert anyway. Prince, please add a payback period per store and per Digital Dock."
+        },
+        {
+          "author": "prince",
+          "time": "2026-09-30T16:30:00",
+          "text": "Understood. I'll add payback and a downside case."
+        }
+      ]
+    },
+    {
+      "id": "p13",
+      "author": "daniel",
+      "time": "2026-10-01T11:00:00",
+      "text": "Memory news: TrendForce's new forecast (30 Sep) says PC DRAM contract prices +13–18% in Oct–Dec. The rise is slowing because PC sales are weak and OEM stock is high. The bigger point: Korean suppliers plan to cut PC DRAM output by more than 20% in 2027 to favour server DRAM. Prices may calm down; availability may not. Allocation first 🙏",
+      "attachments": [],
+      "reactions": {
+        "👀": [
+          "karthi",
+          "prince"
+        ],
+        "😱": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-10-01T11:20:00",
+          "text": "\"Slowing\" matters for the over-buying risk. If prices flatten, holding too much stock gets expensive."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-10-01T11:28:00",
+          "text": "Agreed on cost. But if the allocation is cut, we can't buy at any price. That's what happened last December."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-01T11:35:00",
+          "text": "Please, no repeat of last winter. Our ¥119,800 32GB×2 kit in February was national news. The community still jokes about it."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-10-01T11:50:00",
+          "text": "Both fair points. Daniel, please get an early read on the Q1 2027 contract with Sarah so November doesn't surprise us."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-10-01T11:52:00",
+          "text": "Will do."
+        }
+      ]
+    },
+    {
+      "id": "p14",
+      "author": "jacob",
+      "time": "2026-10-06T14:30:00",
+      "text": "Black Friday early thinking, before I write the plan: I want ONE simple headline. Proposal: the 16GB → 32GB memory upgrade for +¥9,696, in the early-bird sale (30 Oct–13 Nov) and the main sale (13 Nov 11:00 – 4 Dec 10:59). Gamers look at memory before anything else right now. Thoughts?",
+      "attachments": [],
+      "reactions": {
+        "🤔": [
+          "prince"
+        ],
+        "👀": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-10-06T14:55:00",
+          "text": "May I raise one concern: the extra 16GB costs us much more than ¥9,696 now. Let me calculate it properly, but if memory keeps rising, every upgrade loses money."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-06T15:05:00",
+          "text": "I know, but it's the one thing people compare across BTO sites. It's our value message."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-10-06T15:20:00",
+          "text": "A high take rate also pulls DRAM faster. Please give me a take-rate assumption so I can check coverage."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-06T15:24:00",
+          "text": "Plan 60%. Could be higher."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-10-06T15:40:00",
+          "text": "Write it into the plan with Prince's cost number next to it. We decide at the 20 Oct kickoff."
+        }
+      ]
+    },
+    {
+      "id": "p15",
+      "author": "daniel",
+      "time": "2026-10-13T10:30:00",
+      "text": "S&OP W41 (one day late because of Sports Day):\n• Orders 87% of plan.\n• DRAM coverage 6.5 weeks, down from 7.5 because more customers choose 32GB. The floor I'd like to keep is 6 weeks.\n• Lead times unchanged (2–3 days).",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-10-13T10:45:00",
+          "text": "Noted. The 6-week floor goes on the kickoff agenda."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-10-13T10:47:00",
+          "text": "Thank you."
+        }
+      ]
+    },
+    {
+      "id": "p16",
+      "author": "karthi",
+      "time": "2026-10-16T16:00:00",
+      "text": "Agenda for Tue 20 Oct 10:00–11:00: Black Friday & Winter Plan Kickoff\n1. Black Friday plan and the headline offer (Jacob)\n2. Cost and margin of the 32GB upgrade (Prince)\n3. Featured SKUs and parts coverage (Daniel)\n4. Winter outline: New Year / 初売り, 半期決算セール (Jacob)\nRen, please post the plan here by Monday evening. Thread first 🙂",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ]
+      },
+      "replies": []
+    },
+    {
+      "id": "p17",
+      "author": "jacob",
+      "time": "2026-10-19T17:40:00",
+      "text": "Black Friday 2026 plan for tomorrow 🛒\n• Early-bird customisation sale 30 Oct – 13 Nov; Black Friday 13 Nov 11:00 – 4 Dec 10:59 (stores until 3 Dec)\n• Headline: 32GB memory upgrade for +¥9,696; coupons up to ¥100k + points\n• Featured: GALLERIA XPR7A-R57-GD (Ryzen 7 7700 / RTX 5070, ¥249,980), FPC7A-97XT-B (¥324,980) and the compact E-series EGC5I\n• Plan: 22,000 PC orders over the campaign\nKenji's cost note is included.",
+      "attachments": [
+        "files/13_Black_Friday_2026_Plan.docx"
+      ],
+      "reactions": {
+        "🙌": [
+          "daniel"
+        ],
+        "👀": [
+          "karthi",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-10-19T18:05:00",
+          "text": "Thank you. My estimate: the extra 16GB costs about ¥14,000 at current contract prices, so roughly ¥4,300 lost per upgrade. At a 60% take rate that adds up quickly. I'll explain tomorrow."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-19T18:12:00",
+          "text": "Understood, but the Black Friday traffic pays it back in base PC margin. I'll defend it tomorrow 😤"
+        },
+        {
+          "author": "daniel",
+          "time": "2026-10-19T18:30:00",
+          "text": "For 22,000 orders at a 60–70% take rate I need about 15k extra 16GB DIMMs on top of plan. The Q4 contract covers it if we stay above 6 weeks. I'll confirm in the meeting."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-10-19T18:41:00",
+          "text": "Good prep, thanks all. See you at 10."
+        }
+      ]
+    },
+    {
+      "id": "p18",
+      "author": "karthi",
+      "time": "2026-10-20T11:35:00",
+      "text": "Recap: Black Friday & Winter Plan Kickoff (20 Oct)\nKey points\n• Black Friday plan approved.\n• Headline offer: the 32GB upgrade at +¥9,696. Prince warned it loses money if memory keeps rising; Jacob's case (\"it's our value message\") won.\n• Featured SKUs: XPR7A-R57-GD, FPC7A-97XT-B, E-series EGC5I.\n• New Year: first discussion of the 2026 lucky-bag cancellation (memory/SSD shortage, announced 31 Dec 2025) and whether we can bring the bags back.\n宿題\n• Daniel: keep DRAM coverage ≥ 6 weeks through the campaign\n• Jacob: draft the New Year plan\nMinutes are in Files, full transcript in the meeting recap.",
+      "attachments": [
+        "../meetings/2026-10-20_black-friday-winter-kickoff/minutes.md"
+      ],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ],
+        "🎉": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-10-20T11:50:00",
+          "text": "Thank you! New Year draft coming 🎍"
+        },
+        {
+          "author": "prince",
+          "time": "2026-10-20T12:05:00",
+          "text": "I'll keep an eye on the upgrade margin anyway. I hope I'm wrong about the cost trend."
+        }
+      ]
+    },
+    {
+      "id": "p19",
+      "author": "prince",
+      "time": "2026-10-22T14:00:00",
+      "text": "Two market notes:\n1. JEITA: Japan PC shipments Apr–Sep −33.5% YoY, desktops −37.1%, while the average price is +40.3%. The Windows 10 hangover is deeper than we budgeted.\n2. USD/JPY ≈ ¥157.9 today, about ¥2 above our budget rate.\nQ1 closes on 31 Oct. My early view is units around −12%. Full numbers after the close.",
+      "attachments": [],
+      "reactions": {
+        "😟": [
+          "jacob",
+          "daniel"
+        ],
+        "👀": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-10-22T14:20:00",
+          "text": "Fewer units, but people buy higher specs. Same as what we see at the Main Store."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-10-22T14:31:00",
+          "text": "Thanks Prince. Please start the H1 landing now so we have v1 for the Q1 review."
+        },
+        {
+          "author": "prince",
+          "time": "2026-10-22T14:40:00",
+          "text": "Yes, starting today."
+        }
+      ]
+    },
+    {
+      "id": "p20",
+      "author": "jacob",
+      "time": "2026-10-23T13:30:00",
+      "text": "Lunch report from Akihabara 🍜 Ramen on Chuo-dori with the Main Store floor team. Their feedback:\n• Lots of \"should I wait for prices to drop?\" questions. People remember last winter.\n• The compact E-series sells itself once people see it at the GALLERIA Lounge.\n• Customers ask about 32GB first, GPU second.",
+      "attachments": [],
+      "reactions": {
+        "🍜": [
+          "prince",
+          "daniel"
+        ],
+        "👍": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "daniel",
+          "time": "2026-10-23T13:42:00",
+          "text": "32GB first, GPU second. That matches the order mix exactly."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-10-23T13:50:00",
+          "text": "Useful, thanks Jacob. Invite me next time 😄"
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-23T13:52:00",
+          "text": "Deal!"
+        }
+      ]
+    },
+    {
+      "id": "p21",
+      "author": "daniel",
+      "time": "2026-10-26T10:15:00",
+      "text": "S&OP W43:\n1. Orders 86% of plan.\n2. DRAM coverage 6.2 weeks, above the 6-week floor. Q4 deliveries arrive next week and lift it again.\n3. Ayase factory: Saturday shifts confirmed from 14 Nov through December for Black Friday and the year-end peak. Capacity is not the bottleneck; parts are.\n4. Site lead times: GALLERIA 2–3 days, RTX 5080/5090 3 days.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "karthi",
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-10-26T10:30:00",
+          "text": "Thank you Ayase 🙏"
+        },
+        {
+          "author": "prince",
+          "time": "2026-10-26T10:40:00",
+          "text": "The Saturday overtime is in the landing. Small, but included."
+        }
+      ]
+    },
+    {
+      "id": "p22",
+      "author": "jacob",
+      "time": "2026-10-28T18:30:00",
+      "text": "New Year first thoughts (homework from the 20th) 🎍\n1. Bring back the Akihabara Main Store SSD 福袋 priced at the year number: ¥2,027. The last one was ¥2,025 with a 500GB SSD, 50 bags, 1 per person. 2026 was cancelled (announced 31 Dec 2025) because of the memory/SSD shortage. Reviving it tells the community \"we're back\".\n2. A \"previous-gen lucky box\": PCs built from aged stock, a bit like FRONTIER's 福箱 last January.\nDraft document in a few weeks.",
+      "attachments": [],
+      "reactions": {
+        "🎍": [
+          "daniel",
+          "karthi"
+        ],
+        "🤔": [
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-10-28T18:50:00",
+          "text": "The SSD bag is small money. The PC box interests me more if it clears aged inventory. How much aged stock do we have?"
+        },
+        {
+          "author": "daniel",
+          "time": "2026-10-28T19:05:00",
+          "text": "Core Ultra 200S + RTX 4060-class components: enough for about 1,200 PCs. I'll confirm the list."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-28T19:10:00",
+          "text": "1,200 boxes 👀 That's a real campaign."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-10-28T19:20:00",
+          "text": "Good direction. Bring numbers: revenue, the loss on the SSD bags, and what it clears. 1TB SSD this time?"
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-28T19:24:00",
+          "text": "1TB, yes. 500GB in 2027 would look stingy 😅"
+        }
+      ]
+    },
+    {
+      "id": "p23",
+      "author": "jacob",
+      "time": "2026-10-30T11:10:00",
+      "text": "Early-bird customisation sale is live 🚀 32GB for +¥9,696 and SSD 500GB → 1TB for +¥19,696. First SNS reactions: \"finally a sane memory price\". Lots of screenshots comparing us with other BTO sites.",
+      "attachments": [],
+      "reactions": {
+        "🎉": [
+          "karthi",
+          "daniel"
+        ],
+        "👍": [
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-10-30T11:30:00",
+          "text": "Good reaction. Could you share the take rate daily?"
+        },
+        {
+          "author": "jacob",
+          "time": "2026-10-30T11:33:00",
+          "text": "Will do, from the EC dashboard."
+        }
+      ]
+    },
+    {
+      "id": "p24",
+      "author": "karthi",
+      "time": "2026-10-30T16:45:00",
+      "text": "Agenda for Wed 4 Nov 10:00–11:00 (Tuesday is 文化の日): Q1 Results & H1 Landing\n1. Q1 results vs budget (Prince)\n2. H1 landing forecast v1 and the gap (Prince)\n3. Supply view for Q2 (Daniel)\n4. Possible actions to close the gap (all)\nHiroshi will join for the first 15 minutes. 資料 in the thread by Tuesday night, please.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ]
+      },
+      "replies": []
+    },
+    {
+      "id": "p25",
+      "author": "daniel",
+      "time": "2026-11-02T10:05:00",
+      "text": "S&OP W44:\n• Orders 97% of plan. The early-bird sale is working.\n• 32GB upgrade take rate so far: 66% (plan 60%).\n• DRAM coverage 6.8 weeks after the Q4 delivery.\n• Lead times unchanged.",
+      "attachments": [],
+      "reactions": {
+        "🎉": [
+          "jacob"
+        ],
+        "👍": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-02T10:20:00",
+          "text": "66% × about ¥4,300 per upgrade… I'll update the margin view."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-02T10:24:00",
+          "text": "And 97%! Best week of the term 🙌"
+        }
+      ]
+    },
+    {
+      "id": "p26",
+      "author": "prince",
+      "time": "2026-11-02T17:20:00",
+      "text": "Q1 flash (Aug–Oct), before accounting's final:\n• Revenue ¥24.8B vs ¥26.0B (−4.6%)\n• PC units 66,000 vs 75,000 (−12%), ASP +9% vs budget\n• Gross margin 17.6% vs 19.0% (memory cost)\nFinal file on Wednesday morning after the close.",
+      "attachments": [],
+      "reactions": {
+        "😬": [
+          "jacob"
+        ],
+        "👀": [
+          "karthi",
+          "daniel"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-11-02T17:35:00",
+          "text": "Thanks. No surprises, but let's be very clear about it on Wednesday."
+        }
+      ]
+    },
+    {
+      "id": "p27",
+      "author": "prince",
+      "time": "2026-11-03T20:10:00",
+      "text": "H1 landing forecast v1 (着地見込み) for Wednesday. Sorry for the holiday post.\n• H1 landing v1: ¥52.5B vs ¥55.0B budget → gap ¥2.5B\n• Q2 assumes Black Friday at plan and a normal New Year.\nNo new actions are included yet, so this is the \"do nothing\" landing.",
+      "attachments": [
+        "files/04_H1_Landing_Forecast_v1.xlsx"
+      ],
+      "reactions": {
+        "🙏": [
+          "daniel"
+        ],
+        "😟": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-11-03T20:25:00",
+          "text": "Thank you Prince, but it's 文化の日, please log off 😄 We'll go through it on Wednesday."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-03T20:31:00",
+          "text": "Yes, logging off now 🙇"
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-03T20:40:00",
+          "text": "¥2.5B… OK, time to get creative."
+        }
+      ]
+    },
+    {
+      "id": "p28",
+      "author": "prince",
+      "time": "2026-11-04T08:45:00",
+      "text": "Q1 FY2027/7 results vs budget (final). Same totals as the flash. By brand: GALLERIA ¥14.1B, THIRDWAVE ¥4.6B, raytrek/enterprise ¥3.3B, parts & accessories ¥2.8B. Online ≈ 65% / stores ≈ 35% of PC revenue.",
+      "attachments": [
+        "files/03_Q1_FY2027-7_Results_vs_Budget.xlsx"
+      ],
+      "reactions": {
+        "👍": [
+          "karthi",
+          "daniel"
+        ]
+      },
+      "replies": [
+        {
+          "author": "daniel",
+          "time": "2026-11-04T09:05:00",
+          "text": "Thanks. GALLERIA held up best."
+        }
+      ]
+    },
+    {
+      "id": "p29",
+      "author": "karthi",
+      "time": "2026-11-04T11:40:00",
+      "text": "Recap: Q1 Results & H1 Landing (4 Nov)\nKey points\n• Q1: ¥24.8B vs ¥26.0B (−4.6%), units −12%, GM 17.6% vs 19.0%.\n• H1 landing v1: ¥52.5B, a gap of ¥2.5B vs the ¥55.0B budget.\n• Robert joined for 15 minutes and asked us to \"try every route\" before we accept a miss.\n宿題\n• Jacob: pricing options\n• Daniel (with Sarah): the Q1 2027 memory quote\n• Prince: landing actions to close the gap\nMinutes are in Files, full transcript in the meeting recap.",
+      "attachments": [
+        "../meetings/2026-11-04_q1-results-h1-landing/minutes.md"
+      ],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ],
+        "💪": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-04T11:55:00",
+          "text": "I'll list every action, even small ones, with yen next to each."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-04T12:02:00",
+          "text": "Sarah expects the supplier's quote next week."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-04T12:10:00",
+          "text": "Pricing options depend on the memory quote too. Daniel, let's sync once you have it."
+        }
+      ]
+    },
+    {
+      "id": "p30",
+      "author": "karthi",
+      "time": "2026-11-06T15:20:00",
+      "text": "Relaying from Robert (email this morning): he will present our H1 landing at the Monthly Management Meeting on Tue 8 Dec. He wants the landing story with actions, not just the gap. Try every route first, then tell him honestly what's left. So: every route, and an honest number 🙂",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "prince",
+          "daniel"
+        ],
+        "🫡": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-06T15:35:00",
+          "text": "The honest number is important. I won't put an unfunded action into the landing. I'll show \"identified\" and \"in the landing\" separately."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-06T15:41:00",
+          "text": "Perfect, that's exactly the format."
+        }
+      ]
+    },
+    {
+      "id": "p31",
+      "author": "daniel",
+      "time": "2026-11-09T10:10:00",
+      "text": "S&OP W45:\n1. Orders 95% of plan (early-bird, last full week).\n2. 32GB take rate 68%.\n3. DRAM coverage 7 weeks.\n4. GPU heads-up: the board partner hinted that NVIDIA's Jan–Mar allocation will be below our request. Details soon.",
+      "attachments": [],
+      "reactions": {
+        "👀": [
+          "karthi",
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-11-09T10:25:00",
+          "text": "Please not the 5080s 🙏"
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-09T10:31:00",
+          "text": "Too early to say. I'll know by Friday."
+        }
+      ]
+    },
+    {
+      "id": "p32",
+      "author": "daniel",
+      "time": "2026-11-10T16:30:00",
+      "text": "Relaying from Sarah (Purchasing): the supplier's quote for Q1 2027 (Jan–Mar) is in.\n• 120,000 × 16GB DDR5 DIMMs at +14% ≈ ¥1.4B (≈ ¥11,700 each)\n• Signature needed by 4 Dec\n• They warn of allocation cuts in 2027 (PC DRAM output −20%+)\nMika will present it at the 17 Nov sync. I'll write up the options before then.",
+      "attachments": [],
+      "reactions": {
+        "😱": [
+          "jacob"
+        ],
+        "👀": [
+          "karthi",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-10T16:50:00",
+          "text": "¥1.4B is a big commitment. My concern: if Q1 demand misses by 15%, a full commit leaves about 6 extra weeks of DRAM, roughly ¥0.4B of cash sitting in the warehouse."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-10T17:02:00",
+          "text": "And if we under-commit and the allocation is cut, we can't fill orders in February–March, exactly when enterprise and education buy."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-10T17:10:00",
+          "text": "Whatever we do, please no spec-down on GALLERIA. Single-channel memory on a gaming PC would be all over SNS in a day."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-10T17:18:00",
+          "text": "I understand. Let me check how much spot buying is realistic, in case a partial commit is an option."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-10T17:30:00",
+          "text": "Good discussion. It's above ¥100M, so it needs my sign-off and goes to Robert. Daniel, frame it as options with numbers. We hear Sarah on the 17th first."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-10T17:33:00",
+          "text": "Understood."
+        }
+      ]
+    },
+    {
+      "id": "p33",
+      "author": "jacob",
+      "time": "2026-11-11T12:15:00",
+      "text": "Pricing options, early thinking (homework from 4 Nov):\n• FRONTIER went +16–41% last December, MCJ passed costs through. We've held longer than most.\n• If we raise, I want it AFTER 初売り, not before. Raising right before New Year would hurt the community's trust.\n• The +¥9,696 upgrade can't run forever, but how we exit matters.\nDocument with numbers next week, once the memory quote is clear.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "karthi"
+        ],
+        "🤔": [
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-11T12:40:00",
+          "text": "Thank you. Please include the unit-impact assumption. Even −4% in units changes the landing."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-11T12:45:00",
+          "text": "Yes, I'll show units, revenue and margin for each option."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-11T13:00:00",
+          "text": "After 初売り also works for supply. The DRAM cost step-up arrives in January."
+        }
+      ]
+    },
+    {
+      "id": "p34",
+      "author": "jacob",
+      "time": "2026-11-13T11:15:00",
+      "text": "🖤 BLACK FRIDAY IS LIVE 🖤 (11:00)\nSite traffic about 2× a normal Friday in the first 10 minutes. About 40 people queued at the Akihabara Main Store before the doors opened. XPR7A-R57-GD is already top of the ranking.",
+      "attachments": [],
+      "reactions": {
+        "🎉": [
+          "karthi",
+          "daniel",
+          "prince"
+        ],
+        "🔥": [
+          "daniel"
+        ]
+      },
+      "replies": [
+        {
+          "author": "daniel",
+          "time": "2026-11-13T11:25:00",
+          "text": "Orders flowing into Ayase normally. No parts alerts."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-13T11:40:00",
+          "text": "Congratulations 🎉 I'll pull the first-day numbers tomorrow morning."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-13T15:10:00",
+          "text": "SNS update: mostly positive, people love the 32GB price. A few complaints that the coupons are confusing; I've asked the EC team to simplify the banner."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-13T15:22:00",
+          "text": "Nice start. Thank you all, and please thank the store teams for me."
+        }
+      ]
+    },
+    {
+      "id": "p35",
+      "author": "daniel",
+      "time": "2026-11-13T15:40:00",
+      "text": "Forwarding Tom's (Enterprise Sales) brief on the prefectural tender, plus the GPU allocation update:\n• PREF-AI-27: 40 raytrek local-LLM workstations × 4 GPUs = 160 high-end GPUs, ≈ ¥600M\n• Delivery by 31 Mar 2027 (their fiscal year end); bid due 10 Dec\n• NVIDIA board-partner allocation for Jan–Mar: 15% below our request\nConflict: reserving all 160 GPUs pushes GALLERIA RTX 5080/5090 lead times from the ≤ 5-day site target to about 10 days.",
+      "attachments": [
+        "files/09_GPU_Allocation_and_PREF-AI-27_Tender_Brief.pdf"
+      ],
+      "reactions": {
+        "😬": [
+          "jacob"
+        ],
+        "👀": [
+          "karthi",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-11-13T15:55:00",
+          "text": "10 days on our top GALLERIA models in the winter bonus season 😣 That shows on every product page."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-13T16:05:00",
+          "text": "Also, delivery in March is Q3. It helps the full year, but does nothing for H1."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-13T16:12:00",
+          "text": "Correct. But ¥600M is a big step toward the enterprise goal (from ~10% of sales toward 30%)."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-13T16:20:00",
+          "text": "Tom joins on Tuesday, so let's hear the timeline from him directly. No conclusions in the thread yet, please 🙂"
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-13T16:22:00",
+          "text": "Fair 🙏"
+        }
+      ]
+    },
+    {
+      "id": "p36",
+      "author": "karthi",
+      "time": "2026-11-13T17:00:00",
+      "text": "Agenda for Tue 17 Nov 10:00–11:00: Memory Contract & Platform Transition\nGuests: Sarah Miller (Purchasing), Tom Wilson (Enterprise Sales)\n1. Q1 2027 memory quote and 2027 allocation (Sarah, Daniel)\n2. PREF-AI-27 tender and GPU allocation (Tom, Daniel)\n3. Platform transition: Nova Lake / Zen 6 timing and current-gen stock (Jacob, Prince)\nPre-reads by Monday evening: memory options (Daniel), platform plan (Jacob).",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ]
+      },
+      "replies": []
+    },
+    {
+      "id": "p37",
+      "author": "daniel",
+      "time": "2026-11-16T09:40:00",
+      "text": "S&OP W46 (includes Black Friday's first 3 days):\n• Orders 93% of plan for the week; Black Friday days at 90–95%.\n• 32GB take rate 70%.\n• DRAM coverage 7 weeks.\n• Lead times on the site: GALLERIA 2–3 days, RTX 5080/5090 4 days (target ≤ 5).",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "karthi"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-16T10:00:00",
+          "text": "70%… higher than planned. I'll redo the upgrade loss."
+        }
+      ]
+    },
+    {
+      "id": "p38",
+      "author": "daniel",
+      "time": "2026-11-16T14:10:00",
+      "text": "Pre-read for tomorrow: memory market and Q1 2027 contract options.\n(a) Commit 100%: 120,000 DIMMs ≈ ¥1.4B\n(b) Commit 70%: 84,000 DIMMs ≈ ¥0.98B, the rest bought spot/monthly\n(c) Commit 50% + spec-down (16GB×1 instead of 8GB×2 on entry models, saves ≈ ¥3,000/unit)\nRisks for each option are in the document. Current coverage: 7 weeks. Signature deadline: 4 Dec.",
+      "attachments": [
+        "files/06_Memory_Market_and_Q1-2027_Contract_Options.docx"
+      ],
+      "reactions": {
+        "👀": [
+          "karthi",
+          "prince",
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-11-16T14:30:00",
+          "text": "(c) is a no from me for GALLERIA. THIRDWAVE-G already went single-channel on some configs and we still get comments about it."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-16T14:45:00",
+          "text": "(a) worries me for the cash reason. Between (a) and (b) I'd like to see the spot price assumption clearly."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-16T14:52:00",
+          "text": "The spot assumption is in section 2: +20–30% above contract, with no guarantee of volume."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-16T15:05:00",
+          "text": "Thanks. Let's hear Sarah before anyone leans."
+        }
+      ]
+    },
+    {
+      "id": "p39",
+      "author": "jacob",
+      "time": "2026-11-16T17:30:00",
+      "text": "Pre-read: Platform Transition Plan (Nova Lake / Zen 6) 🚀\n• Intel Nova Lake (Core Ultra 400) and AMD Zen 6 are expected to be revealed at CES in early January, shipping Q1–Q2 2027.\n• My proposal: pre-announce new GALLERIA S and X models for February, right after CES. The community will talk about nothing else.\n• Current-gen CPU + motherboard stock: ≈ ¥1.8B (≈ 9 weeks of cover). Sell-down plan included.",
+      "attachments": [
+        "files/11_Platform_Transition_Plan_NovaLake_Zen6.docx"
+      ],
+      "reactions": {
+        "👀": [
+          "karthi"
+        ],
+        "🤔": [
+          "prince",
+          "daniel"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-16T17:50:00",
+          "text": "My worry is the Osborne effect: if we pre-announce in January, buyers wait, right during the 半期決算セール. Then the ¥1.8B gets sold at a discount."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-16T18:00:00",
+          "text": "But if we stay silent, they buy from whoever announces first. CES is going to be huge this year 🤩"
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-16T18:12:00",
+          "text": "9 weeks of cover today. Even with a strong January, I see 6–7 weeks left at the end of January without an extra push."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-16T18:25:00",
+          "text": "Good tension. Let's do it live tomorrow."
+        }
+      ]
+    },
+    {
+      "id": "p40",
+      "author": "karthi",
+      "time": "2026-11-17T11:35:00",
+      "text": "Recap: Memory Contract & Platform Transition (17 Nov). Thank you Sarah and Tom for joining.\nKey points\n• Sarah presented the Q1 2027 memory quote: 120,000 DIMMs at +14% ≈ ¥1.4B, signature by 4 Dec, plus the 2027 allocation warning.\n• Three options framed (100% / 70% / 50% + spec-down). No decision yet.\n• Tom presented PREF-AI-27: 160 GPUs, ≈ ¥600M, delivery by 31 Mar, bid due 10 Dec. NVIDIA allocation is 15% below request.\n• Platform transition debated (Jacob: pre-announce for February; Prince: Osborne risk during the 半期決算セール).\n• All decisions deferred to the decision meeting on Thu 26 Nov.\n宿題: final 資料 in the thread before the 26th.\nMinutes are in Files, full transcript in the meeting recap.",
+      "attachments": [
+        "../meetings/2026-11-17_memory-contract-platform/minutes.md"
+      ],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-11-17T11:40:00",
+          "text": "Invite for Thu 26 Nov 10:00–11:00 \"H2 Supply & Pricing Decisions\" is out."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-17T12:00:00",
+          "text": "Pricing and New Year drafts coming 💪"
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-17T12:10:00",
+          "text": "Landing actions list by next Tuesday."
+        }
+      ]
+    },
+    {
+      "id": "p41",
+      "author": "jacob",
+      "time": "2026-11-18T19:30:00",
+      "text": "Evening note from the GALLERIA Lounge 🎮 Visitors asked three things today: \"is the 32GB deal real?\", \"when do the new CPUs come?\" and \"will prices go up in January?\". The CES question came up again and again; people are already watching. (Also, the E-series demo unit's LEDs are a hit with kids 😄)",
+      "attachments": [],
+      "reactions": {
+        "😄": [
+          "daniel"
+        ],
+        "👀": [
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-18T19:45:00",
+          "text": "\"Will prices go up in January?\" is exactly the question that pulls demand forward. Not necessarily bad for H1."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-18T19:52:00",
+          "text": "Ha, true. I still want us to be honest when we announce anything."
+        }
+      ]
+    },
+    {
+      "id": "p42",
+      "author": "jacob",
+      "time": "2026-11-20T16:00:00",
+      "text": "Black Friday week 1 (13–19 Nov) results 📊\n• Order intake 92% of plan: 8,950 PC orders vs 9,730 (full-campaign plan 22,000)\n• 32GB upgrade at +¥9,696 taken by 70% of buyers\n• Best sellers: XPR7A-R57-GD (¥249,980), FPC7A-97XT-B (¥324,980), E-series EGC5I\nBelow plan, but the mix is strong.",
+      "attachments": [
+        "files/08_Black_Friday_2026_Week1_Results.xlsx"
+      ],
+      "reactions": {
+        "👍": [
+          "karthi",
+          "daniel"
+        ],
+        "😬": [
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-20T16:20:00",
+          "text": "Thank you Jacob. The upgrade math: the real cost of the extra 16GB is ≈ ¥14,000, so ≈ ¥4,300 lost per upgrade. Over the campaign (≈ 15,400 upgrades) that is ≈ ¥66M of margin."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-20T16:28:00",
+          "text": "I know 😓 It's also why we're at 92% and not 80%. But I agree it shouldn't continue after Black Friday."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-20T16:40:00",
+          "text": "70% also pulls DRAM faster. Coverage is fine for now because the Q4 delivery landed, but Q1 depends on the contract."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-20T16:55:00",
+          "text": "Thanks all. ¥66M is a clear number. We take the upgrade exit together with pricing on the 26th."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-20T17:05:00",
+          "text": "For the landing: week 1 at 92% is still inside the range I used for v1, as long as weeks 2 and 3 recover a little."
+        }
+      ]
+    },
+    {
+      "id": "p43",
+      "author": "daniel",
+      "time": "2026-11-23T11:00:00",
+      "text": "S&OP W47 report. I know it's 勤労感謝の日; I'm just posting so it's here for Thursday, no need to read today 🙏\n1. Orders 93% of plan (Black Friday week 2 has started).\n2. 32GB take rate steady at 70%.\n3. DRAM coverage 7 weeks. Without a Q1 contract it falls below 4 weeks by mid-January.\n4. Site lead times: GALLERIA 2–3 days, RTX 5080/5090 4 days (target ≤ 5).\n5. GPUs: nothing reserved for PREF-AI-27 yet; waiting for Thursday.",
+      "attachments": [
+        "files/05_Weekly_SOP_Report_W47.xlsx"
+      ],
+      "reactions": {
+        "🙏": [
+          "karthi",
+          "jacob",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "karthi",
+          "time": "2026-11-23T11:20:00",
+          "text": "Thank you Daniel. Happy 勤労感謝の日 to the person who works hardest 😄"
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-23T11:24:00",
+          "text": "😅 Logging off now."
+        }
+      ]
+    },
+    {
+      "id": "p44",
+      "author": "prince",
+      "time": "2026-11-24T09:30:00",
+      "text": "Landing actions for Thursday (宿題 from 4 Nov). Every route I found that lands inside H1:\n• New Year previous-gen lucky box: +¥0.24B\n• Bigger 半期決算セール (mid-Jan to 31 Jan): +¥0.45B\n• Pulling 2 enterprise deliveries into January: +¥0.21B\nIf all three go ahead, landing v2 would be ¥53.4B, leaving a gap of ¥1.6B. The PREF-AI-27 tender delivers in March (Q3), so it does not help H1. I'd rather report ¥1.6B honestly than fill it with hope.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "karthi",
+          "daniel"
+        ],
+        "💪": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "jacob",
+          "time": "2026-11-24T09:50:00",
+          "text": "The lucky-box number depends on the New Year plan. I'll post the draft tomorrow."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-24T10:05:00",
+          "text": "Thanks Prince. That's the honest format Robert asked for. Nothing goes into v2 until we decide on Thursday."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-24T10:12:00",
+          "text": "Understood. Two columns: identified / in the landing."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-24T10:30:00",
+          "text": "On the enterprise pull-in: Tom confirmed both customers can accept January delivery, and the parts are available."
+        }
+      ]
+    },
+    {
+      "id": "p45",
+      "author": "jacob",
+      "time": "2026-11-24T14:45:00",
+      "text": "January pricing options for Thursday 📄\n• End the +¥9,696 32GB upgrade when Black Friday ends (4 Dec); new 32GB upgrade price +¥19,800\n• Base price increase from 6 Jan 2027 (after 初売り): +¥10,000 on GALLERIA X / E and THIRDWAVE-G, +¥15,000 on GALLERIA F / S\n• Assumed unit impact −4%; gross margin +1.2pt for Feb–Jul\n• Alternatives (smaller increase, increase before New Year, no change) are in the document with the same metrics.",
+      "attachments": [
+        "files/07_January_2027_Pricing_Options.docx"
+      ],
+      "reactions": {
+        "👀": [
+          "karthi",
+          "prince"
+        ],
+        "👍": [
+          "daniel"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-24T15:05:00",
+          "text": "Thank you, very clear. My question is the −4% unit assumption. The market is down a third; we might lose more than 4%."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-24T15:15:00",
+          "text": "Competitors raised months ago, so we're catching up, not leading. The document also shows sensitivity at −6% and −8%."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-24T15:25:00",
+          "text": "+¥19,800 for 32GB is close to the real cost, so it would also slow the DRAM pull. Good for coverage."
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-24T15:40:00",
+          "text": "Price changes need my sign-off and go to Robert, so let's settle it on Thursday. Jacob, please add one line on how we'd explain it to customers."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-24T15:44:00",
+          "text": "Will add 👍 Honest and early is my plan."
+        }
+      ]
+    },
+    {
+      "id": "p46",
+      "author": "karthi",
+      "time": "2026-11-24T17:30:00",
+      "text": "Agenda for Thu 26 Nov 10:00–11:00: H2 Supply & Pricing Decisions 🗓️\nWe need decisions on five items:\n1. Memory: Q1 2027 contract level (100% / 70% / 50% + spec-down); signature deadline 4 Dec (Daniel)\n2. Pricing: the 32GB upgrade after Black Friday and January base prices (Jacob)\n3. GPUs: how many to reserve for PREF-AI-27 vs GALLERIA lead times (Daniel)\n4. New Year: the ¥2,027 SSD bags and the previous-gen lucky box (Jacob)\n5. Platform: Nova Lake / Zen 6 announcement timing and current-gen sell-down (Jacob, Prince)\nThen: H1 landing v2 and the 宿題 list. The output goes to Robert before the 8 Dec management meeting.\nI'll do some 根回し with Robert tomorrow so there are no surprises upstairs. All 資料 in the thread by tomorrow evening, please.",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "daniel",
+          "time": "2026-11-24T17:45:00",
+          "text": "W47, memory options and the tender brief are already in the thread. I'll bring GPU split scenarios."
+        },
+        {
+          "author": "prince",
+          "time": "2026-11-24T17:52:00",
+          "text": "Landing actions are posted. I'll prepare the v2 page so we can fill it in live."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-24T18:00:00",
+          "text": "New Year draft tomorrow morning 🎍"
+        }
+      ]
+    },
+    {
+      "id": "p47",
+      "author": "jacob",
+      "time": "2026-11-25T10:30:00",
+      "text": "New Year 2027 campaign plan (draft) 🎍\n1. ¥2,027 SSD lucky bag at the Akihabara Main Store: 50 bags, 1TB SSD, 1 per person. Loss ≈ ¥8,000 per bag, ≈ ¥0.4M in total. Big PR value as the comeback after the 2026 cancellation.\n2. Previous-gen lucky box: 1,200 PCs from aged stock (Core Ultra 200S + RTX 4060-class), revenue ≈ ¥0.24B, clears ≈ ¥0.18B of aged inventory.\n3. 初売り 1–3 Jan, then the 半期決算セール from mid-January.",
+      "attachments": [
+        "files/10_New_Year_2027_Campaign_Plan_draft.docx"
+      ],
+      "reactions": {
+        "🎍": [
+          "karthi",
+          "daniel"
+        ],
+        "👍": [
+          "prince"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-25T10:50:00",
+          "text": "Thank you. ¥0.4M for that much PR is cheap. And clearing ¥0.18B of aged stock is very welcome."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-25T11:05:00",
+          "text": "Parts check: the 1,200 boxes are covered by current stock. The bags need only 50 × 1TB SSDs, no issue."
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-25T11:12:00",
+          "text": "I can already see the queue on Chuo-dori 😄"
+        },
+        {
+          "author": "karthi",
+          "time": "2026-11-25T11:30:00",
+          "text": "Good draft. We decide on Thursday."
+        }
+      ]
+    },
+    {
+      "id": "p48",
+      "author": "karthi",
+      "time": "2026-11-25T17:45:00",
+      "text": "Reminder for tomorrow 10:00. Pre-read checklist (all in this thread):\n• Memory options (Daniel, 16 Nov) and W47 S&OP (Daniel, 23 Nov)\n• PREF-AI-27 brief (Daniel, 13 Nov)\n• Black Friday week 1 results (Jacob, 20 Nov)\n• January pricing options (Jacob, 24 Nov) and the New Year draft (Jacob, 25 Nov)\n• Platform transition plan (Jacob, 16 Nov)\n• Landing actions (Prince, 24 Nov)\nMax will join to take notes. Let's make the calls tomorrow 💪",
+      "attachments": [],
+      "reactions": {
+        "👍": [
+          "daniel",
+          "jacob",
+          "prince"
+        ],
+        "💪": [
+          "jacob"
+        ]
+      },
+      "replies": [
+        {
+          "author": "prince",
+          "time": "2026-11-25T18:00:00",
+          "text": "Ready. FX is about ¥158 today, still about ¥2 above the budget rate; I'll mention it with the landing."
+        },
+        {
+          "author": "daniel",
+          "time": "2026-11-25T18:05:00",
+          "text": "Ready ✅"
+        },
+        {
+          "author": "jacob",
+          "time": "2026-11-25T18:10:00",
+          "text": "See you tomorrow!"
+        }
+      ]
+    }
+  ]
+}

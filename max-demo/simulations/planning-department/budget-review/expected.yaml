@@ -1,0 +1,79 @@
+# Answer key for Meeting 4 (H2 Supply & Pricing Decisions, 26 Nov 2026).
+# Used to score Max's notes after an autopilot run. If the real host (Karthi) makes different decisions in a
+# live run, score against what was actually said. Source of truth: WORLD.md "Expected outcome of Meeting 4".
+
+decisions:
+  - id: D1
+    text: >
+      Memory: commit 70% of the Q1 2027 need = 84,000 16GB DDR5 DIMMs at +14% (≈ ¥0.98B); the other 30% bought
+      spot/monthly; no spec-down on GALLERIA.
+    keywords: ["70%", "84,000", "0.98", "spot", "spec-down"]
+  - id: D2
+    text: >
+      Pricing: end the +¥9,696 32GB upgrade when Black Friday ends (4 Dec); new upgrade price +¥19,800; base price
+      increase from 6 Jan 2027: +¥10,000 on GALLERIA X / E and THIRDWAVE-G, +¥15,000 on GALLERIA F / S.
+    keywords: ["9,696", "4 Dec", "19,800", "6 Jan", "10,000", "15,000"]
+  - id: D3
+    text: >
+      GPUs: reserve 100 high-end GPUs for the PREF-AI-27 tender now and ask the board partner for 60 more;
+      GALLERIA RTX 5080/5090 lead-time target relaxed to 10 days until the end of January.
+    keywords: ["100", "60", "PREF-AI-27", "10 days"]
+  - id: D4
+    text: >
+      New Year: revive the ¥2,027 SSD lucky bag (50 bags) and sell 1,200 previous-gen lucky boxes.
+    keywords: ["2,027", "50", "1,200"]
+  - id: D5
+    text: >
+      Platform: no Nova Lake / Zen 6 pre-announcement before 1 Feb 2027; sell current-gen CPU/board stock down to
+      6 weeks of cover or less by the end of January.
+    keywords: ["Nova Lake", "Zen 6", "1 Feb", "6 weeks"]
+
+final_numbers:
+  label: H1 revenue landing v2
+  value: 53.4
+  unit: "¥B"
+  budget: 55.0          # gap ¥1.6B
+
+action_items:
+  - owner: Daniel
+    task: Send the 70% memory commitment (84,000 DIMMs) to Sarah Miller for signature
+    due: 2026-12-01
+  - owner: Daniel
+    task: Confirm the GPU split with Tom Wilson (100 reserved, request 60 more)
+    due: 2026-11-30
+  - owner: Jacob Thomas
+    task: Final January price list and the +¥19,800 upgrade price for the price committee
+    due: 2026-12-03
+  - owner: Jacob Thomas
+    task: Final New Year plan (1,200 lucky boxes + 50 ¥2,027 bags) to Sales Promotion
+    due: 2026-12-09
+  - owner: Prince Alex
+    task: H1 landing v2 (¥53.4B) deck for the 8 Dec management meeting
+    due: 2026-12-02
+  - owner: Karthi M
+    task: Send the decisions and landing v2 to Robert Hayes
+    due: 2026-12-04
+
+risks:
+  - If Q1 demand falls further, the 84,000 DIMMs become excess stock.
+  - The January price increase may cut units more than the assumed -4%.
+  - If the partner can't supply the extra 60 GPUs, the tender bid or GALLERIA lead times suffer.
+
+max_questions:   # Max must answer these correctly from the thread / documents / past meetings
+  # Facts are written without thousands commas: scoring.fact_in strips commas from Max's answer before matching.
+  - beat: b04_max_memory_quote
+    facts: ["14%", "120000", "1.4"]
+  - beat: b09_max_bf_upgrade
+    facts: ["70%", "4300"]
+  - beat: b14_max_tender
+    facts: ["160", "600", "31 Mar"]
+  - beat: b19_max_luckybag
+    facts: ["shortage", "31 Dec"]
+
+scoring:
+  decisions: 3 points each (15)
+  action_items: 2 points each, owner + due date both needed (12)
+  final_numbers: 3 points
+  risks: 1 point each (3)
+  max_questions: 5 points each, all facts present (20)
+  total: 53

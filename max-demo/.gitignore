@@ -1,0 +1,31 @@
+# Secrets
+.env
+*.env
+!.env.example
+
+# Simulation run outputs and fake-tenant state (keys, secrets, channel state)
+simulations/*/runs/
+simulations/teams/state/
+
+# Max runtime data (channel knowledge cache)
+max/data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Generated: Gemini TTS audio cache, Max's Teams app package (rebuilt by register_app.py)
+.tts_cache/
+max/appPackage/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Demo launcher logs (run.py) and the optional per-machine Gemini usage meter
+logs/
+gemini_usage/
+local_tts/

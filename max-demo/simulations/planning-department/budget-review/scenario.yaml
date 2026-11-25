@@ -1,0 +1,332 @@
+# Meeting 4 (LIVE): H2 Supply & Pricing Decisions  (Thu 26 Nov 2026, 10:00-11:00)
+# The agents (Daniel, Jacob, Prince) improvise their lines with the LLM, but follow these beats in order.
+# Karthi is the real user; host_fallback lines are used only in "autopilot" mode (no human) so the meeting can
+# run end to end. Facts come from WORLD.md; the answer key is budget-review/expected.yaml.
+# Max questions are asked BEFORE the colleagues state those numbers, so Max must answer from the thread,
+# documents or past meetings.
+
+meeting:
+  title: H2 Supply & Pricing Decisions
+  date: 2026-11-26T10:00:00
+  duration_min: 60
+  host: karthi
+  attendees: [karthi, daniel, jacob, prince, max]
+  agenda:
+    - "Memory: Q1 2027 DRAM contract (sign by 4 Dec)"
+    - "January pricing, incl. ending the +¥9,696 32GB upgrade"
+    - "GPU split for the PREF-AI-27 tender vs GALLERIA lead times"
+    - "New Year 2027 plan (lucky bags and lucky boxes)"
+    - "Platform transition timing (Nova Lake / Zen 6)"
+    - "Confirm H1 landing v2 for Robert (8 Dec management meeting)"
+
+rules_for_agents:
+  - Stay in character (see team.yaml). Speak 1-3 sentences per turn, like a real meeting.
+  - Only state facts that exist in WORLD.md, the thread, the documents or past meetings.
+  - Do not jump ahead of the current beat. Let the host (Karthi) close each decision.
+  - Disagree politely and briefly; give your number, then let others speak.
+  - If Karthi decides differently from the beat's expected outcome, accept it and adapt later beats.
+
+beats:
+  # ---------------------------------------------------------------- opening + landing recap
+  - id: b01_open
+    speaker: karthi
+    goal: Open the meeting, welcome Max, read the agenda and say these decisions go to Robert before 8 Dec.
+    host_fallback: >
+      Morning everyone, and welcome Max, who's taking notes for us today. We have five decisions: the memory
+      contract, January pricing, the GPU split for the prefectural tender, the New Year plan, and the platform
+      transition timing. Then we confirm the H1 landing v2. Everything we decide goes to Robert before the
+      management meeting on the 8th, so let's be clear on the numbers.
+
+  - id: b02_landing_recap
+    speaker: prince
+    goal: >
+      Short recap of where H1 stands: Q1 closed at ¥24.8B vs ¥26.0B budget (-4.6%), landing v1 on 4 Nov was
+      ¥52.5B against the ¥55.0B H1 budget, a ¥2.5B gap, and Robert asked us to try every route. Say you will
+      give the updated landing (v2) at the end, after today's decisions.
+    must_mention: ["24.8", "52.5", "2.5"]
+
+  - id: b03_to_memory
+    speaker: karthi
+    goal: Thank Prince and move to the memory contract, the most urgent item (signature due 4 Dec).
+    host_fallback: >
+      Thanks Prince. Let's start with memory, because the signature is due on the 4th of December.
+
+  # ---------------------------------------------------------------- D1 memory
+  - id: b04_max_memory_quote
+    speaker: jacob
+    goal: Before Daniel starts, ask Max to repeat exactly what the supplier quoted for Q1 memory in the 17 Nov meeting.
+    max_question: "Max, before we dive in, what exactly did the supplier quote us for Q1 memory in the 17 November meeting?"
+    max_expected_answer: >
+      In the 17 Nov meeting Sarah Miller presented the supplier's Q1 2027 (Jan-Mar) quote: 120,000 16GB DDR5
+      DIMMs at +14%, about ¥1.4B (≈ ¥11,700 each), to be signed by 4 Dec 2026, with a warning of allocation cuts
+      in 2027 (PC DRAM output -20%+).
+
+  - id: b05_memory_aoi
+    speaker: daniel
+    goal: >
+      Give the supply view: DRAM coverage is 7 weeks, the Q4 contract was already +15%, and the supplier warns
+      PC DRAM output will be cut by more than 20% in 2027, so allocation first. You would prefer to lock as much as
+      possible, but say committing 70% (84,000 DIMMs, about ¥0.98B) and buying the rest spot/monthly is the
+      minimum you can support. Remind everyone it must be signed by 4 Dec.
+    must_mention: ["7 weeks", "84,000", "4 Dec"]
+
+  - id: b06_memory_kenji
+    speaker: prince
+    goal: >
+      Politely push back on a 100% commitment: if Q1 demand misses by 15%, a 100% commit leaves about 6 extra
+      weeks of DRAM, roughly ¥0.4B of cash tied up. Say 70% is easier to defend than 100%, but excess stock is
+      still the risk to watch.
+    must_mention: ["15%", "6", "0.4"]
+
+  - id: b07_memory_ren
+    speaker: jacob
+    goal: >
+      Reject option (c), the 50% commit plus spec-down (16GB x1 instead of 8GB x2 on entry models): saving about
+      ¥3,000 a unit is not worth it, the gaming community and SNS will notice. Support 70% plus spot buying as
+      long as there is no spec-down on GALLERIA.
+    must_mention: ["spec-down", "3,000"]
+
+  - id: b08_decide_memory
+    speaker: karthi
+    goal: Decide to commit 70% (84,000 DIMMs at +14%, ≈ ¥0.98B), buy the other 30% spot/monthly, no spec-down on GALLERIA.
+    host_fallback: >
+      Okay, decision on memory. We commit seventy percent of the Q1 need: 84,000 DIMMs at plus 14 percent, about
+      0.98 billion yen. The other thirty percent we buy spot or monthly. And no spec-down on GALLERIA.
+    decision: D1
+
+  # ---------------------------------------------------------------- booking during the meeting (Max takes an action)
+  - id: b08b_book_memory_followup
+    speaker: karthi
+    goal: Ask Max to book a 30-minute follow-up with Daniel and Sarah Miller on Monday 30 November at 10:00 to finalise the memory contract quantity.
+    host_fallback: >
+      Max, please book thirty minutes on Monday the 30th of November at 10 am with Daniel and Sarah Miller,
+      to finalise the memory contract quantity before Sarah signs.
+
+  # ---------------------------------------------------------------- D2 pricing
+  - id: b09_max_bf_upgrade
+    speaker: prince
+    goal: Before Jacob presents pricing, ask Max for the Black Friday week-1 take rate of the 32GB upgrade and the loss per upgrade.
+    max_question: "Max, in Jacob's week-one Black Friday results, what percentage of buyers took the 32GB upgrade, and how much do we lose on each one?"
+    max_expected_answer: >
+      Week 1 (13-19 Nov): 70% of buyers took the 32GB upgrade at +¥9,696. The extra 16GB really costs about
+      ¥14,000, so we lose about ¥4,300 per upgrade, roughly ¥66M of margin over the whole campaign (≈ 15,400
+      upgrades). Order intake was 92% of plan (8,950 vs 9,730 PC orders).
+
+  - id: b10_pricing_ren
+    speaker: jacob
+    goal: >
+      Present the pricing proposal: end the +¥9,696 32GB upgrade when Black Friday ends on 4 Dec, new upgrade
+      price +¥19,800; base price increase from 6 Jan 2027, right after 初売り: +¥10,000 on GALLERIA X / E and
+      THIRDWAVE-G, +¥15,000 on GALLERIA F / S. Say it is honest and well timed, and competitors already raised
+      (FRONTIER +16-41% last December).
+    must_mention: ["9,696", "19,800", "6 Jan", "10,000", "15,000"]
+
+  - id: b11_pricing_kenji
+    speaker: prince
+    goal: >
+      Support the increase from the numbers: gross margin about +1.2pt for Feb-Jul, and the upgrade alone would
+      cost about ¥66M of margin over the campaign. Gently warn that the assumed -4% unit impact may be optimistic.
+    must_mention: ["1.2", "66", "4%"]
+
+  - id: b12_pricing_aoi
+    speaker: daniel
+    goal: >
+      Add the supply angle: Black Friday intake is 92% of plan (8,950 vs 9,730 orders), and with Q1 memory at +14%
+      the current prices do not cover parts cost, so you support moving on 6 Jan; ask that the price list be
+      final before the price committee so the S&OP can use it.
+    must_mention: ["92%", "14%"]
+
+  - id: b13_decide_pricing
+    speaker: karthi
+    goal: >
+      Decide: end the +¥9,696 upgrade on 4 Dec, new price +¥19,800; base prices up from 6 Jan 2027, +¥10,000 on
+      X / E / THIRDWAVE-G and +¥15,000 on F / S.
+    host_fallback: >
+      Agreed. The plus 9,696 yen upgrade ends with Black Friday on the 4th of December, and the new 32GB upgrade
+      price is plus 19,800 yen. Base prices go up from the 6th of January: plus 10,000 yen on X, E and
+      THIRDWAVE-G, plus 15,000 yen on F and S.
+    decision: D2
+
+  # ---------------------------------------------------------------- D3 GPUs
+  - id: b14_max_tender
+    speaker: jacob
+    goal: Before Daniel presents the GPU split, ask Max how many GPUs the PREF-AI-27 tender needs, its value and the delivery date.
+    max_question: "Max, how many GPUs does the PREF-AI-27 tender need, what's it worth, and when do we have to deliver?"
+    max_expected_answer: >
+      PREF-AI-27 (prefectural government AI-workstation tender, presented by Tom Wilson on 17 Nov): 40 raytrek
+      local-LLM workstations with 4 GPUs each = 160 high-end GPUs, about ¥600M, delivery by 31 Mar 2027 (their
+      fiscal year end); the bid is due 10 Dec 2026.
+
+  - id: b15_gpu_aoi
+    speaker: daniel
+    goal: >
+      NVIDIA's board-partner allocation for Jan-Mar is 15% below our request. Reserving all 160 GPUs now would push
+      GALLERIA RTX 5080/5090 lead times from the 5-day target to about 10 days. Propose reserving 100 GPUs for the
+      tender now and asking the board partner for 60 more.
+    must_mention: ["15%", "100", "60"]
+
+  - id: b16_gpu_ren
+    speaker: jacob
+    goal: >
+      Worry about GALLERIA: the site promises 5 days or less on RTX 5080/5090, and 10 days during the 半期決算セール
+      will hurt; the community will notice. Accept it only as a temporary change, until the end of January, and
+      with an honest note on the product pages.
+    must_mention: ["5 days", "10 days", "January"]
+
+  - id: b17_gpu_kenji
+    speaker: prince
+    goal: >
+      Note that the tender's ¥600M delivers in March, which is Q3, so it does not help the H1 landing, but it does
+      support raising enterprise sales from about 10% toward 30%. The bid is due 10 Dec; the risk is that if the
+      partner cannot supply the extra 60, either the bid or GALLERIA lead times suffer.
+    must_mention: ["Q3", "10 Dec", "60"]
+
+  - id: b18_decide_gpu
+    speaker: karthi
+    goal: Decide to reserve 100 GPUs for PREF-AI-27 now, ask the partner for 60 more, and relax the RTX 5080/5090 lead-time target to 10 days until end of January.
+    host_fallback: >
+      Let's do it Daniel's way. We reserve 100 high-end GPUs for the PREF-AI-27 tender now and ask the board partner
+      for 60 more. The GALLERIA RTX 5080 and 5090 lead-time target moves to 10 days until the end of January.
+    decision: D3
+
+  - id: b18b_book_gpu_followup
+    speaker: daniel
+    goal: Ask Max to set up a 30-minute meeting with Tom Wilson on Friday 27 November at 11:00 to align the GPU split for PREF-AI-27.
+    max_question: "Max, please book thirty minutes with Tom Wilson this Friday, 27 November, at 11 am to align the GPU split for the tender."
+
+  # ---------------------------------------------------------------- D4 New Year
+  - id: b19_max_luckybag
+    speaker: daniel
+    goal: Before Jacob pitches the New Year plan, ask Max why the 2026 lucky bags were cancelled and when that was announced.
+    max_question: "Max, why were the 2026 lucky bags cancelled again, and when was that announced?"
+    max_expected_answer: >
+      Because of the memory/SSD shortage; Dospara announced the cancellation on 31 Dec 2025. The Akihabara Main
+      Store's year-number SSD bag had been ¥2,025 with a 500GB SSD (50 bags, 1 per person).
+
+  - id: b20_newyear_ren
+    speaker: jacob
+    goal: >
+      Pitch the New Year plan with energy: revive the ¥2,027 SSD lucky bag (50 bags, 1TB SSD, 1 per person, loss
+      about ¥8,000 each, about ¥0.4M in total, big PR value with the community), plus a previous-gen lucky box:
+      1,200 PCs from aged stock (Core Ultra 200S + RTX 4060-class), about ¥0.24B of revenue.
+    must_mention: ["2,027", "50", "1,200", "0.24"]
+
+  - id: b21_newyear_aoi
+    speaker: daniel
+    goal: >
+      Confirm supply: 50 1TB SSDs is a small quantity, and the 1,200 lucky boxes are built from aged stock already
+      at the Ayase factory, so they need no new parts. Ask that the boxes stay at 1,200 so the S&OP holds.
+    must_mention: ["1,200", "Ayase"]
+
+  - id: b22_newyear_kenji
+    speaker: prince
+    goal: >
+      Support it from finance: the lucky boxes clear about ¥0.18B of aged inventory and add about ¥0.24B revenue in
+      H1; the bag's ¥0.4M loss is small. No objection.
+    must_mention: ["0.18", "0.24"]
+
+  - id: b23_decide_newyear
+    speaker: karthi
+    goal: Decide to revive the ¥2,027 SSD lucky bag (50 bags) and sell 1,200 previous-gen lucky boxes.
+    host_fallback: >
+      Good, the New Year plan is approved. We bring back the 2,027 yen SSD lucky bag, 50 bags, and we sell 1,200
+      previous-gen lucky boxes from aged stock.
+    decision: D4
+
+  # ---------------------------------------------------------------- D5 platform
+  - id: b24_platform_ren
+    speaker: jacob
+    goal: >
+      Argue to pre-announce Nova Lake / Zen 6 GALLERIA S and X models for February: Intel and AMD reveal them at CES
+      in early January, competitors will tease theirs, and GALLERIA should not look late to the gaming community.
+    must_mention: ["Nova Lake", "Zen 6", "CES"]
+
+  - id: b25_platform_kenji
+    speaker: prince
+    goal: >
+      Politely disagree: a pre-announcement makes buyers wait (the Osborne effect) right in the 半期決算セール, and
+      we hold about ¥1.8B of current-gen CPU and motherboard stock, about 9 weeks of cover. "That may be a little
+      difficult" before H1 closes on 31 Jan.
+    must_mention: ["1.8", "9 weeks", "31 Jan"]
+
+  - id: b26_platform_aoi
+    speaker: daniel
+    goal: >
+      Give the S&OP view: bring current-gen CPU/board stock down to 6 weeks of cover or less by the end of January
+      through the half-year closing sale, then announce the new platform after 1 Feb.
+    must_mention: ["6 weeks", "1 Feb"]
+
+  - id: b27_platform_ren_ok
+    speaker: jacob
+    goal: >
+      Accept, a little reluctantly but positively: you can live with no pre-announcement before 1 Feb if the
+      February launch is ready to go the moment the sale ends.
+    must_mention: ["1 Feb"]
+
+  - id: b28_decide_platform
+    speaker: karthi
+    goal: Decide no Nova Lake / Zen 6 pre-announcement before 1 Feb 2027; sell current-gen CPU/board stock down to 6 weeks of cover or less by end of January.
+    host_fallback: >
+      Then the decision is: no Nova Lake or Zen 6 pre-announcement before the 1st of February. Until then we sell
+      the current-gen CPU and board stock down to 6 weeks of cover or less by the end of January.
+    decision: D5
+
+  # ---------------------------------------------------------------- landing v2
+  - id: b29_landing_v2
+    speaker: prince
+    goal: >
+      Give landing v2: v1 ¥52.5B plus the New Year previous-gen lucky box +¥0.24B, the bigger 半期決算セール +¥0.45B
+      and two enterprise deliveries pulled into January +¥0.21B gives ¥53.4B, a remaining gap of ¥1.6B vs the
+      ¥55.0B budget. The tender delivers in March (Q3), so it is not in H1. Recommend reporting the gap honestly.
+    must_mention: ["53.4", "1.6", "0.24", "0.45", "0.21"]
+
+  - id: b30_landing_react
+    speakers: [daniel, jacob]
+    goal: >
+      Daniel confirms the parts are covered to pull the two enterprise deliveries into January. Jacob says the bigger
+      半期決算セール (mid-January to 31 Jan) fits well, because it also sells down the current-gen stock.
+
+  - id: b31_confirm_landing
+    speaker: karthi
+    goal: Confirm landing v2 at ¥53.4B, gap ¥1.6B, reported honestly to Robert.
+    host_fallback: >
+      Okay. Our H1 landing v2 is 53.4 billion yen, a gap of 1.6 billion against the 55 billion budget, and we
+      report it to Robert honestly, gap included.
+
+  # ---------------------------------------------------------------- action items + read-back
+  - id: b32_actions
+    speaker: karthi
+    goal: Assign the six action items with owners and due dates (see expected.yaml). Do not address Max yet.
+    host_fallback: >
+      Actions. Daniel, please get the 70 percent commitment, 84,000 DIMMs, to Sarah for signature by Tuesday the 1st
+      of December, and confirm the GPU split with Tom, 100 reserved and 60 more requested, by Monday the 30th.
+      Jacob, the final January price list and the 19,800 yen upgrade price for the price committee by Thursday the
+      3rd, and the final New Year plan, 1,200 lucky boxes and 50 of the 2,027 yen bags, to Sales Promotion by
+      Wednesday the 9th. Prince, the landing v2 deck at 53.4 billion for the 8 December management meeting by
+      Wednesday the 2nd. And I'll take the decisions and landing v2 to Robert by Friday the 4th.
+
+  - id: b33_actions_ack
+    speakers: [daniel, jacob, prince]
+    goal: >
+      Each person briefly confirms their own action item(s) and the due date in one sentence: Daniel (Sarah signature
+      by 1 Dec, GPU split with Tom by 30 Nov), Jacob (price list by 3 Dec, New Year plan by 9 Dec), Prince
+      (landing v2 deck by 2 Dec).
+
+  - id: b34_recap_request
+    speaker: karthi
+    goal: Ask Max to read back the decisions and action items before the meeting ends.
+    host_fallback: >
+      Max, before we finish, please read back the decisions and the action items so we can check them.
+
+  - id: b35_recap_check
+    speaker: prince
+    goal: >
+      After Max's read-back, confirm it matches, double-checking two numbers aloud: 84,000 DIMMs and the ¥53.4B
+      landing. If Max got something wrong or missed it, politely correct it.
+    must_mention: ["84,000", "53.4"]
+
+  - id: b36_close
+    speaker: karthi
+    goal: Thank everyone and close the meeting.
+    host_fallback: >
+      Great work, everyone. Clear decisions and honest numbers. Thank you, that's all for today.
