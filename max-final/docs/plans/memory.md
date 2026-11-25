@@ -78,6 +78,17 @@ Concern (Karthi): the system can't be designed for one person. Some people are i
   and can be focused with a word ("planning: ...") and/or a "Working in: Planning ▾" menu.
 - Team memory stays with the team; personal memory (preferences, own reminders, own tasks) follows the person.
 - Open questions: (1) does this remove the confusion? (2) focus by typed word, menu, or both (proposed: both)?
+  (3) group chats with people from different teams / shared channels: proposed = only what everyone there may see
+  (already rule R-8).
+- **Agreed by Karthi (25 Nov 2026, later session):**
+  - (1) Yes: one Max (one bot, one program; memory split per team and per person). Max Personal = the person's
+    private 1:1 chat with Max. No "@Max" needed there (every message in the 1:1 chat goes to Max).
+  - (2) Focus = **both** typed word and menu, plus **automatic choice**: a general question ("what work is
+    pending?") gathers from all the person's teams, labelled by team; a question clearly about one team uses that
+    team; the person can switch by just saying so in chat ("only Ads", "all teams"). When Max is unsure it uses
+    all teams and labels them (never guesses silently). Every answer shows which team(s) it used.
+    No separate router agent: the team is just a filter on the search tools, chosen in the same model call.
+  - (3) Mixed-team group chats / shared channels: **still open** (proposed: only what everyone there may see, R-8).
 
 ## To discuss (after research)
 1. Working memory and compaction inside a run

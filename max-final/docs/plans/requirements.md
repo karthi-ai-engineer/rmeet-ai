@@ -15,6 +15,11 @@ It only acts on its own inside clear limits, and asks before anything that leave
 | **R2** | The Should items | After R1 works |
 | **Later** | Parked topics (routines, memory design, Max Personal, integrations, Document Agent, voice) | Own planning |
 
+**R1 size (agreed 25 Nov 2026):** everything runs on **one laptop** (Max, database, simulated Teams, voice).
+About **4 simulated users in 1-2 teams**; Karthi plays all 4 himself in the simulated Teams. No other
+computers connect in R1. The design stays the same for more people later (one Max program, memory split per
+team and per person, short runs only when someone asks).
+
 ## 2. People and roles
 
 | Role | Can do |

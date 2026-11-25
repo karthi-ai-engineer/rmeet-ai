@@ -9,8 +9,11 @@ Last updated: 25 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
   model, SQLite store (raw layer), Gemini cost meter + dashboard, `run.py`, 59 offline tests.
 - **Now we are DESIGNING, not coding.** Rule: every topic in `docs/plans/open-topics.md` is discussed and agreed
   with Karthi, **one part at a time**, before any more code.
-- **We stopped at:** memory Part 6, "Max Personal" (one Max; the team is chosen by where you talk; in the 1:1 chat a
-  focus word and/or a team menu). Two questions are waiting for Karthi (see `docs/plans/memory.md`, Part 6).
+- **We stopped at:** memory Part 6, "Max Personal". Agreed: one Max; the team is chosen by where you talk; in the
+  1:1 chat Max picks the team(s) automatically, plus a focus word, a team menu, or just saying so in chat.
+  **One question is still waiting for Karthi:** mixed-team group chats (see `docs/plans/memory.md`, Part 6, point 3).
+- **R1 size:** one laptop, about 4 simulated users in 1-2 teams, Karthi plays all of them (`requirements.md` §1).
+- In examples and the simulated team use the names **Karthi, Prince, Rachitaa, Praga**.
 
 ## 2. Read in this order
 
@@ -65,7 +68,8 @@ Notes:
 
 ## 5. Next session: start here
 
-1. Ask Karthi the two open questions of **memory Part 6** (`docs/plans/memory.md`).
+1. Ask Karthi the last open question of **memory Part 6** (mixed-team group chats, `docs/plans/memory.md`),
+   then tick topics 1 and 2 in `open-topics.md`.
 2. Then continue `docs/plans/open-topics.md` in order: **RAG design (topic 3)** → tool contracts → personality
    and answer style → message/card formats → meetings (text mode) → skill files list → simulated team world +
    test set → build plan.
