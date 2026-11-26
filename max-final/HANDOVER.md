@@ -26,7 +26,7 @@ Last updated: 25 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 | `docs/plans/requirements.md` | Requirements, 13 rules, R1 scope, quality targets (approved) |
 | `docs/plans/agent-design.md` | Agent loop design (approved), loop graph (section 11), 3 modes + skill files (section 12) |
 | `docs/plans/agent-loop.excalidraw` | The loop as a diagram (open at excalidraw.com, or with the VS Code Excalidraw extension); quick picture: `agent-loop-preview.png` |
-| `docs/plans/memory.md` | Memory design: Parts 1-5 agreed, Part 6 proposed |
+| `docs/plans/memory.md` | Memory design, all 6 parts agreed (26 Nov). Pictures: `memory-stories.excalidraw` (simple, 4 stories) and `memory.excalidraw` (full), each with a `-preview.png` |
 | `docs/plans/step-0.md` | Step 0 plan and results |
 | `docs/research/` | All research reports (Teams access, storage, AI stack, app stack, prototype review, knowledge/RAG, tools, competitors, memory) |
 

@@ -1,6 +1,8 @@
 # Max: memory design
 
-**Status: STARTED (25 Nov 2026).** Research running (`docs/research/memory-*.md`), then discussed part by part.
+**Status: AGREED (26 Nov 2026), all 6 parts.** Research: `docs/research/memory-*.md`.
+**Pictures:** `memory-stories.excalidraw` (4 simple story pictures for anyone; quick view `memory-stories-preview.png`)
+and `memory.excalidraw` (the whole design on one page; quick view `memory-preview.png`).
 
 ## Agreed so far
 
@@ -88,7 +90,8 @@ Concern (Karthi): the system can't be designed for one person. Some people are i
     team; the person can switch by just saying so in chat ("only Ads", "all teams"). When Max is unsure it uses
     all teams and labels them (never guesses silently). Every answer shows which team(s) it used.
     No separate router agent: the team is just a filter on the search tools, chosen in the same model call.
-  - (3) Mixed-team group chats / shared channels: **still open** (proposed: only what everyone there may see, R-8).
+  - (3) Mixed-team group chats / shared channels: **agreed (26 Nov 2026)**: Max uses only what **everyone** in that
+    chat may see (rule R-8). If that blocks an answer, Max says so and offers to answer in the person's 1:1 chat.
 
 ## To discuss (after research)
 1. Working memory and compaction inside a run
