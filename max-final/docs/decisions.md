@@ -36,6 +36,9 @@ Based on `docs/research/` (teams-access, storage, ai-stack, app-stack, prototype
 | Thinking / answers / tools | **Gemini `gemini-3.1-flash-lite`** | `gemini-3.5-flash-lite` (separate limits; 2.5-flash-lite is blocked for new users) |
 | Meeting notes | Gemini flash-lite | `gemini-3.5-flash-lite` |
 
+**Rule 26 Nov 2026: the model provider is swappable.** Gemini may later be replaced by open-source models on
+company servers (cost then doesn't matter, but usage and speed are still tracked). Only `max/llm/` knows the provider.
+
 **Change 25 Nov 2026: Gemini only for now.** There is no Qwen access at the moment (its limits were reduced).
 The model client stays provider-neutral, so Qwen can come back later as a settings change.
 Risk: Gemini free-tier limits (HTTP 429). A paid key with a daily cap is strongly advised.

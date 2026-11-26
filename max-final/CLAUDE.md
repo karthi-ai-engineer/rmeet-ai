@@ -15,14 +15,14 @@ not a demo). The old prototype lives in `../max-demo`: read it for ideas, **neve
   then recommend the best option.
 - **Decide before building.** Tech stack, AI stack, frameworks and folder layout are fixed
   and written down (in `docs/decisions.md`) before any feature code. Right now **every topic in
-  `docs/plans/open-topics.md` is discussed and agreed before any more code**; tick a topic only when Karthi agrees.
+  `docs/plans/01-open-topics.md` is discussed and agreed before any more code**; tick a topic only when Karthi agrees.
 - **One part at a time.** Walk through designs section by section and wait for questions. Never dump a
   whole design into one message (the full version can live in a file).
 - **Real product, not a demo.** No "for the demo" framing or shortcuts. R1 = first release.
 - **Keep scope lean.** Don't keep adding extra features; ask "will people really use this?" first.
 - **Never mention Japan or Japanese laws** as a reason for anything. Present privacy and forgetting
   simply as good product design.
-- When a picture helps (loops, flows), make an Excalidraw file plus a PNG preview (see `docs/plans/agent-loop.*`).
+- When a picture helps (loops, flows), make an Excalidraw file plus a PNG preview (see `docs/plans/pictures/agent-loop.*`).
 
 ## Hard rules
 - **Models allowed:**
@@ -32,7 +32,7 @@ not a demo). The old prototype lives in `../max-demo`: read it for ideas, **neve
     Keep Gemini usage visible and cheap.
   - A local voice server on the PC (Kokoro).
   - Gemini embeddings (`gemini-embedding-2`) for meaning search, only if tests show they help.
-  - Other **local** models only if they run well and fast on this PC (agree with Karthi first).
+  - Other **local** models if they run well (agree with Karthi first).
   - No GPT or other gateway models.
 - **Secrets never in chat or git.** Keys live only in `.env` files. When showing an env file,
   hide the values (`GEMINI_API_KEY=***`).
@@ -42,6 +42,16 @@ not a demo). The old prototype lives in `../max-demo`: read it for ideas, **neve
 - **Keep it simple.** Few folders, clear names, no clever abstractions. A new developer
   should understand the layout in 2 minutes.
 - **Follow `docs/decisions.md`** (approved stack). Change it only with Karthi's OK.
+- **The AI model stays swappable (Karthi, 26 Nov 2026).** Gemini may be replaced at any time, e.g. by open-source
+  models on company servers. Only `max/llm/` may know which provider is used. No Gemini-only features in the design
+  (no Google search grounding, no Gemini file search, no context caching). Embeddings sit behind one `embed()`
+  function. Settings and names stay provider-neutral. Every quality test must be runnable against any model.
+- **Environment is flexible (Karthi, 26 Nov 2026).** Don't design around one machine. Development runs on the office
+  laptop (i5, no GPU) and a home HP Omen (more powerful); real use will run on a server. Pick the **best tools and
+  models for the project**; machine limits are only noted, never a reason to choose a weaker design.
+- **Every price, budget and limit is a setting (Karthi, 26 Nov 2026).** Daily cap, test budget, per-task budgets,
+  cost targets, message limits: never fixed in code, editable by the user any time. An editable dashboard for
+  them comes later; until then they live in the settings file. Numbers in plans are only starting defaults.
 - **Agent framework stays swappable:** Pydantic AI only inside `max/agent/runner.py`.
   Tools, prompts, model clients, approvals and history are plain Python, so LangGraph can
   replace the runner later.
@@ -72,5 +82,5 @@ are updated. Every bug found gets a test. Never start the next step while one is
 | `data/` | Runtime data (databases, logs, caches). Not in git. |
 
 ## Open topics
-See `docs/plans/open-topics.md` (the master list). Teams: simulated now; real tenant later
+See `docs/plans/01-open-topics.md` (the master list). Teams: simulated now; real tenant later
 (research: `docs/research/teams-access.md`). The IT admin should only ever install Max once.

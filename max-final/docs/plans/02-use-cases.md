@@ -102,6 +102,9 @@ clarifying question, refusing L4 requests.
 | Avatar | Orange cloud for now; richer animations later |
 
 ## 6. How Max reads a big team (research: `docs/research/knowledge.md`)
+> **Replaced by `docs/plans/07-rag.md` (agreed 26 Nov 2026):** keyword + meaning search from R1, re-rank to the best 8,
+> answer checks, ~250-question test set. The text below is the earlier first idea, kept for history.
+
 **Search first, then open only what is needed.** Never send everything to the AI.
 1. `search_knowledge(query, filters)` → about 8 short snippets with ids and sources (keyword search, SQLite FTS5).
 2. The agent opens only what it needs: `read_thread`, `read_file(section)`, `get_transcript(time range)`.
@@ -188,7 +191,7 @@ meetings is a real difference.
 ## 11. Decisions round 2 (Karthi, 25 Nov 2026)
 | Topic | Decision |
 |---|---|
-| Where people see plans | **Max's own views first**: a living plan card in the channel (Max edits it in place, with Done / New date / Blocked buttons) and a **Plans tab** in Teams. Max's database is the one source of truth. Third-party apps later (Microsoft Planner first, then Jira / Notion), one-way export first. |
+| Where people see plans | **Max's own views first**: a living plan card in the channel (Max edits it in place, with Done / New date / Blocked buttons) and a **Plans tab** in Teams. Max's database is the one source of truth. No Microsoft Planner (Karthi, 26 Nov: our own plans only). Jira / Notion export maybe later. |
 | 3 rules + U28-U30 | Agreed |
 | **Stop button (new rule)** | Every running Max task shows a **Stop** button. If Max was called by mistake, one click stops it: nothing more is sent, nothing half-done is left (pending actions cancelled). |
 | Language (R1) | English |
@@ -204,5 +207,5 @@ meetings is a real difference.
 | U38 reusable routines | Probably "saved steps + a trigger"; needs its own careful plan |
 | Memory and how the agent uses it | Own design session |
 | **Max per channel vs. a person in many teams; "Max Personal"** | Karthi has an idea. Same Max workflow, different connections. |
-| Third-party integrations (MCP, Planner, Jira, Notion) | Own design session |
+| Third-party integrations (MCP, Jira, Notion; no Microsoft Planner: Karthi 26 Nov, own plans only) | Own design session |
 | Document Agent (U18), charts (U22), agent-to-agent (U21) | Stubs or later |

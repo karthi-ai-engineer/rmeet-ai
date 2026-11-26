@@ -1,6 +1,6 @@
 # Competitors: meeting AI and the Microsoft ecosystem
 
-**Date:** 25 Nov 2026. Input to `docs/plans/use-cases.md` (U1-U27). Goes deeper than `use-cases-market.md`.
+**Date:** 25 Nov 2026. Input to `docs/plans/02-use-cases.md` (U1-U27). Goes deeper than `use-cases-market.md`.
 Sources are mostly vendor pages and trade press, so features are "what they say", not tested. **(?)** = I could not confirm it.
 
 ## 1. Microsoft (Teams)

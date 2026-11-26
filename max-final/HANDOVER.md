@@ -1,18 +1,22 @@
 # Max final: handover
 
-Last updated: 25 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
+Last updated: 26 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 
 ## 1. Where we are in one minute
 
 - **Max** = a semi-autonomous AI teammate for Microsoft Teams. This is the **real product** (not a demo).
 - **Step 0 (foundation) is built, tested and committed**: settings, Gemini client with time limits + backup
   model, SQLite store (raw layer), Gemini cost meter + dashboard, `run.py`, 59 offline tests.
-- **Now we are DESIGNING, not coding.** Rule: every topic in `docs/plans/open-topics.md` is discussed and agreed
-  with Karthi, **one part at a time**, before any more code.
-- **We stopped at:** memory Part 6, "Max Personal". Agreed: one Max; the team is chosen by where you talk; in the
-  1:1 chat Max picks the team(s) automatically, plus a focus word, a team menu, or just saying so in chat.
-  **One question is still waiting for Karthi:** mixed-team group chats (see `docs/plans/memory.md`, Part 6, point 3).
-- **R1 size:** one laptop, about 4 simulated users in 1-2 teams, Karthi plays all of them (`requirements.md` §1).
+- **The design phase is DONE (26 Nov 2026).** All topics in `docs/plans/01-open-topics.md` are agreed, except
+  **Max Meeting** (topic 7), which became its own module and is **paused until the chat Max (R1) is built**
+  (`docs/plans/meeting/01-overview.md`).
+- **The UI is designed** (`docs/plans/13-ui-design.md`, pictures `docs/plans/pictures/ui-*.png`): a simulated Teams
+  built with Fluent UI v9 in `teams_sim/web/` (mock data only), Max's own pages, developer tools, all cards (drawn by
+  Microsoft's Adaptive Cards renderer) and Max's chat (prompt starters, streaming, answers, feedback, cards).
+  Run it: `cd teams_sim/web && npm install && npm run dev` (or `npm run build -- --base ./ && npx vite preview --port 5181`).
+- **Next: Step 1** of the build plan (`docs/plans/12-build-plan.md`): any AI provider can be plugged in + all limits
+  in one settings file. Write `docs/plans/step-1.md` (1-page plan) first and get Karthi's OK.
+- **R1 size:** one laptop, about 4 simulated users in 1-2 teams, Karthi plays all of them (`03-requirements.md` §1).
 - In examples and the simulated team use the names **Karthi, Prince, Rachitaa, Praga**.
 
 ## 2. Read in this order
@@ -20,14 +24,24 @@ Last updated: 25 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 | File | What |
 |---|---|
 | `CLAUDE.md` | Rules: how to work with Karthi, models allowed, git, process |
-| `docs/plans/open-topics.md` | **The master list of what's left to decide** (start here for the next session) |
+| `docs/plans/01-open-topics.md` | **The master list of what's left to decide** (start here for the next session) |
 | `docs/decisions.md` | Approved tech stack |
-| `docs/plans/use-cases.md` | 45 use cases, control levels L0-L4, triggers, decisions (agreed) |
-| `docs/plans/requirements.md` | Requirements, 13 rules, R1 scope, quality targets (approved) |
-| `docs/plans/agent-design.md` | Agent loop design (approved), loop graph (section 11), 3 modes + skill files (section 12) |
-| `docs/plans/agent-loop.excalidraw` | The loop as a diagram (open at excalidraw.com, or with the VS Code Excalidraw extension); quick picture: `agent-loop-preview.png` |
-| `docs/plans/memory.md` | Memory design, all 6 parts agreed (26 Nov). Pictures: `memory-stories.excalidraw` (simple, 4 stories) and `memory.excalidraw` (full), each with a `-preview.png` |
+| `docs/plans/02-use-cases.md` | 45 use cases, control levels L0-L4, triggers, decisions (agreed) |
+| `docs/plans/03-requirements.md` | Requirements, 13 rules, R1 scope, quality targets (approved) |
+| `docs/plans/04-agent-design.md` | Agent loop design (approved), loop graph (section 11), 3 modes + skill files (section 12) |
+| `docs/plans/pictures/agent-loop.excalidraw` | The loop as a diagram (open at excalidraw.com, or with the VS Code Excalidraw extension); quick picture: `pictures/agent-loop-preview.png` |
+| `docs/plans/06-memory.md` | Memory design, all 6 parts agreed (26 Nov). Pictures in `docs/plans/pictures/`: `memory-stories.excalidraw` (simple, 4 stories) and `memory.excalidraw` (full), each with a `-preview.png` |
+| `docs/plans/07-rag.md` | RAG (live knowledge) design, all parts + Decisions 1-4 agreed (26 Nov). Pictures in `docs/plans/pictures/` |
+| `docs/plans/05-tools.md` | Tool contracts, all agreed (26 Nov) |
+| `docs/plans/08-personality.md` | Personality and answer style, agreed (26 Nov) |
+| `docs/plans/09-cards.md` | Cards and message formats, agreed (26 Nov); pictures `docs/plans/pictures/cards-*.png` |
+| `docs/plans/10-skill-files.md` | Skill files list (agreed) |
+| `docs/plans/11-sim-world.md` | Simulated Thirdwave world + test set (agreed; scale test later) |
+| `docs/plans/12-build-plan.md` | Build steps in order + "R1 done" checklist (agreed) |
+| `docs/plans/13-ui-design.md` | UI design, all agreed; mock-ups in `teams_sim/web/` |
+| `docs/plans/meeting/01-overview.md` | Max Meeting module (paused) |
 | `docs/plans/step-0.md` | Step 0 plan and results |
+| `docs/plans/README.md` | Map of the plans folder: numbered files in reading order + one `pictures/` folder |
 | `docs/research/` | All research reports (Teams access, storage, AI stack, app stack, prototype review, knowledge/RAG, tools, competitors, memory) |
 
 ## 3. Key decisions so far (short)
@@ -39,8 +53,8 @@ Last updated: 25 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 | Agent | **Pydantic AI**, only in `max/agent/runner.py` (swappable to LangGraph). 3 modes: workflow / simple loop / plan-then-act. Skill files per task type (written later). |
 | Safety | Levels L0-L4, approvals by the right person (configurable), Stop button, budgets per task type + Continue card, loop guard, privacy filter, hidden-instruction guard |
 | Memory | Compaction 40k/120k/200k + notepad; thread summaries; people facts with date + source (newer wins); run cards 60 days; lessons only from people (team lead accepts); work-only memory; forgetting rules |
-| Knowledge (RAG) | Search first, open only what's needed. **Own big design session still to come** (topic 3, incl. OCR extractor and live updates) |
-| Plans | Living plan card + Plans tab; Max's DB is the source of truth; Planner/Jira/Notion later |
+| Knowledge (RAG) | Agreed (`07-rag.md`): structure-based pieces, keyword + meaning search, AI re-rank to best 8, answer checks, ~250-question test set |
+| Plans | Living plan card + Plans tab; Max's DB is the source of truth; no Microsoft Planner (Karthi, 26 Nov); Jira/Notion later |
 | Time | Team time zone Asia/Tokyo, working hours 9:00-18:00 |
 
 ## 4. Setup on another machine (e.g. home laptop)
@@ -68,9 +82,9 @@ Notes:
 
 ## 5. Next session: start here
 
-1. Ask Karthi the last open question of **memory Part 6** (mixed-team group chats, `docs/plans/memory.md`),
-   then tick topics 1 and 2 in `open-topics.md`.
-2. Then continue `docs/plans/open-topics.md` in order: **RAG design (topic 3)** → tool contracts → personality
-   and answer style → message/card formats → meetings (text mode) → skill files list → simulated team world +
-   test set → build plan.
-3. Walk through each topic **one part at a time**; record agreements in the docs; tick in `open-topics.md`.
+1. Read `docs/plans/12-build-plan.md` (step order + "R1 done") and `docs/plans/13-ui-design.md`.
+2. **Step 1:** write `docs/plans/step-1.md` (provider-neutral `LLM_*` settings, OpenAI-compatible backend for
+   company-server models, neutral usage meter, all limits in one settings file). Karthi approves, then tests first,
+   build, review, end-to-end test, docs, Karthi commits.
+3. Keep the rules in `CLAUDE.md`: one part at a time, limits are settings, model stays swappable, Claude decides UI
+   details and shows images.

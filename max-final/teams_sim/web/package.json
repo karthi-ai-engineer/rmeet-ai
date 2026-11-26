@@ -1,0 +1,25 @@
+{
+  "name": "teams-sim-web",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Simulated Teams UI (design mock-ups first, then the real simulator screens)",
+  "scripts": {
+    "dev": "vite --port 5180",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "9.75.3",
+    "@fluentui/react-icons": "2.0.347",
+    "adaptivecards": "^3.0.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.3",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
+  }
+}

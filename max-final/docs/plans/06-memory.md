@@ -1,8 +1,8 @@
 # Max: memory design
 
 **Status: AGREED (26 Nov 2026), all 6 parts.** Research: `docs/research/memory-*.md`.
-**Pictures:** `memory-stories.excalidraw` (4 simple story pictures for anyone; quick view `memory-stories-preview.png`)
-and `memory.excalidraw` (the whole design on one page; quick view `memory-preview.png`).
+**Pictures:** `pictures/memory-stories.excalidraw` (4 simple story pictures for anyone; quick view `pictures/memory-stories-preview.png`)
+and `pictures/memory.excalidraw` (the whole design on one page; quick view `pictures/memory-preview.png`).
 
 ## Agreed so far
 

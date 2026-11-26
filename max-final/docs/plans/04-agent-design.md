@@ -1,7 +1,7 @@
 # Max: agent loop design
 
 **Status: APPROVED by Karthi (25 Nov 2026).** Next: the loop as an exact graph of nodes and edges (section 11).
-Implements `requirements.md` (rules R-1 … R-13). Framework: Pydantic AI 2.74 (checked: it has step/cost
+Implements `03-requirements.md` (rules R-1 … R-13). Framework: Pydantic AI 2.74 (checked: it has step/cost
 limits, approve/deny pauses, run cancel). Pydantic AI lives only in `max/agent/runner.py`.
 
 ## 1. The big picture
@@ -81,6 +81,8 @@ Tool list for R1: `search_knowledge`, `read_thread`, `list_recent`, `read_file`,
 `list_people`, `get_calendar`, `list_tasks`, `calc` (numbers from code, R-12), `record_decision`,
 `post_message`, `propose_tasks` (L3), `update_task`, `schedule_job`, `list_jobs`, `cancel_job`,
 `ask_for_more_steps`. Stubs: `make_document`, `ask_agent`.
+**Full, current list with exact inputs/outputs: `05-tools.md`** (26 Nov: adds `query_sheet`, `list_decisions`,
+`send_private_message`, `save_meeting_notes`, and email + meetings moved into R1).
 
 ## 5. What the model sees (small, not "everything")
 
@@ -143,7 +145,7 @@ Every edge writes one line to the audit table.
 
 ### 11.1 Overview
 
-Visual: `docs/plans/agent-loop.excalidraw` (open at excalidraw.com or with the VS Code Excalidraw extension); quick picture: `agent-loop-preview.png`.
+Visual: `docs/plans/pictures/agent-loop.excalidraw` (open at excalidraw.com or with the VS Code Excalidraw extension); quick picture: `pictures/agent-loop-preview.png`.
 
 ```
             ┌──────────┐    ┌─────────┐    ┌─────────┐    ┌──────────┐
@@ -231,4 +233,4 @@ Intake (code, not the AI) picks the mode from the task type.
 - **No matching skill:** general "answer" mode (general instructions + thinking). If it turns out big, the agent
   switches to mode 3 (the person sees the plan). Unmatched requests are logged, to decide which skills to write next.
 - **Thinking level** per task type (a setting): low for questions, higher for notes and mode-3 plans (slower, a bit costlier).
-- Diagram: `agent-loop.excalidraw` (PLAN and WORKFLOW nodes added).
+- Diagram: `pictures/agent-loop.excalidraw` (PLAN and WORKFLOW nodes added).

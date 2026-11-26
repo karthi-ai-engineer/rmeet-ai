@@ -1,6 +1,6 @@
 # What comparable AI teammates offer (market check for Max use cases)
 
-**Date:** 25 Nov 2026. Input to `docs/plans/use-cases.md` (draft 2). Sources are mostly vendor pages, so treat feature claims as "what they say", not tested facts.
+**Date:** 25 Nov 2026. Input to `docs/plans/02-use-cases.md` (draft 2). Sources are mostly vendor pages, so treat feature claims as "what they say", not tested facts.
 
 ## 1. Features our draft is missing
 

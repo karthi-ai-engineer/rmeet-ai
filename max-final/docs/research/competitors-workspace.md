@@ -1,6 +1,6 @@
 # Competitors: workspace AI teammates and knowledge agents
 
-**Date:** 25 Nov 2026. Input to `docs/plans/use-cases.md` (U1-U27). Goes deeper than `use-cases-market.md`.
+**Date:** 25 Nov 2026. Input to `docs/plans/02-use-cases.md` (U1-U27). Goes deeper than `use-cases-market.md`.
 Sources are mostly vendor pages, so treat them as claims. **(unverified)** = not confirmed from a 2026 primary source.
 Tags: **Search**, **Chat**, **Tasks**, **Proactive**, **Docs**, **Actions**, **Multi** (agents/automation), **Memory**, **Trust** (admin, approvals, audit, citations).
 
