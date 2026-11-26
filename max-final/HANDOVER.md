@@ -6,7 +6,8 @@ Last updated: 26 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 
 - **Max** = a semi-autonomous AI teammate for Microsoft Teams. This is the **real product** (not a demo).
 - **Step 0 (foundation) is built, tested and committed**: settings, Gemini client with time limits + backup
-  model, SQLite store (raw layer), Gemini cost meter + dashboard, `run.py`, 59 offline tests.
+  model, SQLite store (raw layer), AI usage meter + dashboard, `run.py`. **Step 1** (branch `step-1`): any AI
+  provider via settings (`LLM_PROVIDER`: gemini or openai_compatible), all limits in `limits.toml`.
 - **The design phase is DONE (26 Nov 2026).** All topics in `docs/plans/01-open-topics.md` are agreed, except
   **Max Meeting** (topic 7), which became its own module and is **paused until the chat Max (R1) is built**
   (`docs/plans/meeting/01-overview.md`).
@@ -67,11 +68,12 @@ Last updated: 26 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
    git checkout max-final
    cd max-final
    ```
-3. Copy `.env.example` to `.env` and paste your **Gemini key** (never commit `.env`).
+3. Copy `.env.example` to `.env` and paste your **AI key** (`LLM_API_KEY`; the old `GEMINI_API_KEY` also works). Never commit `.env`.
 4. `python run.py setup` (creates `.venv`, installs exact library versions).
-5. `python run.py test` → should show **59 passed** (offline, free).
+5. `python run.py test` → should show **103 passed** (offline, free).
 6. `python run.py check` → live check with the key (main, backup, fallback drill).
-7. Optional: `python run.py dashboard` → Gemini cost dashboard on http://localhost:8600.
+7. `python run.py settings` → provider, models and every limit. Optional: `python run.py dashboard` → AI usage
+   dashboard on http://localhost:8600. Own limits: copy lines from `limits.toml` into `data/limits.toml`.
 
 Notes:
 - `data/` (cost log, logs, database) is per machine and not in git. The daily cost cap ($1) counts per machine.
@@ -80,11 +82,19 @@ Notes:
 - Claude's own notes ("memory") live per machine. Everything important is in `CLAUDE.md` and this file,
   so a new session on another machine has the same rules.
 
-## 5. Next session: start here
+## 5. Next session: start here (paused 26 Nov 2026)
 
-1. Read `docs/plans/12-build-plan.md` (step order + "R1 done") and `docs/plans/13-ui-design.md`.
-2. **Step 1:** write `docs/plans/step-1.md` (provider-neutral `LLM_*` settings, OpenAI-compatible backend for
-   company-server models, neutral usage meter, all limits in one settings file). Karthi approves, then tests first,
-   build, review, end-to-end test, docs, Karthi commits.
-3. Keep the rules in `CLAUDE.md`: one part at a time, limits are settings, model stays swappable, Claude decides UI
+**Where we stopped:**
+- **Step 1 is built, reviewed and fixed** on branch **`step-1`** (pushed): any AI provider via `LLM_*` settings,
+  OpenAI-style backend (proven live through Gemini's OpenAI door), `ai_usage/` (was `gemini_cost/`), every limit in
+  `limits.toml` + `data/limits.toml`, `python run.py settings`. 125 tests pass; live check passes.
+  Results + review fixes: `docs/plans/step-1.md`. **Next: Karthi merges `step-1` into `max-final`.**
+- **Avatar design is in progress:** `docs/plans/14-avatar.md` (options A-D, blob style 1-3, and the animated cloud
+  engine found in `../max-demo/bot-avatar/`). Three open questions at the end of that file.
+- On the home laptop: `git fetch` then `git checkout step-1` to continue (or merge it first).
+
+**Then:**
+1. Settle the avatar questions, then Step 2 of `docs/plans/12-build-plan.md` (simulated Teams for real, starting from
+   the mock-ups in `teams_sim/web/`). Write `docs/plans/step-2.md` first and get Karthi's OK.
+2. Keep the rules in `CLAUDE.md`: one part at a time, limits are settings, model stays swappable, Claude decides UI
    details and shows images.

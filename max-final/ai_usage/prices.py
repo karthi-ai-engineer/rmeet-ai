@@ -1,6 +1,8 @@
 """
-Gemini API prices, USD per 1 million tokens, paid tier (Standard).
-Checked 25 Nov 2026 (aistudio.google.com/docs/pricing). Edit here when Google changes them.
+AI model prices, USD per 1 million tokens. Edit here when a provider changes them or a new model is used.
+Gemini: paid tier (Standard), checked 25 Nov 2026 (aistudio.google.com/docs/pricing).
+Company-server and local models cost $0 per token (still counted: calls, tokens, time).
+Models not listed are counted at the highest known price, so a budget is never under-counted.
 """
 
 PRICES = {
@@ -8,6 +10,8 @@ PRICES = {
     "gemini-3.1-flash-lite": {"in": 0.25, "audio_in": 0.50, "cached": 0.025, "out": 1.50},
     "gemini-3.5-flash-lite": {"in": 0.30, "audio_in": 0.30, "cached": 0.03, "out": 2.50},
     "gemini-2.5-flash-lite": {"in": 0.10, "audio_in": 0.30, "cached": 0.01, "out": 0.40},
+    # company servers / local models: free per token
+    "unsloth/Qwen3.8-27B-NVFP4": {"in": 0.0, "audio_in": 0.0, "cached": 0.0, "out": 0.0},
 }
 
 # For models not listed above: the highest known price of each kind, so spend is never under-counted.

@@ -3,8 +3,9 @@ One command for everything (standard library only, so it works before anything i
 
   python run.py setup       create .venv and install requirements.txt (only when it changed)
   python run.py test        all offline tests (free, no keys needed)
-  python run.py check       live check with the real Gemini key (costs a fraction of a cent)
-  python run.py dashboard   Gemini cost dashboard on http://localhost:8600
+  python run.py check       live check with the real AI settings (costs a fraction of a cent)
+  python run.py settings    show the AI provider, models and every limit in use (keys hidden)
+  python run.py dashboard   AI usage dashboard on http://localhost:8600
 
 More commands (start, stop, e2e) arrive with later steps.
 """
@@ -53,7 +54,7 @@ def setup() -> None:
         say("libraries up to date")
     env_file = ROOT / ".env"
     if not env_file.exists():
-        say("no .env yet: copy .env.example to .env and paste your Gemini key")
+        say("no .env yet: copy .env.example to .env and paste your AI key")
 
 
 def run_py(*args: str) -> int:
@@ -64,7 +65,8 @@ COMMANDS = {
     "setup": lambda: 0,
     "test": lambda: run_py("-m", "pytest"),
     "check": lambda: run_py("-m", "max.llm.check"),
-    "dashboard": lambda: run_py("-m", "gemini_cost.dashboard"),
+    "settings": lambda: run_py("-m", "max.config"),
+    "dashboard": lambda: run_py("-m", "ai_usage.dashboard"),
 }
 
 

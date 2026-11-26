@@ -1,10 +1,10 @@
-"""Shared test helpers: a fake model backend, a fake clock, a throwaway cost meter. No network, no cost."""
+"""Shared test helpers: a fake model backend, a fake clock, a throwaway usage meter. No network, no cost."""
 
 from __future__ import annotations
 
 import pytest
 
-from gemini_cost import Meter
+from ai_usage import Meter
 from max.llm import LLM, BackendError, Result
 
 
@@ -44,6 +44,13 @@ class FakeBackend:
         return Result(step, {"in": 100, "out": 20})
 
 
+@pytest.fixture(autouse=True)
+def own_limits_file(tmp_path, monkeypatch):
+    """Tests never read or change the real data/limits.toml."""
+    monkeypatch.setenv("LIMITS_FILE", str(tmp_path / "limits.toml"))
+    monkeypatch.delenv("AI_USAGE_DIR", raising=False)
+
+
 @pytest.fixture
 def clock():
     c = FakeClock()
@@ -53,7 +60,7 @@ def clock():
 
 @pytest.fixture
 def meter(tmp_path):
-    return Meter(tmp_path / "gemini_cost")
+    return Meter(tmp_path / "ai_usage")
 
 
 @pytest.fixture

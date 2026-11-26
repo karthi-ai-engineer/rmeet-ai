@@ -1,5 +1,5 @@
 """
-Live Gemini cost dashboard: http://localhost:8600 (this PC only).
+Live AI usage dashboard: http://localhost:8600 (this PC only). Works for any AI provider.
 Shows calls, tokens, cost, forecast, daily limits and a pause switch.
 Run: python run.py dashboard
 """
@@ -66,13 +66,13 @@ def summary(meter: Meter, now: float | None = None) -> dict:
                      "monthAtPace": per_hour * 24 * days_in_month,
                      "monthEnd": month_cost / day_frac * days_in_month if day_frac > 0.05 else None},
         "byFeature": by_feature, "minutes": minutes, "recent": recent,
-        "limits": meter.limits(), "paused": meter.paused(), "prices": prices.PRICES,
+        "limits": meter.limits(), "limitsProblem": meter.limits_store.problem, "paused": meter.paused(), "prices": prices.PRICES,
     }
 
 
 def create_app(meter: Meter | None = None) -> FastAPI:
     meter = meter or Meter()
-    app = FastAPI(title="Gemini cost", docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="AI usage", docs_url=None, redoc_url=None, openapi_url=None)
 
     def guard(x_dashboard: str | None) -> None:
         # Changes need a custom header: a page from another site can't send it (no CORS here).
@@ -100,9 +100,11 @@ def create_app(meter: Meter | None = None) -> FastAPI:
         body = await request.json()
         try:
             values = {k: float(v) for k, v in body.items() if v not in (None, "")}
-        except (TypeError, ValueError):
-            raise HTTPException(400, "limits must be numbers")
-        return {"ok": True, "limits": meter.set_limits(**values)}
+            return {"ok": True, "limits": meter.set_limits(**values)}
+        except (TypeError, ValueError, OverflowError) as e:
+            raise HTTPException(400, f"limits must be numbers of 0 or more ({e})")
+        except OSError as e:          # LimitsSaveError: file locked or unreadable
+            raise HTTPException(503, str(e))
 
     return app
 
@@ -110,8 +112,8 @@ def create_app(meter: Meter | None = None) -> FastAPI:
 def main() -> None:
     import uvicorn
 
-    port = int(os.environ.get("GEMINI_COST_PORT", "8600"))
-    print(f"Gemini cost dashboard on http://localhost:{port}", flush=True)
+    port = int(os.environ.get("AI_USAGE_PORT", "8600"))
+    print(f"AI usage dashboard on http://localhost:{port}", flush=True)
     uvicorn.run(create_app(), host="127.0.0.1", port=port, log_level="warning")
 
 

@@ -15,7 +15,9 @@
 | `11-sim-world.md` | The simulated team, its data, planted facts, and the test set | ✅ |
 | `12-build-plan.md` | The coding steps in order, and what "R1 done" means | ✅ |
 | `13-ui-design.md` | UI design: theme, all screens, cards, Max's chat (pictures `ui-*.png`) | ✅ |
+| `14-avatar.md` | Max's avatar (identity), paused with 3 open questions | 🔄 |
 | `step-0.md` | Coding step 0 (done). Later steps get their own `step-N.md` | ✅ |
+| `step-1.md` | Coding step 1: any AI provider + one limits file (done, reviewed; branch `step-1`) | ✅ |
 
 **`meeting/`** is the **Max Meeting module** (its own section, own numbered files, starting with
 `meeting/01-overview.md`): Max joins calls, live speech-to-text, answers live, notes. ⏸️ Paused until chat Max is done.

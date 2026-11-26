@@ -1,0 +1,31 @@
+# Max: every limit in one place (starting values).
+#
+# Don't edit this file to change a limit on your machine: put your own values in data/limits.toml
+# (same layout, only the lines you want to change). Changes apply at once, no restart.
+# `python run.py settings` shows the values in use. 0 means "no limit" where noted.
+
+[ai]
+daily_budget_usd = 1.0           # Max pauses new AI work for the day when reached (0 = no limit)
+daily_requests = 1000            # AI calls per day (0 = no limit)
+test_budget_usd_per_week = 5.0   # nightly answer tests, separate from the daily budget
+model_timeout_s = 20             # one AI call
+answer_deadline_s = 60           # everything one answer may take, retries and backup model included
+rate_limit_max_wait_s = 5        # longest wait for a provider's rate limit before using the backup model
+
+[messages]
+private_per_person_per_day = 3   # chases, briefs and notices Max starts itself
+chases_per_task_per_day = 1
+follow_up_window_min = 10        # Max answers follow-ups without @Max for this long
+
+[jobs]
+active_per_person = 40           # reminders and repeating jobs
+min_repeat_min = 15              # repeating jobs run at most this often
+
+[approvals]
+expire_after_h = 24              # then: "Expired, nothing was done"
+
+[search]
+max_searches_per_question = 3
+
+[knowledge]
+history_window_days = 30         # how far back Max reads a chat when it joins (15 / 30 / 60 / 90)

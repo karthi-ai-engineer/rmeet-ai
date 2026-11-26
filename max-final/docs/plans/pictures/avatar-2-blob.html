@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Max character</title>
+<style>
+  body { margin: 0; background: #f5f5f5; font-family: "Segoe UI", sans-serif; color: #242424; }
+  .page { padding: 26px 34px 34px; }
+  h1 { margin: 0 0 4px; font-size: 28px; }
+  .lead { color: #616161; margin: 0 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card { background: #fff; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 18px; }
+  .card.rec { outline: 2px solid #5B5FC7; }
+  .tag { font-size: 12px; font-weight: 600; color: #5B5FC7; }
+  h2 { margin: 2px 0 4px; font-size: 19px; }
+  .what { color: #616161; font-size: 13px; margin: 0 0 8px; min-height: 34px; }
+  .big { display: flex; justify-content: center; padding: 4px 0 10px; }
+  .sizes { display: flex; align-items: flex-end; gap: 16px; justify-content: center; padding: 10px; border-radius: 10px; background: #fafafa; }
+  .sizes.dark { background: #1f1f1f; margin-top: 8px; }
+  .lbl { font-size: 10px; color: #8a8a8a; text-align: center; margin-top: 3px; }
+  .chat { margin-top: 10px; border-radius: 10px; background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: flex-start; }
+  .bubble { background: #fff; border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+  .name { color: #F7630C; font-weight: 600; font-size: 12px; }
+  .row { display: flex; gap: 22px; align-items: flex-end; flex-wrap: wrap; }
+  .exp { text-align: center; font-size: 12px; color: #616161; }
+  .wide { margin-top: 18px; }
+  .note { font-size: 12.5px; color: #424242; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Max's character (blob style)</h1>
+  <p class="lead">An orange cloud blob with two white pill eyes, Max's own shape in the style you shared. Shown at Teams sizes,
+    on light and dark, and in a chat row. Below: the expressions it can animate between later.</p>
+  <div class="grid" id="grid"></div>
+  <div class="card wide">
+    <h2>Expressions (for animation later: chat cards as small GIFs, Max's pages and meetings fully live)</h2>
+    <div class="row" id="exps"></div>
+    <div class="note">Blinking every few seconds and a slow "breathing" scale make it feel alive without being distracting.</div>
+  </div>
+</div>
+<script>
+const ORANGE = "#F7630C";
+// Max's cloud blob: union of soft circles (organic, slightly lopsided like a real cloud)
+const CLOUD = (c = ORANGE) => `<g fill="${c}">
+  <circle cx="33" cy="60" r="19"/><circle cx="50" cy="40" r="23"/><circle cx="70" cy="52" r="20"/>
+  <circle cx="58" cy="70" r="19"/><circle cx="40" cy="72" r="16"/><circle cx="74" cy="68" r="12"/></g>`;
+const ROUND = (c = ORANGE) => `<g fill="${c}"><circle cx="50" cy="52" r="38"/></g>`;
+const SOFT = (c = ORANGE) => `<path fill="${c}" d="M50 10 C70 10 88 26 88 50 C88 74 72 90 50 90 C28 90 12 76 12 54 C12 34 26 10 50 10 Z"/>`;
+
+// eyes: pill (upright), tilted pills, with highlight, expressions
+const pill = (x, y, w = 9.5, h = 21, rot = 0) => `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${w / 2}" fill="#fff" transform="rotate(${rot} ${x} ${y})"/>`;
+const EYES = {
+  upright: pill(42, 55) + pill(60, 55),
+  tilted: pill(41, 50, 9, 21, -60) + pill(61, 55, 9, 21, -60),
+  highlight: pill(42, 55) + pill(59, 55) + `<ellipse cx="34" cy="38" rx="6" ry="3.2" fill="#fff" opacity=".35" transform="rotate(-35 34 38)"/>`,
+};
+const EXPR = {
+  "Normal": pill(42, 55) + pill(60, 55),
+  "Blink": `<rect x="36" y="54" width="12" height="4.5" rx="2.2" fill="#fff"/><rect x="54" y="54" width="12" height="4.5" rx="2.2" fill="#fff"/>`,
+  "Happy": `<path d="M36 59 q6 -9 12 0" stroke="#fff" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M54 59 q6 -9 12 0" stroke="#fff" stroke-width="5.5" fill="none" stroke-linecap="round"/>`,
+  "Thinking": pill(47, 48, 9.5, 17) + pill(65, 48, 9.5, 17),
+  "Listening": pill(42, 55, 11, 24) + pill(60, 55, 11, 24),
+  "Sorry": pill(42, 57, 9, 17, 25) + pill(60, 57, 9, 17, -25),
+};
+
+const OPTIONS = [
+  { key: "1", name: "Cloud, upright eyes", tag: "recommended", rec: true, body: CLOUD, eyes: EYES.upright,
+    what: "Max's own orange cloud with two calm pill eyes. Friendly, simple, clearly a teammate." },
+  { key: "2", name: "Cloud, tilted eyes", tag: "playful", body: CLOUD, eyes: EYES.tilted,
+    what: "Same cloud, eyes tilted like a relaxed smile. More playful, a bit less serious." },
+  { key: "3", name: "Soft round, with shine", tag: "calm", body: SOFT, eyes: EYES.highlight,
+    what: "A smooth round body with a soft shine. Cleanest at tiny sizes, less 'cloud'." },
+];
+const svg = (body, eyes, s, bg) => `<svg width="${s}" height="${s}" viewBox="0 0 100 100">${bg || ""}${body()}${eyes}</svg>`;
+document.getElementById("grid").innerHTML = OPTIONS.map((o) => {
+  const sizes = (cls) => `<div class="sizes ${cls}">${[48, 32, 20].map((s) => `<div>${svg(o.body, o.eyes, s)}<div class="lbl">${s}</div></div>`).join("")}</div>`;
+  return `<div class="card ${o.rec ? "rec" : ""}"><span class="tag">${o.key} · ${o.tag}</span><h2>${o.name}</h2><p class="what">${o.what}</p>
+    <div class="big">${svg(o.body, o.eyes, 170)}</div>${sizes("")}${sizes("dark")}
+    <div class="chat">${svg(o.body, o.eyes, 32)}<div><div class="name">Max</div><div class="bubble">📌 Decided on 20 Nov: prices +5% from 1 Jan.</div></div></div></div>`;
+}).join("");
+document.getElementById("exps").innerHTML = Object.entries(EXPR).map(([k, e]) =>
+  `<div class="exp">${svg(CLOUD, e, 96)}<div>${k}</div></div>`).join("");
+</script>
+</body>
+</html>

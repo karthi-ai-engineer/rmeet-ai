@@ -35,7 +35,7 @@ not a demo). The old prototype lives in `../max-demo`: read it for ideas, **neve
   - Other **local** models if they run well (agree with Karthi first).
   - No GPT or other gateway models.
 - **Secrets never in chat or git.** Keys live only in `.env` files. When showing an env file,
-  hide the values (`GEMINI_API_KEY=***`).
+  hide the values (`LLM_API_KEY=***`).
 - **Git:** never add Claude as co-author (no `Co-Authored-By` line). Commits are Karthi's,
   from the `karthi-ai-engineer` account only. Commit only when Karthi asks.
 - **Test end to end** before saying something works. Report failures honestly.
@@ -73,7 +73,8 @@ are updated. Every bug found gets a test. Never start the next step while one is
 | Folder | What goes there |
 |---|---|
 | `max/` | Max, the bot. Talks only through real Microsoft contracts (Bot Framework, Graph, calling). |
-| `gemini_cost/` | Gemini usage meter + cost dashboard. Every Gemini call goes through it. Shared by all programs. |
+| `ai_usage/` | AI usage meter + dashboard (any provider). Every AI call goes through it. Shared by all programs. |
+| `limits.toml` / `limits.py` | Every limit in one file (defaults); own edits in `data/limits.toml`, applied without restart. |
 | `teams_sim/` | Simulated Teams for development (UI + fake Microsoft cloud) until a real tenant is used. |
 | `world/` | Simulated team data: the team, channel posts, files, past meetings. Max never reads it directly. |
 | `voice/` | Local voice server (text-to-speech on the PC). Model files are not in git. |

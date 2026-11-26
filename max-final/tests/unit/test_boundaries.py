@@ -2,8 +2,9 @@
 Folder rules (CLAUDE.md, docs/decisions.md):
   max/         must never import teams_sim/ or world/   (Max only knows real Microsoft contracts)
   teams_sim/   must never import max/                   (the fake cloud can't peek into Max)
-  gemini_cost/ must never import max/ or teams_sim/     (both use it)
-  Only max/llm/ may import the Gemini SDK                (one place for time limits, fallback, cost)
+  ai_usage/    must never import max/ or teams_sim/     (both use it)
+  limits.py    must never import max/, ai_usage/ or teams_sim/ (everyone uses it)
+  Only max/llm/ may import an AI provider's SDK or call a provider directly (model stays swappable)
 """
 
 import ast
@@ -14,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RULES = {
     "max": {"teams_sim", "world"},
     "teams_sim": {"max"},
-    "gemini_cost": {"max", "teams_sim", "world"},
+    "ai_usage": {"max", "teams_sim", "world"},
 }
 
 
@@ -48,3 +49,20 @@ def test_only_llm_package_uses_gemini_sdk():
               if "llm" not in f.relative_to(ROOT / "max").parts
               and any(n.startswith("google.genai") or n == "google" for n in imports_of(f))]
     assert not broken, "Use max.llm instead of the Gemini SDK in:\n" + "\n".join(broken)
+
+
+def test_limits_module_imports_nothing_of_ours():
+    names = imports_of(ROOT / "limits.py")
+    assert not {n.split(".")[0] for n in names} & {"max", "ai_usage", "teams_sim", "world"}
+
+
+def test_only_llm_package_talks_to_providers():
+    """No OpenAI-style client or raw provider URLs outside max/llm/ (the provider stays swappable)."""
+    broken = []
+    for f in python_files("max"):
+        if "llm" in f.relative_to(ROOT / "max").parts:
+            continue
+        text = f.read_text(encoding="utf-8")
+        if any(n.split(".")[0] == "openai" for n in imports_of(f)) or "/chat/completions" in text:
+            broken.append(str(f.relative_to(ROOT)))
+    assert not broken, "Use max.llm instead of calling a provider in: " + ", ".join(broken)

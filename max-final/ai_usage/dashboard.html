@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gemini Cost</title>
+<title>AI usage</title>
 <style>
   :root {
     --bg: #f6f7f9; --card: #ffffff; --ink: #17202a; --muted: #66707c; --line: #e3e6ea;
@@ -57,13 +57,14 @@
 </head>
 <body>
 <header>
-  <h1>Gemini cost</h1>
+  <h1>AI usage</h1>
   <span class="live"><span class="dot" id="dot"></span><span id="updated">connecting…</span></span>
   <span class="spacer"></span>
-  <button id="pauseBtn" class="danger">Pause Gemini</button>
+  <button id="pauseBtn" class="danger">Pause AI calls</button>
 </header>
 <main>
-  <div class="banner" id="banner">Gemini is paused: Max and the fake Teams will not call Gemini until you resume.</div>
+  <div class="banner" id="banner">AI calls are paused: Max and the simulated Teams will not call the AI model until you resume.</div>
+  <div class="banner" id="limitsBanner"></div>
 
   <div class="cards">
     <div class="card"><div class="label">Cost today</div><div class="value" id="cToday">–</div><div class="sub" id="cTodaySub"></div></div>
@@ -84,7 +85,7 @@
       <label>Daily requests<input id="limReq" type="number" step="50" min="0"></label>
       <button class="primary" id="saveLim">Save limits</button>
     </div>
-    <div class="note">When a limit is reached, new Gemini calls are refused (Max falls back or says so). 0 = no limit.</div>
+    <div class="note">When a limit is reached, new AI calls are refused (Max says so). 0 = no limit. Saved in data/limits.toml.</div>
   </div>
 
   <h2>Requests per minute (last hour)</h2>
@@ -142,19 +143,21 @@ function render(d) {
   if (!limitsLoaded) { $('limUsd').value = lim.daily_usd; $('limReq').value = lim.daily_requests; limitsLoaded = true; }
   paused = d.paused;
   $('banner').style.display = paused ? 'block' : 'none';
-  $('pauseBtn').textContent = paused ? 'Resume Gemini' : 'Pause Gemini';
+  $('limitsBanner').textContent = d.limitsProblem ? 'Limits file problem: ' + d.limitsProblem : '';
+  $('limitsBanner').style.display = d.limitsProblem ? 'block' : 'none';
+  $('pauseBtn').textContent = paused ? 'Resume AI calls' : 'Pause AI calls';
   $('pauseBtn').className = paused ? 'primary' : 'danger';
   chart(d.minutes);
   $('features').innerHTML = d.byFeature.length ? d.byFeature.map((r) => `<tr><td>${esc(r.source)}</td><td>${esc(r.kind)}</td><td class="muted">${esc(r.model)}</td>
     <td class="num">${num(r.requests)}${r.errors ? ` <span class="err">(${r.errors} failed)</span>` : ''}</td><td class="num">${num(r.in)}</td>
     <td class="num">${num(r.out)}</td><td class="num">${(r.avgMs / 1000).toFixed(1)}s</td><td class="num">${usd(r.cost)}${r.unpriced ? ' <span class="muted" title="model not in prices.py: counted at the highest known price">(est.)</span>' : ''}</td></tr>`).join('')
-    : '<tr><td colspan="8" class="muted">No Gemini calls today yet.</td></tr>';
+    : '<tr><td colspan="8" class="muted">No AI calls today yet.</td></tr>';
   $('recent').innerHTML = d.recent.length ? d.recent.map((e) => `<tr><td>${new Date(e.ts * 1000).toLocaleTimeString()}</td><td>${esc(e.source)}</td>
     <td>${esc(e.kind)}</td><td class="muted">${esc(e.model)}</td><td class="num ${e.status === 200 ? '' : 'err'}" title="${esc(e.note)}">${e.status || 'error'}</td>
     <td class="num">${(e.ms / 1000).toFixed(1)}s</td><td class="num">${num((e.in || 0) + (e.out || 0) + (e.think || 0))}</td>
     <td class="num">${e.cost == null ? '<span class="muted">–</span>' : usd(e.cost)}</td></tr>`).join('')
     : '<tr><td colspan="8" class="muted">Waiting for the first call…</td></tr>';
-  $('priceNote').textContent = 'Costs use Gemini paid-tier prices (gemini_cost/prices.py): ' +
+  $('priceNote').textContent = 'Costs use the model prices in ai_usage/prices.py: ' +
     Object.entries(d.prices).map(([m, p]) => `${m} $${p.in} in / $${p.out} out per 1M tokens`).join(' · ') +
     '.';
   $('updated').textContent = 'live · ' + new Date(d.now * 1000).toLocaleTimeString();

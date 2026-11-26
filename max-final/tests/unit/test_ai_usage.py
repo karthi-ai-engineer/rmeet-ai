@@ -1,10 +1,14 @@
-"""Gemini cost meter, prices and dashboard API."""
+"""AI usage meter (any provider), prices, limits from the limits file, and the dashboard API."""
 
 import pytest
 from fastapi.testclient import TestClient
 
-from gemini_cost import Blocked, Meter, prices
-from gemini_cost.dashboard import create_app, summary
+import json
+
+from ai_usage import Blocked, Meter, prices
+from ai_usage import meter as meter_mod
+from ai_usage.dashboard import create_app, summary
+from limits import LimitsStore
 
 
 def test_cost_uses_model_prices():
@@ -55,9 +59,35 @@ def test_zero_means_no_limit(tmp_path):
     m.check("gemini-3.1-flash-lite", "max")
 
 
-def test_bad_limits_file_falls_back_to_defaults(tmp_path):
-    (tmp_path / "limits.json").write_text("not json", encoding="utf-8")
-    assert Meter(tmp_path).limits() == {"daily_usd": 1.0, "daily_requests": 1000}
+def test_limits_come_from_the_limits_file(tmp_path):
+    assert Meter(tmp_path).limits() == {"daily_usd": 1.0, "daily_requests": 1000.0}   # limits.toml defaults
+    (tmp_path / "limits.toml").write_text("[ai]\ndaily_budget_usd = 3.5\n", encoding="utf-8")
+    assert Meter(tmp_path).limits()["daily_usd"] == 3.5
+
+
+def test_bad_limits_file_keeps_defaults_and_says_why(tmp_path):
+    (tmp_path / "limits.toml").write_text("not toml [", encoding="utf-8")
+    m = Meter(tmp_path)
+    assert m.limits()["daily_usd"] == 1.0 and m.limits_store.problem
+
+
+def test_company_models_cost_nothing_but_are_counted(tmp_path):
+    m = Meter(tmp_path)
+    e = m.record("unsloth/Qwen3.8-27B-NVFP4", "brain", "max", 200, 900, {"in": 50_000, "out": 2_000})
+    assert e["cost"] == 0.0 and "price_estimated" not in e and m.today_totals()["requests"] == 1
+
+
+def test_old_gemini_cost_folder_is_moved_once(tmp_path, monkeypatch):
+    old, new, user = tmp_path / "gemini_cost", tmp_path / "ai_usage", tmp_path / "limits.toml"
+    old.mkdir()
+    (old / "usage-2026-11-25-p1.jsonl").write_text('{"ts": 1, "model": "m", "status": 200, "cost": 0.01}\n',
+                                                   encoding="utf-8")
+    (old / "limits.json").write_text(json.dumps({"daily_usd": 2.0, "daily_requests": 500}), encoding="utf-8")
+    meter_mod._move_old_folder(old, new, user)
+    assert not old.exists() and (new / "usage-2026-11-25-p1.jsonl").exists()
+    lim = LimitsStore(user_file=user).get().ai
+    assert lim.daily_budget_usd == 2.0 and lim.daily_requests == 500
+    meter_mod._move_old_folder(old, new, user)        # second time: nothing happens
 
 
 def test_pause_switch(tmp_path):
@@ -80,7 +110,7 @@ def test_summary_groups_today(tmp_path):
 def test_dashboard_api(tmp_path):
     m = Meter(tmp_path)
     client = TestClient(create_app(m))
-    assert "Gemini cost" in client.get("/").text
+    assert "AI usage" in client.get("/").text
     assert client.get("/api/usage").json()["paused"] is False
     # changes need the custom header
     assert client.post("/api/pause", json={"paused": True}).status_code == 403
@@ -89,6 +119,9 @@ def test_dashboard_api(tmp_path):
     r = client.post("/api/limits", json={"daily_usd": "2.5", "daily_requests": ""}, headers={"X-Dashboard": "1"})
     assert r.status_code == 200 and m.limits()["daily_usd"] == 2.5
     assert client.post("/api/limits", json={"daily_usd": "abc"}, headers={"X-Dashboard": "1"}).status_code == 400
+    assert client.post("/api/limits", json={"daily_usd": -1}, headers={"X-Dashboard": "1"}).status_code == 400
+    assert client.post("/api/limits", json={"daily_requests": "1e999"}, headers={"X-Dashboard": "1"}).status_code == 400
+    assert (tmp_path / "limits.toml").exists()                       # saved in the one limits file
 
 
 def test_unknown_model_still_counts_towards_the_cap(tmp_path):
@@ -106,7 +139,7 @@ def test_several_programs_writing_at_once_lose_nothing(tmp_path):
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2]
-    code = ("import sys; from gemini_cost import Meter; m = Meter(sys.argv[1]);"
+    code = ("import sys; from ai_usage import Meter; m = Meter(sys.argv[1]);"
             "[m.record('gemini-3.1-flash-lite', 'brain', 'p', 200, 1, {'in': 10}) for _ in range(200)]")
     procs = [subprocess.Popen([sys.executable, "-c", code, str(tmp_path)], cwd=root) for _ in range(4)]
     assert all(p.wait(timeout=60) == 0 for p in procs)

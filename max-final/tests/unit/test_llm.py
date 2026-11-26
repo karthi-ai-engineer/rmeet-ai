@@ -125,7 +125,7 @@ def test_models_are_deduplicated_and_required(clock, meter):
 def test_from_settings_uses_main_then_backup(tmp_path, meter, clock):
     from max.config import load_settings
     from tests.unit.conftest import FakeBackend
-    s = load_settings(_env_file=None, gemini_api_key="test-key-123", data_dir=tmp_path)
+    s = load_settings(_env_file=None, llm_api_key="test-key-123", data_dir=tmp_path)
     llm = LLM.from_settings(s, meter=meter, backend=FakeBackend(clock, {}))
     assert llm.models == ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
 
@@ -148,3 +148,34 @@ def test_cost_log_failure_never_loses_the_answer(make_llm, meter, monkeypatch):
     monkeypatch.setattr(meter, "record", broken)
     llm, _ = make_llm({"main": ["still answered"]})
     assert ask(llm).text == "still answered"
+
+
+def test_backend_follows_the_provider_setting(monkeypatch):
+    from max.config import load_settings
+    from max.llm.backends import make_backend
+    from max.llm.gemini import GeminiBackend
+    from max.llm.openai_compat import OpenAICompatBackend
+    for n in ("LLM_PROVIDER", "LLM_API_KEY", "LLM_MODEL", "LLM_BASE_URL", "GEMINI_API_KEY", "GEMINI_MODEL"):
+        monkeypatch.delenv(n, raising=False)
+    s = load_settings(_env_file=None, llm_api_key="k-1")
+    assert isinstance(make_backend(s), GeminiBackend)
+    s2 = load_settings(_env_file=None, llm_provider="openai_compatible", llm_base_url="http://x/v1", llm_model="qwen")
+    assert isinstance(make_backend(s2), OpenAICompatBackend)
+
+
+def test_time_limits_come_from_the_limits_file_and_apply_live(tmp_path, meter, clock):
+    from limits import LimitsStore
+    from tests.unit.conftest import FakeBackend
+    store = LimitsStore(user_file=tmp_path / "limits.toml")
+    llm = LLM(FakeBackend(clock, {"main": ["ok"]}), meter, ["main"], limits=store, sleep=clock.sleep, clock=clock)
+    assert llm.current_limits() == (20, 60, 5)
+    store.update({"ai": {"model_timeout_s": 7, "answer_deadline_s": 30}})
+    assert llm.current_limits() == (7, 30, 5)                       # no restart needed
+    assert ask(llm).text == "ok"
+
+
+def test_auth_message_names_the_provider_setting(make_llm):
+    llm, _ = make_llm({"main": [BackendError("auth", 401)]})
+    with pytest.raises(LLMError) as e:
+        ask(llm)
+    assert e.value.reason == "auth" and "LLM_API_KEY" in str(e.value)
