@@ -12,7 +12,9 @@ export interface ChatMessage {
   reactions?: { emoji: string; count: number }[];
   buttons?: string[]; // quick buttons under a Max message (cards are designed later)
   followUps?: string[]; // tappable suggested next questions (Teams suggested actions)
-  card?: { before: object; after?: object; done?: boolean; afterText?: string }; // an Adaptive Card attached to the message
+  card?: { before: object; after?: object; done?: boolean; afterText?: string; retry?: string }; // an Adaptive Card attached to the message
+  botReaction?: string; // a reaction Max put on this message (status for long tasks: ⏳ while working, ✅ when done)
+  system?: boolean; // Max's own notices (welcome, done, errors): no "AI generated" label, no 👍/👎
 }
 
 export interface Chat {

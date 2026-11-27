@@ -23,11 +23,12 @@ import {
   Popover,
   PopoverSurface,
   PopoverTrigger,
-  makeStyles,
+  makeStyles, shorthands,
   mergeClasses,
   tokens,
 } from "@fluentui/react-components";
 import {
+  ArrowCounterclockwise16Regular,
   ArrowReply16Regular,
   Attach20Regular,
   Call20Regular,
@@ -51,7 +52,7 @@ import { CHATS, maxChatFor, type Chat, type ChatMessage } from "./chatMock";
 import { PEOPLE, type PersonId } from "./mock";
 import { MAX_ORANGE, MaxAvatar, RichText, Sources, personName } from "./ui";
 import { CardFrame } from "./CardsGallery";
-import { CARDS } from "./cards";
+import { CARDS, SORRY_CARD, SORRY_RETRIED_CARD, celebrateCard, welcomeCard } from "./cards";
 
 const useStyles = makeStyles({
   wrap: { display: "flex", flex: 1, minWidth: 0, minHeight: 0 },
@@ -129,6 +130,17 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusCircular, backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
   },
+  // a reaction Max puts on the person's message (Teams agent reactions): pops in once, no loop
+  botChip: {
+    cursor: "default", ...shorthands.borderColor(tokens.colorBrandStroke2), backgroundColor: tokens.colorBrandBackground2,
+    animationName: {
+      "0%": { transform: "scale(0.3)", opacity: 0 },
+      "60%": { transform: "scale(1.15)", opacity: 1 },
+      "100%": { transform: "scale(1)", opacity: 1 },
+    },
+    animationDuration: "360ms", animationTimingFunction: "cubic-bezier(0.2, 0.9, 0.3, 1)", animationFillMode: "both",
+    "@media (prefers-reduced-motion: reduce)": { animationName: "none" },
+  },
   feedback: { display: "flex", gap: "2px", marginTop: "4px" },
   time: { color: tokens.colorNeutralForeground3, fontSize: tokens.fontSizeBase100 },
   typing: { display: "inline-flex", gap: "4px", padding: "12px 14px" },
@@ -152,12 +164,55 @@ const useStyles = makeStyles({
   composeText: { width: "100%", "& textarea": { maxHeight: "160px" } },
   composeBar: { display: "flex", alignItems: "center", gap: "2px", padding: "0 6px 6px" },
   hint: { color: tokens.colorNeutralForeground3, fontSize: tokens.fontSizeBase100, marginLeft: "6px" },
+  // showcase controls: simulator chrome (same striped look as the simulator bar), never part of Teams
+  showcase: {
+    display: "flex", alignItems: "center", gap: "8px", height: "28px", padding: "0 4px 0 10px", borderRadius: tokens.borderRadiusCircular,
+    color: "#ffffff", fontSize: tokens.fontSizeBase200, whiteSpace: "nowrap",
+    backgroundImage: "repeating-linear-gradient(135deg, #1b1a19 0 10px, #252423 10px 20px)",
+  },
+  showcaseTag: { fontWeight: tokens.fontWeightSemibold, letterSpacing: "0.04em", color: "#ffd8a8", fontSize: tokens.fontSizeBase100 },
+  showcaseBtn: { color: "#ffffff", minWidth: "auto", ":hover": { color: "#ffd8a8" } },
 });
 
-interface Canned { statuses: string[]; text: string; sources?: { n: number; title: string; where: string }[]; followUps?: string[]; card?: { before: object; after?: object; done?: boolean; afterText?: string } }
+interface Canned {
+  statuses: string[]; text: string; sources?: { n: number; title: string; where: string }[]; followUps?: string[];
+  card?: { before: object; after?: object; done?: boolean; afterText?: string; retry?: string };
+  statusMs?: number; // how long each status line shows (default 0.8 s)
+  long?: boolean;    // a long task: Max reacts ⏳ on the question, then ✅ when done (Teams reactions)
+  system?: boolean;  // a notice, not AI-written text (no AI label, no 👍/👎)
+  error?: boolean;   // the answer fails: Max sends the "sorry" card instead (Try again re-asks `retry`)
+}
 const EMAIL_CARD = CARDS.find((c) => c.id === "email")!;
-function cannedAnswer(q: string): Canned {
+const NAMES: Record<PersonId, string> = { prince: "Prince", praga: "Praga", rachitaa: "Rachitaa", karthi: "Karthi" };
+function cannedAnswer(q: string, me: PersonId = "prince"): Canned {
   const s = q.toLowerCase();
+  if (s.includes("what can you do")) return {
+    statuses: ["Getting my list…"],
+    text: "Here's what I can do for you:\n🔎 **Find answers** in your team's chats, files and plans, always with sources\n📋 **Keep plans up to date** and remind owners, kindly\n📅 **Prepare meeting briefs** before your meetings\n✉️ **Write emails and book meetings**, only after you approve\n⏰ **Remind you** about anything, at the time you pick",
+    followUps: ["What did I miss?", "What's on my plate this week?", "Summarise all supplier threads this month"],
+  };
+  if (s.includes("summar") && s.includes("supplier")) return {
+    long: true, statusMs: 1200,
+    statuses: ["Finding supplier threads from November…", "Reading 14 threads in Procurement and New model sync…", "Reading Supplier B quote.pdf…", "Pulling out prices, dates and open questions…", "Checking the summary against the sources…"],
+    text: "**Supplier threads in November (14 threads, 2 suppliers):**\n📦 **Supplier A:** GPU price fixed until March, delivery on time for **15 Jan** [1]\n💴 **Supplier B:** **6% cheaper**, but ships **2 weeks later**, which would push the launch [2]\n🧠 **Memory:** prices up **16%** since October; the 5% price rise from 1 Jan covers it [3]\n❓ **Open:** Supplier B hasn't confirmed a firm delivery date yet [2]",
+    sources: [
+      { n: 1, title: "Procurement › Suppliers, 12 Nov", where: "Praga, 10:14" },
+      { n: 2, title: "New model sync", where: "Praga, yesterday 16:10" },
+      { n: 3, title: "Parts prices.xlsx › Memory", where: "rows 2-4, Oct and Nov" },
+    ],
+    followUps: ["Ask Praga to chase Supplier B", "Compare both suppliers in a table"],
+  };
+  if (s.includes("mark") && s.includes("done")) return {
+    system: true, statuses: ["Updating the New model launch plan…"],
+    text: "✅ Done: **Price list** is marked done.",
+    card: { before: celebrateCard(NAMES[me]) },
+  };
+  if (s.includes("northwind")) return {
+    error: true, statuses: ["Searching team chats and files…", "Reading 3 threads…"],
+    text: "📅 Northwind last heard from us on **12 Nov**, and that message still says **8 Jan** [1]. Nobody has told them the new date (**15 Jan**) yet.",
+    sources: [{ n: 1, title: "Sales › Big accounts", where: "Rachitaa, 12 Nov" }],
+    followUps: ["Draft an update to Northwind", "Who owns the Northwind account?"],
+  };
   if (s.includes("email")) return {
     statuses: ["Searching team chats and files…", "Writing the email…", "Checking the facts…"],
     text: "Here's the email to Prince. **It's only sent after you approve it.**",
@@ -212,8 +267,8 @@ const useWelcome = makeStyles({
   listItem: { padding: "8px 10px", borderRadius: tokens.borderRadiusMedium, cursor: "pointer", ":hover": { backgroundColor: tokens.colorNeutralBackground1Hover } },
 });
 
-/** What Teams shows in a new, empty chat with Max: app icon, name, description (from the manifest) + prompt starters. */
-function MaxWelcome({ onPick }: { onPick: (text: string) => void }) {
+/** What Teams shows at the top of a new chat with Max: app icon, name, description (from the manifest). */
+function MaxIntro() {
   const w = useWelcome();
   return (
     <div className={w.wrap}>
@@ -223,7 +278,16 @@ function MaxWelcome({ onPick }: { onPick: (text: string) => void }) {
       <Text className={w.desc}>
         Ask me about your team's chats, files and plans. I answer with sources, and I always ask before I send or change anything.
       </Text>
-      <span className={w.label}>Try one of these</span>
+    </div>
+  );
+}
+
+/** Prompt starters (from the manifest), shown while the chat has no question yet. */
+function Starters({ onPick }: { onPick: (text: string) => void }) {
+  const w = useWelcome();
+  return (
+    <div className={w.wrap} style={{ paddingTop: 4 }}>
+      <span className={w.label} style={{ marginTop: 10 }}>Try one of these</span>
       <div className={w.grid} style={{ marginTop: 10 }}>
         {PROMPT_STARTERS.map((p) => (
           <div key={p.title} className={w.tile} onClick={() => onPick(p.prompt)} role="button" tabIndex={0}>
@@ -306,7 +370,7 @@ function MessageRow({ m, me, first, onReply, latest, onPick, fb, onThumb, onCard
           <div className={s.meta}>
             {!mine && <span className={isMax ? s.maxName : undefined} style={isMax ? undefined : { fontWeight: 600 }}>{personName(m.author)}</span>}
             <span className={s.time}>{m.time}</span>
-            {isMax && <Badge appearance="tint" color="informative" size="small">AI generated</Badge>}
+            {isMax && !m.system && <Badge appearance="tint" color="informative" size="small">AI generated</Badge>}
           </div>
         )}
         <div className={mergeClasses(s.bubble, mine && s.bubbleMine)}>
@@ -322,9 +386,11 @@ function MessageRow({ m, me, first, onReply, latest, onPick, fb, onThumb, onCard
               <div style={{ color: tokens.colorNeutralForeground2 }}>{m.quote.text}</div>
             </div>
           )}
-          <RichText text={m.card?.done && m.card.afterText ? m.card.afterText : m.text} sources={m.sources} />
+          {(m.card?.done && m.card.afterText ? m.card.afterText : m.text) && (
+            <RichText text={m.card?.done && m.card.afterText ? m.card.afterText : m.text} sources={m.sources} />
+          )}
           {m.card && (
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: m.text ? 10 : 4 }}>
               <CardFrame json={m.card.done && m.card.after ? m.card.after : m.card.before} dark={!!dark} onAction={(v) => onCard?.(m, v)} />
             </div>
           )}
@@ -338,7 +404,7 @@ function MessageRow({ m, me, first, onReply, latest, onPick, fb, onThumb, onCard
               {refsOpen && <Sources sources={m.sources} />}
             </div>
           )}
-          {isMax && (
+          {isMax && !m.system && (
             <div className={s.feedback}>
               <Button size="small" appearance="subtle" aria-label="Helpful" onClick={() => onThumb?.(m, "up")}
                 icon={fb === "up" ? <ThumbLike16Filled primaryFill={tokens.colorBrandForeground1} /> : <ThumbLike16Regular />} />
@@ -357,9 +423,15 @@ function MessageRow({ m, me, first, onReply, latest, onPick, fb, onThumb, onCard
             ))}
           </div>
         )}
-        {m.reactions && (
+        {(m.reactions || m.botReaction) && (
           <div className={s.reactions}>
-            {m.reactions.map((r) => <span key={r.emoji} className={s.reactionChip}>{r.emoji} {r.count}</span>)}
+            {m.botReaction && (
+              <Tooltip key={m.botReaction} content={m.botReaction === "⏳" ? "Max reacted ⏳ (working on it)" : `Max reacted ${m.botReaction} (done)`} relationship="description">
+                <span className={mergeClasses(s.reactionChip, s.botChip)} role="img"
+                  aria-label={m.botReaction === "⏳" ? "Max is working on this" : "Max finished this"}>{m.botReaction} 1</span>
+              </Tooltip>
+            )}
+            {m.reactions?.map((r) => <span key={r.emoji} className={s.reactionChip}>{r.emoji} {r.count}</span>)}
           </div>
         )}
       </div>
@@ -455,8 +527,32 @@ function FeedbackDialog({ open, me, onClose, onSend }: { open: boolean; me: Pers
   );
 }
 
-export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonId; initialChat: string; fresh?: boolean; demo?: string; dark?: boolean }) {
+/** Where a card button or link takes you (Teams deep links in real Teams). */
+export interface NavTarget { view: string; chat?: string; mtab?: string; channel?: string; tab?: string; meeting?: string }
+interface ChatProps { me: PersonId; initialChat: string; fresh?: boolean; demo?: string; dark?: boolean; onOpen?: (to: NavTarget) => void }
+
+const welcomeMessage = (me: PersonId): ChatMessage => ({
+  id: "welcome", author: "max", day: "Today", time: new Date().toTimeString().slice(0, 5), text: "", system: true,
+  card: { before: welcomeCard(NAMES[me]) },
+});
+
+/** The agreed animation moments, one after another (?view=chat&chat=max&demo=moments). */
+const MOMENT_STEPS = ["Welcome", "Long task: ⏳ → ✅", "Big success", "Sorry (error)", "Done"];
+const MOMENT_SCRIPT = [
+  { wait: 5200, step: 1, text: "Summarise all supplier threads this month" },
+  { wait: 2200, step: 2, text: "Mark the price list done" },
+  { wait: 3600, step: 3, text: "What did Northwind say about the delivery date?" },
+];
+
+export function ChatScreen(props: ChatProps) {
+  const [run, setRun] = useState(0);
+  if (props.demo !== "moments") return <ChatInner {...props} />;
+  return <ChatInner key={run} {...props} onRestart={() => setRun((r) => r + 1)} />;
+}
+
+function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: ChatProps & { onRestart?: () => void }) {
   const s = useStyles();
+  const moments = demo === "moments";
   const [chats, setChats] = useState<Chat[]>(() => [
     demo === "card" || demo === "carddone" ? { ...maxChatFor(me), messages: [
       { id: "cq", author: me, day: "Today", time: "10:40", text: "Email Prince the Q1 pricing summary" },
@@ -467,11 +563,12 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
       { id: "dq", author: me, day: "Today", time: "11:20", text: "What's the total memory cost in November in Parts prices?" },
       { id: "da", author: "max", day: "Today", time: "11:20", ...(({ statuses: _s, ...rest }) => rest)(cannedAnswer("total memory cost")) },
     ] }
+    : moments || fresh ? { ...maxChatFor(me), messages: [welcomeMessage(me)] }
     : demo ? { ...maxChatFor(me), messages: [{ id: "dq", author: me, day: "Today", time: "11:20", text: "What's the total memory cost in November in Parts prices?" }] }
-      : fresh ? { ...maxChatFor(me), messages: [] } : maxChatFor(me),
+      : maxChatFor(me),
     ...CHATS.filter((c) => c.members.includes(me))]);
   const [promptsOpen, setPromptsOpen] = useState(false);
-  const [feedback, setFeedback] = useState<Record<string, string>>(() => (demo === "fbdone" ? { da: `down:${me === "prince" ? "Thanks. Saved as a lesson for the team." : "Thanks. Sent to Prince (team lead) as a lesson to accept."}` } : {}));
+  const [feedback, setFeedback] = useState<Record<string, string>>((): Record<string, string> => (demo === "fbdone" ? { da: `down:${me === "prince" ? "Thanks. Saved as a lesson for the team." : "Thanks. Sent to Prince (team lead) as a lesson to accept."}` } : {}));
   const [fbFor, setFbFor] = useState<string | null>(demo === "feedback" ? "da" : null);
   const [activeId, setActiveId] = useState(chats.some((c) => c.id === initialChat) ? initialChat : "max");
   const [draft, setDraft] = useState("");
@@ -484,11 +581,13 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
       : demo === "status" ? { status: "Reading Parts prices.xlsx › Memory…", text: "" }
       : demo === "text" ? { status: null, text: cannedAnswer(demoQ).text.slice(0, 120) } : null);
   const timers = useRef<number[]>([]);
-  const current = useRef<{ chatId: string; canned: Canned; shown: string } | null>(null);
+  const current = useRef<{ chatId: string; canned: Canned; shown: string; askId?: string } | null>(null);
+  const [momentStep, setMomentStep] = useState(0);
   const [filter, setFilter] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const active = chats.find((c) => c.id === activeId)!;
   const busy = !!stream && active.kind === "max";
+  const newMaxChat = active.kind === "max" && !active.messages.some((m) => m.author !== "max");
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -499,17 +598,32 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
     [chats, filter, me],
   );
 
-  const pushMax = (chatId: string, m: { text: string; sources?: Canned["sources"]; followUps?: string[]; card?: Canned["card"] }) =>
+  const pushMax = (chatId: string, m: Pick<ChatMessage, "text" | "sources" | "followUps" | "card" | "system">) =>
     setChats((cs) => cs.map((c) => (c.id === chatId ? {
       ...c, messages: [...c.messages, { id: crypto.randomUUID(), author: "max" as const, day: "Today", time: new Date().toTimeString().slice(0, 5), ...m }],
     } : c)));
+  const patchMsg = (id: string, patch: Partial<ChatMessage>) =>
+    setChats((cs) => cs.map((c) => ({ ...c, messages: c.messages.map((x) => (x.id === id ? { ...x, ...patch } : x)) })));
 
-  const startStream = (chatId: string, canned: Canned) => {
-    current.current = { chatId, canned, shown: "" };
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  const startStream = (chatId: string, canned: Canned, askId?: string, question?: string) => {
+    current.current = { chatId, canned, shown: "", askId };
     const at = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
-    canned.statuses.forEach((st, i) => at(i * 800, () => setStream({ status: st, text: "" })));
+    const per = canned.statusMs ?? 800;
+    // long task: Max acknowledges with ⏳ on the question (one reaction add), and swaps it to ✅ when done
+    if (canned.long && askId) at(450, () => patchMsg(askId, { botReaction: "⏳" }));
+    canned.statuses.forEach((st, i) => at(i * per, () => setStream({ status: st, text: "" })));
+    const start = canned.statuses.length * per;
+    if (canned.error) {
+      at(start, () => {
+        setStream(null);
+        current.current = null;
+        pushMax(chatId, { text: "", system: true, card: { before: SORRY_CARD, after: SORRY_RETRIED_CARD, retry: question } });
+      });
+      return;
+    }
     const words = canned.text.split(/(\s+)/);
-    const start = canned.statuses.length * 800;
     words.forEach((_, i) => at(start + i * 30, () => {
       const shown = words.slice(0, i + 1).join("");
       if (current.current) current.current.shown = shown;
@@ -518,7 +632,8 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
     at(start + words.length * 30 + 150, () => {
       setStream(null);
       current.current = null;
-      pushMax(chatId, { text: canned.text, sources: canned.sources, followUps: canned.followUps, card: canned.card });
+      pushMax(chatId, { text: canned.text, sources: canned.sources, followUps: canned.followUps, card: canned.card, system: canned.system });
+      if (canned.long && askId) patchMsg(askId, { botReaction: "✅" });
     });
   };
 
@@ -528,6 +643,7 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
     const cur = current.current;
     setStream(null);
     current.current = null;
+    if (cur?.askId && cur.canned.long) patchMsg(cur.askId, { botReaction: undefined });
     if (cur) pushMax(cur.chatId, { text: (cur.shown ? cur.shown + "\n\n" : "") + "(Stopped. Nothing was sent or changed.)" });
   };
 
@@ -549,7 +665,7 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
     setDraft("");
     setReplyTo(null);
     if (askedMax && active.kind === "max") {
-      startStream(active.id, cannedAnswer(text));
+      startStream(active.id, cannedAnswer(text, me), msg.id, text);
     } else if (askedMax) {
       setTyping(true);
       setTimeout(() => {
@@ -557,6 +673,45 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
         pushMax(active.id, { text: "This is a design mock-up, so I'm not connected yet. In the real simulator I'd answer here, with sources." });
       }, 1400);
     }
+  };
+
+  // showcase: type and send the script's questions one after another, each when Max is free again
+  const sendRef = useRef(sendText);
+  sendRef.current = sendText;
+  const busyRef = useRef(false);
+  busyRef.current = !!stream;
+  useEffect(() => {
+    if (!moments) return;
+    let cancelled = false;
+    const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
+    (async () => {
+      for (const st of MOMENT_SCRIPT) {
+        await sleep(st.wait);
+        while (!cancelled && busyRef.current) await sleep(100);
+        if (cancelled) return;
+        setMomentStep(st.step);
+        for (let i = 1; i <= st.text.length && !cancelled; i++) { setDraft(st.text.slice(0, i)); await sleep(26); }
+        await sleep(350);
+        if (cancelled) return;
+        sendRef.current(st.text);
+      }
+      await sleep(600);
+      while (!cancelled && busyRef.current) await sleep(100);
+      await sleep(1500);
+      if (!cancelled) setMomentStep(MOMENT_STEPS.length - 1);
+    })();
+    return () => { cancelled = true; };
+  }, [moments]);
+
+  const onCard = (mm: ChatMessage, verb: string) => {
+    if (verb === "approve" || verb === "approveEdited" || verb === "book" || verb === "accept") patchMsg(mm.id, { card: { ...mm.card!, done: true } });
+    if (verb === "retry" && mm.card && !mm.card.done && !busy) {
+      patchMsg(mm.id, { card: { ...mm.card, done: true } });
+      startStream(active.id, { ...cannedAnswer(mm.card.retry ?? "", me), error: false, statuses: ["Trying again…", "Reading 3 threads…"] });
+    }
+    if (verb === "Open Max") onOpen?.({ view: "max", mtab: "home" });
+    if (verb === "Open plan") onOpen?.({ view: "teams", channel: "pp-models", tab: "plans" });
+    if (verb === "What can you do?" && !busy) sendText("What can you do?");
   };
 
   const pinned = visible.filter((c) => c.kind === "max");
@@ -574,7 +729,7 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
             <Text size={100} style={{ color: tokens.colorNeutralForeground3 }}>{last.day === "Today" ? last.time : last.day}</Text>
           </div>
           <span className={mergeClasses(s.itemPreview, unread && s.unread)}>
-            {last.author === me ? "You: " : c.kind === "group" ? `${personName(last.author)}: ` : ""}{plain(last.text)}
+            {last.author === me ? "You: " : c.kind === "group" ? `${personName(last.author)}: ` : ""}{plain(last.text) || (last.card ? "Sent a card" : "")}
           </span>
         </div>
       </div>
@@ -612,6 +767,17 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
             <Tab value="chat">Chat</Tab>
             <Tab value="files">Files</Tab>
           </TabList>
+          {moments && active.kind === "max" && (
+            <div className={s.headRight} style={{ alignItems: "center" }}>
+              <div className={s.showcase} role="status" aria-live="polite">
+                <span className={s.showcaseTag}>SIM SHOWCASE</span>
+                <span>{Math.min(momentStep + 1, 4)}/4 · {MOMENT_STEPS[momentStep]}</span>
+                <Tooltip content="Play the moments again from the start" relationship="label">
+                  <Button size="small" appearance="transparent" className={s.showcaseBtn} icon={<ArrowCounterclockwise16Regular />} onClick={onRestart}>Restart</Button>
+                </Tooltip>
+              </div>
+            </div>
+          )}
           {active.kind !== "max" && (
             <div className={s.headRight}>
               <Tooltip content="Video call" relationship="label"><Button appearance="subtle" icon={<Video20Regular />} /></Tooltip>
@@ -622,7 +788,7 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
 
         <div className={s.scroll} ref={scrollRef}>
           <div className={s.inner}>
-            {active.kind === "max" && active.messages.length === 0 && !typing && <MaxWelcome onPick={sendText} />}
+            {newMaxChat && <MaxIntro />}
             {active.messages.map((m) => {
               const newDay = m.day !== prevDay;
               const first = newDay || m.author !== prevAuthor || !!m.quote;
@@ -633,11 +799,7 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
                   {newDay && <div className={s.day}>{m.day}</div>}
                   <MessageRow m={m} me={me} first={first} onReply={setReplyTo} onPick={busy ? undefined : sendText}
                     dark={dark}
-                    onCard={(mm, verb) => {
-                      if (verb === "approve" || verb === "approveEdited" || verb === "book" || verb === "accept") {
-                        setChats((cs) => cs.map((c) => ({ ...c, messages: c.messages.map((x) => (x.id === mm.id && x.card ? { ...x, card: { ...x.card, done: true } } : x)) })));
-                      }
-                    }}
+                    onCard={onCard}
                     fb={feedback[m.id]} onThumb={(mm, k) => (k === "up" ? setFeedback((f) => ({ ...f, [mm.id]: "up" })) : setFbFor(mm.id))}
                     latest={m.id === active.messages[active.messages.length - 1]?.id && !stream} />
                 </div>
@@ -651,6 +813,7 @@ export function ChatScreen({ me, initialChat, fresh, demo, dark }: { me: PersonI
                 setFbFor(null);
               }} />
             {stream && active.kind === "max" && <StreamingBubble status={stream.status} text={stream.text} onStop={stopStream} />}
+            {newMaxChat && !busy && <Starters onPick={sendText} />}
           </div>
         </div>
 

@@ -92,3 +92,18 @@ no automated tests yet for moves / poke.
 everywhere else; **Max's personal tab is the home of the full animated Max** (cards link to it with "Open Max").
 Polish fixes: Claude decides what looks best (hide mouth below ~64 px, half-closed lids instead of dot eyes while
 settling, "!" timed to the flinch, cheeks slightly stronger but still soft).
+
+## Part 8: the moments, built in the simulator
+**Agreed (Karthi, 27 Nov 2026):** all moments below as built; Max's pages open on **Home** for everyone.
+
+| Moment | Where | How it moves | Picture |
+|---|---|---|---|
+| New still icon | everywhere (chat list, messages, mail, activity, calendar, cards, Max app, rail) | none (still; 3-bump shape at 40 px and below) | `pictures/ui-16-new-icon-chat.png` |
+| Welcome card | first message in a new Max chat (`?view=chat&chat=max&fresh=1`) | Max on his tile: wink + happy hop, plays 2x (~4.5 s), rests smiling | `pictures/ui-16-moments-welcome.png` |
+| ⏳ → ✅ reaction | on the person's message, long tasks ("Summarise all supplier threads this month") | chip pops in once; ⏳ swaps to ✅ when done; removed on Stop | `pictures/ui-16-moments-reaction.png` |
+| Celebrate card | "Mark the price list done" → plan back on track (nothing late) | two jumps with sparkles, once (~2 s), rests smiling | `pictures/ui-16-moments-celebrate.png` |
+| Sorry card | error ("What did Northwind say…" fails once; Try again works) | none (still sorry pose) | `pictures/ui-16-moments-sorry.png` |
+| Max Home tab | Max app, first tab, everyone (`?view=max&mtab=home`); "Open Max" links here | full live Max: happy on arrival, thinking while working, listening on "Ask Max", hover + poke | `pictures/ui-16-max-home.png` |
+Showcase of all moments in order: `?view=chat&chat=max&demo=moments` (Restart button, simulator-only). Code:
+`src/avatar/MaxMoment.tsx` (tile, GIF-like limits), `src/MaxHome.tsx`, cards in `src/cards.ts`. Reduced motion: tiles
+show only the still pose. Real Teams: the tiles are GIF/PNG files (to produce with the pipeline in the research doc).

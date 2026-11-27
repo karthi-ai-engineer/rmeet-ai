@@ -1,5 +1,5 @@
 // UI design mock-ups: the Files tab and the Plans tab of a channel (static data).
-import { useState } from "react";
+import { useState, type JSX } from "react";
 import {
   Avatar,
   Badge,

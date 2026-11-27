@@ -1153,7 +1153,7 @@ export function MaxCharacter({
 }
 
 /** True when the system asks for less motion; follows live changes. */
-function useReducedMotionPref() {
+export function useReducedMotionPref() {
   const get = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const [reduced, setReduced] = useState(get);
   useEffect(() => {

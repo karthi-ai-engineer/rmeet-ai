@@ -1,5 +1,5 @@
 // UI design mock-ups: simple Mail (to check emails Max sent after approval) and Activity. Static data.
-import { useState } from "react";
+import { useState, type JSX } from "react";
 import {
   Avatar,
   Badge,
@@ -157,7 +157,7 @@ const ACTS: Act[] = [
   { id: "a8", who: "max", kind: "max", text: "📅 Brief ready: New model check-in (Fri 10:00)", where: "Calendar", time: "Yesterday", forOnly: ["prince", "praga", "rachitaa", "karthi"], detail: "📅 **New model check-in** · Fri 28 Nov, 10:00 JST. Open items: price list (late), GPU decision (blocked). Open the meeting in Calendar." },
 ];
 
-const KIND_ICON: Record<Kind, JSX.Element | string> = { mention: <Mention12Regular />, reply: <ChatMultiple20Regular fontSize={12} />, reaction: "👍", max: "☁" };
+const KIND_ICON: Record<Kind, JSX.Element | string> = { mention: <Mention12Regular />, reply: <ChatMultiple20Regular fontSize={12} />, reaction: "👍", max: <MaxAvatar size={12} /> };
 
 export function ActivityScreen({ me }: { me: PersonId }) {
   const s = useStyles();

@@ -1,4 +1,4 @@
-// UI design mock-up: Max's own app (left rail "Max"): Setup, Health, Costs, My settings. Static data.
+// UI design mock-up: Max's own app (left rail "Max"): Home (everyone), Setup, Health, Costs, My settings. Static data.
 import { useState, type ReactNode } from "react";
 import {
   Avatar,
@@ -22,7 +22,7 @@ import {
   TableRow,
   Text,
   Tooltip,
-  makeStyles,
+  makeStyles, shorthands,
   mergeClasses,
   tokens,
 } from "@fluentui/react-components";
@@ -34,6 +34,7 @@ import {
   DataBarVertical20Regular,
   ErrorCircle20Filled,
   HeartPulse20Regular,
+  Home20Regular,
   Code20Regular,
   Search20Regular,
   LockClosed12Regular,
@@ -44,6 +45,8 @@ import {
 import { PEOPLE, type PersonId } from "./mock";
 import { MAX_ORANGE, MaxAvatar, personName } from "./ui";
 import { RunViewer, SearchTester } from "./DevTools";
+import { MaxHome } from "./MaxHome";
+import type { NavTarget } from "./ChatScreen";
 
 const ADMINS: PersonId[] = ["prince", "karthi"]; // team lead + developer
 
@@ -72,8 +75,8 @@ const useStyles = makeStyles({
     width: "26px", height: "26px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
     fontSize: tokens.fontSizeBase200, fontWeight: tokens.fontWeightSemibold, border: `2px solid ${tokens.colorNeutralStroke1}`, color: tokens.colorNeutralForeground3,
   },
-  bubbleDone: { backgroundColor: tokens.colorBrandBackground, borderColor: tokens.colorBrandBackground, color: tokens.colorNeutralForegroundOnBrand },
-  bubbleNow: { borderColor: tokens.colorBrandStroke1, color: tokens.colorBrandForeground1 },
+  bubbleDone: { backgroundColor: tokens.colorBrandBackground, ...shorthands.borderColor(tokens.colorBrandBackground), color: tokens.colorNeutralForegroundOnBrand },
+  bubbleNow: { ...shorthands.borderColor(tokens.colorBrandStroke1), color: tokens.colorBrandForeground1 },
   stepLine: { width: "2px", height: "14px", backgroundColor: tokens.colorNeutralStroke2, marginLeft: "24px" },
   footer: { display: "flex", alignItems: "center", gap: "8px", marginTop: "24px", paddingTop: "16px", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
   formGrid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "18px 28px" },
@@ -439,10 +442,10 @@ function MySettingsTab({ me }: { me: PersonId }) {
   );
 }
 
-export function MaxApp({ me, initialTab, initialStep }: { me: PersonId; initialTab?: string; initialStep?: number }) {
+export function MaxApp({ me, initialTab, initialStep, onOpen }: { me: PersonId; initialTab?: string; initialStep?: number; onOpen?: (to: NavTarget) => void }) {
   const s = useStyles();
   const admin = ADMINS.includes(me);
-  const [tab, setTab] = useState(initialTab && (admin || initialTab === "mine") && (me === "karthi" || !["search", "runs"].includes(initialTab)) ? initialTab : admin ? "setup" : "mine");
+  const [tab, setTab] = useState(initialTab && (admin || initialTab === "mine" || initialTab === "home") && (me === "karthi" || !["search", "runs"].includes(initialTab)) ? initialTab : "home");
   const person = PEOPLE.find((p) => p.id === me)!;
   return (
     <div className={s.page}>
@@ -458,6 +461,7 @@ export function MaxApp({ me, initialTab, initialStep }: { me: PersonId; initialT
           </Badge>
         </div>
         <TabList className={s.tabs} selectedValue={tab} onTabSelect={(_, d) => setTab(String(d.value))}>
+          <Tab value="home" icon={<Home20Regular />}>Home</Tab>
           {admin && <Tab value="setup" icon={<Settings20Regular />}>Setup</Tab>}
           {admin && <Tab value="health" icon={<HeartPulse20Regular />}>Health</Tab>}
           {admin && <Tab value="costs" icon={<DataBarVertical20Regular />}>Costs</Tab>}
@@ -468,6 +472,7 @@ export function MaxApp({ me, initialTab, initialStep }: { me: PersonId; initialT
       </div>
       <div className={s.body}>
         <div className={s.inner}>
+          {tab === "home" && <MaxHome me={me} onOpen={onOpen} onSettings={() => setTab("mine")} />}
           {tab === "setup" && <SetupTab initialStep={initialStep ?? 0} />}
           {tab === "health" && <HealthTab />}
           {tab === "costs" && <CostsTab />}

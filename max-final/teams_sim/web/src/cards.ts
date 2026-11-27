@@ -57,9 +57,72 @@ export interface CardDemo {
   before: Json;
   after?: Json;
   afterLabel?: string;
+  system?: boolean; // a notice, not AI-written: no "AI generated" label
 }
 
+// ---- Max's moments (docs/plans/14-avatar.md Part 7): Max on his own rounded tile, left of the text.
+// In real Teams the tile is an image: a GIF (welcome, celebrate; plays 2x / 1x, under 5 s, first and last frame
+// = the still pose) or a PNG (sorry). Versioned URLs so caches update. The simulator draws the live character in
+// the image's place (id "maxTile-<moment>"), limited exactly like the GIF.
+const MAX_ASSETS = "https://max.thirdwave.test/static";
+const maxTile = (moment: "welcome" | "celebrate" | "sorry", file: string, altText: string, px = 96): Json => ({
+  type: "Image", id: `maxTile-${moment}`, url: `${MAX_ASSETS}/${file}`, altText, width: `${px}px`, height: `${px}px`,
+});
+const withTile = (tile: Json, items: Json[]): Json => ({
+  type: "ColumnSet", columns: [
+    { type: "Column", width: "auto", items: [tile] },
+    { type: "Column", width: "stretch", verticalContentAlignment: "Center", items },
+  ],
+});
+/** Deep link to Max's personal app, Home tab (real Teams: https://teams.microsoft.com/l/entity/<app id>/home). */
+export const MAX_HOME_URL = "https://teams.microsoft.com/l/entity/max-app-id/home";
+export const PLAN_URL = "https://teams.microsoft.com/l/entity/max-app-id/plans?context=new-model-launch";
+
+/** First message in a new chat with Max (sent once per person, when Max is installed for them). */
+export function welcomeCard(firstName: string): Json {
+  return card([
+    withTile(maxTile("welcome", "max-hello.v1.gif", "Max says hello with a wink and a happy hop"), [
+      title(`Hi ${firstName}, I'm Max, your AI teammate 👋`),
+      textB("I know the Product Planning team's chats, files, plans and meetings. Ask me what you missed, what's on your plate or where a decision was made. I always ask before I send or change anything.", { spacing: "Small" }),
+    ]),
+  ], [
+    { type: "Action.OpenUrl", title: "Open Max", url: MAX_HOME_URL, style: "positive" },
+    { type: "Action.Submit", title: "What can you do?", data: { msteams: { type: "messageBack", displayText: "What can you do?", text: "what can you do" } } },
+  ]);
+}
+
+/** Big success (rare: at most about once a day per person, a setting). */
+export const celebrateCard = (byName: string): Json => card([
+  withTile(maxTile("celebrate", "max-celebrate.v1.gif", "Max celebrating"), [
+    title("🎉 New model launch is back on track"),
+    textB("Price list was the only late task. Nothing is late now, and the launch on **Wed 15 Jan** is on track.", { spacing: "Small" }),
+    small(`Marked done by ${byName} · just now`),
+  ]),
+], [{ type: "Action.OpenUrl", title: "Open plan", url: PLAN_URL }]);
+
+/** Something went wrong: always the still "sorry" pose, never animated. */
+export const SORRY_CARD = card([
+  withTile(maxTile("sorry", "max-sorry.v1.png", "Max looking sorry"), [
+    title("Sorry, I couldn't reach the AI model"),
+    textB("Nothing was sent or changed. This usually clears up within a minute.", { spacing: "Small" }),
+    small("Error: the model didn't answer in 30 s (tried 2 times)"),
+  ]),
+], [exec("Try again", "retry", true)]);
+export const SORRY_RETRIED_CARD = card([small("Tried again: it worked. The answer is below.")]);
+
 export const CARDS: CardDemo[] = [
+  {
+    id: "welcome", system: true, name: "Welcome (Max says hello)", where: "First message in a new chat with Max · once per person · GIF plays 2x, then rests",
+    before: welcomeCard("Prince"),
+  },
+  {
+    id: "celebrate", system: true, name: "Big success", where: "Chat with the person who finished it · rare (about once a day at most, a setting) · GIF plays once",
+    before: celebrateCard("Prince"),
+  },
+  {
+    id: "sorry", system: true, name: "Sorry (error)", where: "Where the request came from · still image, never animated",
+    before: SORRY_CARD, after: SORRY_RETRIED_CARD, afterLabel: "After Try again",
+  },
   {
     id: "working", name: "Working on it + Stop", where: "In the thread, for tasks longer than ~5 s · Stop: the asker or the team lead",
     before: card([textB("Working on it: reading 12 threads…"), small("Step 3 of about 8")], [exec("Stop", "stop")]),

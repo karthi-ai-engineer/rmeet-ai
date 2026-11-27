@@ -13,7 +13,7 @@ import {
   TableHeaderCell,
   TableRow,
   Text,
-  makeStyles,
+  makeStyles, shorthands,
   mergeClasses,
   tokens,
 } from "@fluentui/react-components";
@@ -38,7 +38,7 @@ const useStyles = makeStyles({
     flex: "1 1 140px", padding: "10px 12px", borderRadius: tokens.borderRadiusLarge, border: `1px solid ${tokens.colorNeutralStroke2}`,
     display: "flex", flexDirection: "column", gap: "2px", backgroundColor: tokens.colorNeutralBackground2,
   },
-  stageAi: { borderColor: "#F7630C55", backgroundColor: "#F7630C0D" },
+  stageAi: { ...shorthands.borderColor("#F7630C55"), backgroundColor: "#F7630C0D" },
   stageNum: { fontSize: tokens.fontSizeBase500, fontWeight: tokens.fontWeightSemibold, fontVariantNumeric: "tabular-nums" },
   arrow: { display: "flex", alignItems: "center", color: tokens.colorNeutralForeground3 },
   pass: { display: "flex", alignItems: "center", gap: "8px", marginTop: "14px", padding: "10px 12px", borderRadius: tokens.borderRadiusLarge, backgroundColor: tokens.colorPaletteGreenBackground1 },

@@ -1,9 +1,11 @@
 // UI design: all of Max's cards, drawn by Microsoft's Adaptive Cards renderer (the same card JSON Teams receives).
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import * as AC from "adaptivecards";
-import { Badge, Text, makeStyles, tokens } from "@fluentui/react-components";
+import { Badge, Text, makeStyles, shorthands, tokens } from "@fluentui/react-components";
 import { CARDS, teamsHostConfig, type CardDemo } from "./cards";
 import { MaxAvatar } from "./ui";
+import { MOMENTS, MaxMomentTile, type MaxMoment } from "./avatar/MaxMoment";
 
 // Simple markdown for card text (Teams supports a small subset: bold, lists, line breaks).
 AC.AdaptiveCard.onProcessMarkdown = (text, result) => {
@@ -36,7 +38,7 @@ const useStyles = makeStyles({
     },
     "& .ac-pushButton:hover": { backgroundColor: tokens.colorNeutralBackground1Hover },
     "& .ac-pushButton.style-positive, & .ac-pushButton.primary": {
-      backgroundColor: tokens.colorBrandBackground, color: tokens.colorNeutralForegroundOnBrand, borderColor: tokens.colorBrandBackground,
+      backgroundColor: tokens.colorBrandBackground, color: tokens.colorNeutralForegroundOnBrand, ...shorthands.borderColor(tokens.colorBrandBackground),
     },
     "& .ac-pushButton.expanded": { backgroundColor: tokens.colorNeutralBackground1Selected },
     "& .ac-input, & .ac-textInput": {
@@ -47,20 +49,51 @@ const useStyles = makeStyles({
   toast: { marginTop: "8px", fontSize: tokens.fontSizeBase200, color: tokens.colorNeutralForeground3 },
 });
 
+// In the simulator, Max's tile images (id "maxTile-<moment>") are drawn by the live character instead of the GIF/PNG.
+const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+function simTiles(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(simTiles);
+  if (node && typeof node === "object") {
+    const o = node as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const k in o) out[k] = simTiles(o[k]);
+    if (o.type === "Image" && typeof o.id === "string" && o.id.startsWith("maxTile-")) out.url = BLANK; // no request to the (real) image URL
+    return out;
+  }
+  return node;
+}
+
 export function RenderedCard({ json, dark, onAction }: { json: object; dark: boolean; onAction?: (verb: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const actionRef = useRef(onAction);
+  actionRef.current = onAction;
+  const [tiles, setTiles] = useState<{ el: HTMLElement; moment: MaxMoment; size: number }[]>([]);
   useEffect(() => {
     const ac = new AC.AdaptiveCard();
     ac.hostConfig = new AC.HostConfig(teamsHostConfig(dark));
     ac.onExecuteAction = (action) => {
       const verb = action instanceof AC.ExecuteAction ? action.verb ?? action.title ?? "" : action.title ?? "";
-      onAction?.(verb);
+      actionRef.current?.(verb);
     };
-    ac.parse(json);
+    ac.parse(simTiles(json));
     const el = ac.render();
-    if (ref.current && el) { ref.current.innerHTML = ""; ref.current.appendChild(el); }
-  }, [json, dark, onAction]);
-  return <div ref={ref} />;
+    const found: { el: HTMLElement; moment: MaxMoment; size: number }[] = [];
+    if (ref.current && el) {
+      ref.current.innerHTML = "";
+      ref.current.appendChild(el);
+      el.querySelectorAll<HTMLElement>('[id^="maxTile-"]').forEach((host) => {
+        const moment = host.id.slice("maxTile-".length) as MaxMoment;
+        if (!(moment in MOMENTS)) return;
+        const size = parseInt(host.querySelector("img")?.style.width ?? "", 10) || 96;
+        host.innerHTML = "";
+        const mount = document.createElement("div");
+        host.appendChild(mount);
+        found.push({ el: mount, moment, size });
+      });
+    }
+    setTiles(found);
+  }, [json, dark]);
+  return <><div ref={ref} />{tiles.map((t, i) => createPortal(<MaxMomentTile moment={t.moment} size={t.size} />, t.el, String(i)))}</>;
 }
 
 /** A card with Teams-like buttons and inputs (used in the gallery and inside chat messages). */
@@ -69,7 +102,7 @@ export function CardFrame({ json, dark, onAction }: { json: object; dark: boolea
   return <div className={s.frame}><RenderedCard json={json} dark={dark} onAction={onAction} /></div>;
 }
 
-function MaxMessage({ children, time = "10:41" }: { children: React.ReactNode; time?: string }) {
+function MaxMessage({ children, time = "10:41", system }: { children: React.ReactNode; time?: string; system?: boolean }) {
   const s = useStyles();
   return (
     <div className={s.msg}>
@@ -78,7 +111,7 @@ function MaxMessage({ children, time = "10:41" }: { children: React.ReactNode; t
         <div className={s.msgMeta}>
           <Text weight="semibold" style={{ color: "#F7630C" }}>Max</Text>
           <Text size={200} style={{ color: tokens.colorNeutralForeground3 }}>{time}</Text>
-          <Badge appearance="tint" color="informative" size="small">AI generated</Badge>
+          {!system && <Badge appearance="tint" color="informative" size="small">AI generated</Badge>}
         </div>
         {children}
       </div>
@@ -98,13 +131,13 @@ function Demo({ c, dark }: { c: CardDemo; dark: boolean }) {
       <div className={s.pair}>
         <div>
           <span className={s.label}>As posted (buttons work: try them)</span>
-          <MaxMessage><div className={s.frame}><RenderedCard json={c.before} dark={dark} onAction={setClicked} /></div></MaxMessage>
+          <MaxMessage system={c.system}><div className={s.frame}><RenderedCard json={c.before} dark={dark} onAction={setClicked} /></div></MaxMessage>
           {clicked && <div className={s.toast}>→ Button "{clicked}" sent to Max (Universal Action). Max checks who clicked, acts, and updates the card.</div>}
         </div>
         {c.after && (
           <div>
             <span className={s.label}>{c.afterLabel ?? "After"} (the same card, updated in place)</span>
-            <MaxMessage><div className={s.frame}><RenderedCard json={c.after} dark={dark} /></div></MaxMessage>
+            <MaxMessage system={c.system}><div className={s.frame}><RenderedCard json={c.after} dark={dark} /></div></MaxMessage>
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@ import type React from "react";
 import { Button, Link, Popover, PopoverSurface, PopoverTrigger, Text, Tooltip, makeStyles, tokens } from "@fluentui/react-components";
 import { Open16Regular } from "@fluentui/react-icons";
 import { BACKGROUND, PEOPLE, type Source } from "./mock";
+import { MaxCharacter } from "./avatar/MaxCharacter";
 
 export const MAX_ORANGE = "#F7630C";
 
@@ -21,18 +22,10 @@ export function personName(id: string): string {
   return PEOPLE.find((p) => p.id === id)?.name ?? BACKGROUND[id] ?? id;
 }
 
+/** Max's still icon (chats, lists, mail, activity, headers). Real Teams only shows a still bot icon here;
+ *  the living Max is on Max's own pages. At 40 px and below the character uses its simpler 3-bump shape. */
 export function MaxAvatar({ size = 32 }: { size?: number }) {
-  return (
-    <span
-      aria-label="Max"
-      style={{
-        width: size, height: size, borderRadius: "50%", background: MAX_ORANGE, color: "#fff", flexShrink: 0,
-        display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.55,
-      }}
-    >
-      ☁
-    </span>
-  );
+  return <MaxCharacter still size={size} title="Max" />;
 }
 
 /** Message text: **bold** and [n] citation markers. */

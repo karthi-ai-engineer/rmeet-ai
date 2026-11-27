@@ -41,7 +41,7 @@ import {
 } from "@fluentui/react-icons";
 import { PEOPLE, TEAMS, THREADS, type Message, type PersonId, type Thread } from "./mock";
 import { MAX_ORANGE, MaxAvatar, RichText, Sources, personName } from "./ui";
-import { ChatScreen } from "./ChatScreen";
+import { ChatScreen, type NavTarget } from "./ChatScreen";
 import { FilesTab, PlansTab } from "./ChannelTabs";
 import { CalendarScreen } from "./CalendarScreen";
 import { ActivityScreen, MailScreen } from "./MailActivity";
@@ -85,10 +85,6 @@ const useStyles = makeStyles({
       content: '""', position: "absolute", left: "0", top: "14px", bottom: "14px", width: "3px",
       borderRadius: "2px", backgroundColor: tokens.colorBrandForeground1,
     },
-  },
-  maxIcon: {
-    width: "24px", height: "24px", borderRadius: "50%", backgroundColor: MAX_ORANGE, color: "#fff",
-    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px",
   },
   list: {
     width: "280px", flexShrink: 0, display: "flex", flexDirection: "column", overflowY: "auto",
@@ -212,6 +208,17 @@ export function App() {
   const [newPost, setNewPost] = useState("");
   const [tab, setTab] = useState(q.get("tab") ?? "posts");
   const [view, setView] = useState(q.get("view") ?? "teams");
+  // deep links from cards and Max's pages ("Open Max", "Open plan", "Ask Max"); demo flags only apply to the first load
+  const [nav, setNav] = useState<NavTarget & { n: number }>({
+    view: q.get("view") ?? "teams", chat: q.get("chat") ?? "max", mtab: q.get("mtab") ?? undefined, meeting: q.get("meeting") ?? undefined, n: 0,
+  });
+  const open = (to: NavTarget) => {
+    setNav((o) => ({ ...o, ...to, n: o.n + 1 }));
+    if (to.channel) setChannelId(to.channel);
+    if (to.tab) setTab(to.tab);
+    setView(to.view);
+  };
+  const firstLoad = nav.n === 0;
 
   const myTeams = useMemo(
     () =>
@@ -250,7 +257,7 @@ export function App() {
     { key: "teams", label: "Teams", icon: <PeopleTeam24Filled /> },
     { key: "calendar", label: "Calendar", icon: <CalendarLtr24Regular /> },
     { key: "mail", label: "Mail", icon: <Mail24Regular /> },
-    { key: "max", label: "Max", icon: <span className={s.maxIcon}>☁</span> },
+    { key: "max", label: "Max", icon: <MaxAvatar size={24} /> },
   ];
 
   return (
@@ -309,20 +316,20 @@ export function App() {
           <nav className={s.rail}>
             {rail.map((r) => (
               <div key={r.key} className={mergeClasses(s.railItem, r.key === view && s.railActive)}
-                onClick={() => setView(r.key)}>
+                onClick={() => { if (r.key !== view) setNav((o) => ({ ...o, mtab: undefined, meeting: undefined, n: o.n + 1 })); setView(r.key); }}>
                 {r.icon}
                 <span>{r.label}</span>
               </div>
             ))}
           </nav>
 
-          {view === "chat" && <ChatScreen me={me} initialChat={q.get("chat") ?? "max"} fresh={q.get("fresh") === "1"} demo={q.get("demo") ?? undefined} dark={themeName !== "light"} key={me} />}
-          {view === "calendar" && <CalendarScreen me={me} initialMeeting={q.get("meeting") ?? undefined} key={me} />}
+          {view === "chat" && <ChatScreen me={me} initialChat={nav.chat ?? "max"} fresh={firstLoad && q.get("fresh") === "1"} demo={firstLoad ? q.get("demo") ?? undefined : undefined} dark={themeName !== "light"} onOpen={open} key={me} />}
+          {view === "calendar" && <CalendarScreen me={me} initialMeeting={nav.meeting} key={me} />}
           {view === "mail" && <MailScreen me={me} key={me} />}
           {view === "emoji" && <EmojiCompare />}
           {view === "avatar" && <AvatarLab />}
           {view === "cards" && <CardsGallery dark={themeName !== "light"} only={q.get("cards")?.split(",")} />}
-          {view === "max" && <MaxApp me={me} key={me} initialTab={q.get("mtab") ?? undefined} initialStep={Number(q.get("step") ?? 0)} />}
+          {view === "max" && <MaxApp me={me} key={me} initialTab={nav.mtab} initialStep={Number(q.get("step") ?? 0)} onOpen={open} />}
           {view === "activity" && <ActivityScreen me={me} key={me} />}
           {!["chat", "teams", "calendar", "mail", "activity", "max", "cards", "emoji", "avatar"].includes(view) && <div className={s.empty} style={{ flex: 1 }}>The {view} screen is designed in a later mock-up.</div>}
           {view === "teams" && <>
