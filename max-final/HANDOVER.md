@@ -9,6 +9,9 @@ Last updated: 27 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
   Step 0 foundation · Step 1 any AI provider + one limits file (merged into `max-final`) · **Step 2 simulated Teams
   in the browser** (branch `step-2`): people, departments, channels (one private), chats, live updates; Max connects
   through the **real Bot Framework contract** (Teams SDK for Python) and says hello. `docs/plans/step-2.md`.
+  **Step 3 Thirdwave's world** (branch `step-3`): 45 days of history (~1,280 messages), 40 real files (Excel,
+  PowerPoint, Word, PDF incl. scans, images), 116 planted facts proven by code, dates that slide to today.
+  `docs/plans/step-3.md`, `world/README.md`.
 - **The design phase is DONE (26 Nov 2026).** All topics in `docs/plans/01-open-topics.md` are agreed, except
   **Max Meeting** (topic 7), which became its own module and is **paused until the chat Max (R1) is built**
   (`docs/plans/meeting/01-overview.md`). UI: `docs/plans/13-ui-design.md`; Max's character and chat animations:
@@ -87,13 +90,13 @@ Notes:
 ## 5. Next session: start here (27 Nov 2026)
 
 **Where we stopped:**
-- **Step 2 is DONE** on branch **`step-2`** (pushed): see `docs/plans/step-2.md` (results, bugs found, known gaps).
-  Karthi merges `step-2` into `max-final` when happy.
+- **Step 2 DONE** (`step-2`), **Step 3 DONE** (`step-3`, pushed): Karthi merges them into `max-final` when happy.
 - **Git identity:** commit only as `karthi-ai-engineer` (repo-local `git config user.email` =
-  `296384397+karthi-ai-engineer@users.noreply.github.com`). The PC's global email belongs to a company GitHub
-  account; check `git config user.email` before committing on a new clone.
-- **Step 3 (Thirdwave's world)** continues on branch **`step-3`**: `docs/plans/step-3.md`. Per the agreed process
-  (`11-sim-world.md` Part 3) **Karthi reviews the fact sheet + samples before the full world is generated**.
+  `296384397+karthi-ai-engineer@users.noreply.github.com`; check it on a new clone). Old commits under the company
+  account stay as they are (Karthi, 27 Nov).
+- **Karthi wants to play with examples** in the simulated Teams to check everything (`python run.py start`).
+- **Next: Step 4** of `docs/plans/12-build-plan.md`: Max reads everything and keeps up to date (knowledge import,
+  extraction, pieces, keyword + meaning search, live updates, search page). Write `docs/plans/step-4.md` first.
 
 **Keep the rules in `CLAUDE.md`:** one part at a time, limits are settings, model stays swappable, Claude decides UI
 details and shows images, test end to end before saying something works.

@@ -24,9 +24,12 @@ from world.dates import Clock, render
 FOLDER = Path(__file__).resolve().parents[1] / "messages"
 
 
-def raw(folder: Path = FOLDER) -> list[dict]:
+def raw(folder: Path = FOLDER, skip: tuple[str, ...] = ()) -> list[dict]:
+    """All message files in the folder (except the file names in `skip`)."""
     out = []
     for p in sorted(folder.glob("*.yaml")):
+        if p.name in skip:
+            continue
         out += yaml.safe_load(p.read_text(encoding="utf-8")) or []
     return out
 
@@ -55,14 +58,15 @@ def _expand(world: dict, items: list[dict]) -> list[dict]:
 def problems(world: dict, items: list[dict] | None = None) -> list[str]:
     msgs = _expand(world, raw() if items is None else items)
     out, by_id = [], {}
+    for m in msgs:  # every id first: a reply may sit in a file loaded before its post's file
+        if m["id"] in by_id:
+            out.append(f"message {m['id']}: duplicate id")
+        by_id[m["id"]] = m
     for m in msgs:
         what = f"message {m['id']}"
         if m["_unknown_event"]:
             out.append(f"{what}: unknown event")
             continue
-        if m["id"] in by_id:
-            out.append(f"{what}: duplicate id")
-        by_id[m["id"]] = m
         if None in (m["place"], m["by"], m["wd"], m["at"]):
             out.append(f"{what}: place, by, wd and at are needed")
             continue

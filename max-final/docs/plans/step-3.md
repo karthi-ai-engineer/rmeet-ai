@@ -1,6 +1,6 @@
 # Step 3 plan: Thirdwave's world (history, files, reset)
 
-**Status: IN PROGRESS (27 Nov 2026).** Started on Karthi's go-ahead ("go to the next step in a new branch and keep
+**Status: ✅ DONE (27 Nov 2026).** Full world built, reviewed (4 rounds), all checks pass. Started on Karthi's go-ahead ("go to the next step in a new branch and keep
 progressing"); design already agreed in `11-sim-world.md` (Parts 1-4). Branch: `step-3`. Build plan: `12-build-plan.md`.
 **Review gate (agreed process, `11-sim-world.md` Part 3): Karthi reviews the fact sheet + samples before the full
 world (~1,500 messages, AI-written, about $1-3) is generated.** Everything up to that gate is built and tested now.
@@ -44,7 +44,7 @@ and traps the test set needs, and **dates that slide** so the history always end
 | Checks `python run.py world` | ✅ 77 facts proven at their labelled place, 0 pending, 0 problems; canary sweep over every message and file |
 | Loader + reset | ✅ The simulated Teams starts from the world; dates slide (working days, Tokyo); history ends this morning; nothing from the future; edited / deleted history |
 | Files for real | ✅ Files tab with versions, preview (images, PDF), download; private files closed to non-members; full names for everyone |
-| Full world (AI-written, ~1,500 messages + the other 31 files) | ⏸️ **Waiting for Karthi's review** |
+| Full world | ✅ Karthi said go (27 Nov). All **40 files** have content (43 versions, incl. a ~36-page policy for long-document tests); **116 planted facts**, all proven; **1,224 AI-written everyday messages** + 57 storyline messages = ~1,280 (after the strictest rules; a rerun can top it up). Cost of writing: **about $0.75** in total (trial + 4 runs while improving the writer; cap $3 per run, a setting) |
 
 **Design decisions made while building (for Karthi to confirm at the review):**
 1. **Files and dates are made at load time, not frozen in git.** git keeps the fact sheet and the message text with date
@@ -59,3 +59,26 @@ and traps the test set needs, and **dates that slide** so the history always end
 
 **Review pack for Karthi:** `world/facts.yaml` (start with `names`, `people`, `data`, `storylines`, `traps`),
 `world/messages/samples.yaml`, pictures `docs/plans/pictures/world-sample-*.png` and `ui-18-step3-*.png`.
+
+## Full world (27 Nov 2026, after Karthi's go)
+- **Writer** `python run.py world-write` (`world/make/write_messages.py`): one AI call per place per working week,
+  given the place's members, files, topics and what is already written. Rules checked by code; a message that breaks
+  one is dropped: no digits except inside product / file names, no month or weekday names, no secret words, no
+  personal matters, authors are members, working hours, replies only to earlier posts, and **no status changes about
+  a storyline** ("sent Northwind the update", "decision approved"), so the planted facts and traps stay true.
+- **Quality pass:** the first run was bland corporate filler; the writer now asks for concrete work talk (names,
+  files, meetings, samples) and refuses spelled-out product names ("Raptor X nine"). Checked by reading samples.
+- Bugs found and fixed with tests: the writer read its own old output as context (would duplicate ids on a rerun);
+  three regexes broken by invisible control characters from shell edits (a test now refuses control characters in
+  code); personal matter repeated by the AI (now refused).
+- **Second quality pass (review of the full world):** the reviewer found messages naming files before they existed
+  (171), early weeks "seeing" later events, invented file contents and role mix-ups. Now each batch sees only the
+  storyline and files that exist by its week (files with a one-line summary, "name, don't describe"), a who-does-what
+  line, and code refuses: files before their upload day or older than the window, private file names elsewhere, number
+  and weekend words, near-repeats, topics that must stay "not in the data". Result: 0 files before upload, natural
+  chat style (contractions), roles right.
+- **Third pass (re-review):** the AI had copied two storyline moments as chatter (one of them the Northwind order
+  post without its numbers), named files earlier on their upload day, and invented file contents. Code now refuses
+  copies of storyline messages (same author within 30 min, or half the same words), checks upload day and time, and
+  refuses content words a file doesn't contain; more status words, private hints and old-only names. The existing
+  messages were re-checked with these rules (1,349 -> 1,224). All 116 facts proven, 0 problems.

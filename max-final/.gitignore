@@ -53,3 +53,6 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# ---- Half-written files of an interrupted run ----
+*.partial

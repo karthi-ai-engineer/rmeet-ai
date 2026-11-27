@@ -164,10 +164,44 @@ def make_pptx(world, f, v, fill, path: Path) -> dict:
     return drawn
 
 
+LONG_TOPICS = ["booking travel", "approvals", "receipts", "trains and flights", "hotels", "meals", "taxis",
+               "client entertainment", "mobile phones", "conferences", "visas", "insurance", "currency exchange",
+               "corporate cards", "lost receipts", "deadlines", "audits", "exceptions"]
+LONG_SENTENCES = [
+    "Employees plan {t} early and choose the most economical option that still fits the purpose of the trip.",
+    "The manager confirms {t} before any money is spent, and the confirmation is kept with the expense report.",
+    "Questions about {t} go to Finance, who answer within two working days.",
+    "Rules on {t} apply to permanent staff, contractors and interns alike.",
+    "If the rules on {t} are unclear, the stricter reading applies until Finance decides.",
+    "Costs for {t} that break this policy are not refunded, unless Finance approved an exception in writing.",
+    "Records about {t} are kept for seven years, as the law requires.",
+]
+
+
+def long_policy(spec: dict, seed: str) -> list[tuple[str, list[str]]]:
+    """A very long, plain policy (for long-document tests): many sections of ordinary rules, and a few facts placed
+    deep inside at fixed sections. Deterministic: the same seed always gives the same text."""
+    rng = random.Random(seed)
+    out = []
+    for n in range(1, spec["sections"] + 1):
+        topic = LONG_TOPICS[(n - 1) % len(LONG_TOPICS)]
+        paragraphs = [" ".join(rng.sample(LONG_SENTENCES, 4)).format(t=topic) for _ in range(spec["paragraphs"])]
+        if str(n) in spec.get("facts", {}):
+            paragraphs.insert(1, spec["facts"][str(n)])
+        part = (n - 1) // len(LONG_TOPICS) + 1
+        out.append((f"{n}. {topic.capitalize()}" + (f" (part {part})" if part > 1 else ""), paragraphs))
+    return out
+
+
 def make_docx(world, f, v, fill, path: Path) -> dict:
     doc = Document()
     for b in f["spec"]["blocks"]:
-        if "h1" in b:
+        if "long" in b:
+            for title, paragraphs in long_policy(b["long"], f["id"]):
+                doc.add_heading(title, level=2)
+                for p in paragraphs:
+                    doc.add_paragraph(fill(p))
+        elif "h1" in b:
             doc.add_heading(fill(b["h1"]), level=1)
         elif "h2" in b:
             doc.add_heading(fill(b["h2"]), level=2)
@@ -264,14 +298,36 @@ def make_pdf(world, f, v, fill, path: Path) -> dict:
     return drawn
 
 
+def render_image(label: str) -> Image.Image:
+    """A simple product 'render': a dark tower PC with a light strip and its name on the front."""
+    img = Image.new("RGB", (1200, 900), (236, 238, 242))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((430, 120, 770, 800), radius=28, fill=(32, 34, 40))
+    d.rounded_rectangle((455, 150, 475, 770), radius=8, fill=(247, 99, 12))
+    for y in range(200, 700, 40):
+        d.line((520, y, 730, y), fill=(60, 63, 72), width=6)
+    d.text((520, 735), label, fill=(230, 230, 230), font=_font("DejaVuSans-Bold.ttf", 34))
+    d.ellipse((380, 790, 820, 840), fill=(210, 212, 218))
+    return img
+
+
 def make_image(world, f, v, fill, path: Path) -> dict:
     spec = f["spec"]
-    lines = [fill(t) for t in spec["lines"]]
-    if spec["image"] == "whiteboard":
-        whiteboard_image(lines, f["id"]).save(path, "JPEG", quality=85)
-    else:
-        raise ValueError(f"unknown image kind {spec['image']!r}")
-    return {"image": lines}
+    kind = spec["image"]
+    fmt = "JPEG" if path.suffix.lower() in (".jpg", ".jpeg") else "PNG"
+    if kind == "whiteboard":
+        lines = [fill(t) for t in spec["lines"]]
+        whiteboard_image(lines, f["id"]).save(path, fmt, quality=85)
+        return {"image": lines}
+    if kind == "chart":
+        png, texts = chart_png(spec["chart"], fill)
+        Image.open(io.BytesIO(png)).save(path, fmt)
+        return {"image": texts}
+    if kind == "render":
+        label = fill(spec["label"])
+        render_image(label).save(path, fmt)
+        return {"image": [label]}
+    raise ValueError(f"unknown image kind {kind!r}")
 
 
 # ---------------------------------------------------------------- all files

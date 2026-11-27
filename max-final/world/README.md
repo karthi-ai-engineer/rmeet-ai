@@ -7,12 +7,14 @@ Teams, exactly like real data would.
 | File | What |
 |---|---|
 | `facts.yaml` | **The fact sheet** (Karthi reviews this): company, people, places, numbers, storylines, dated events, planted facts + traps, canary words, the ~40 files |
-| `messages/*.yaml` | The messages, written around the events (`samples.yaml` now; the full ~1,500 after the review) |
+| `messages/samples.yaml` | The storyline messages, written by hand around the events (57) |
+| `messages/generated.yaml` | The everyday messages (~1,220), written by an AI model and checked by code (`make/write_messages.py`); don't edit by hand |
 | `dates.py` | Sliding dates: working-day offsets + Tokyo times, filled in for "today" |
 | `model.py` | Loads the fact sheet and checks it is consistent (places, members, the reading window, references, canaries) |
 | `make/files.py` | Makes the real files (Excel, PowerPoint, Word, PDF, images); every number comes from `facts.yaml` |
 | `make/messages.py` | Makes the messages ready for a day (place, author, time, thread, edited / deleted) |
 | `check.py` | Proves every planted fact is exactly where the fact sheet says; canary words only in the private channel |
+| `make/write_messages.py` | Writes `generated.yaml` with the AI model: each week sees only what exists by then; strict rules (no numbers, dates, secrets, status changes, files before they exist…) |
 
 **How it works:** git keeps the fact sheet and the message text (with date placeholders like `{date:-3}`). When the
 simulated Teams starts or is reset, the loader (`teams_sim/cloud/world.py`) fills in the dates for today and makes the

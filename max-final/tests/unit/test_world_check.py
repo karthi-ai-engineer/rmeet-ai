@@ -139,3 +139,11 @@ def test_month_names_agree_with_the_messages_own_dates(world, today, tmp_path):
     assert not any(check.contains(check.file_text(notice), m) for m in month_names)
     assert not any(check.contains(msgs["e201"]["text"], m) for m in month_names)
     assert check.check(world, clock, made, list(msgs.values()))["problems"] == []
+
+
+def test_reply_may_come_before_its_post_in_the_files(world):
+    """generated.yaml loads before samples.yaml: a generated reply to a sample post must still be valid."""
+    reply = {"id": "g1", "place": "pp-general", "by": "kenji", "wd": -30, "at": "12:40", "text": "Yes!", "reply_to": "e501"}
+    from world.make import messages as m
+    samples = m.raw(skip=("generated.yaml",))
+    assert m.problems(world, [reply, *samples]) == []

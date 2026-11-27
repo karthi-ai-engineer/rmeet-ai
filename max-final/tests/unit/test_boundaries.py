@@ -75,3 +75,14 @@ def test_only_llm_package_talks_to_providers():
         if any(n.split(".")[0] == "openai" for n in imports_of(f)) or "/chat/completions" in text:
             broken.append(str(f.relative_to(ROOT)))
     assert not broken, "Use max.llm instead of calling a provider in: " + ", ".join(broken)
+
+
+def test_no_invisible_control_characters_in_code():
+    """A backspace or similar inside a regex silently breaks it (happened 3 times on 27 Nov 2026 via shell edits)."""
+    bad = []
+    for folder in ("max", "teams_sim", "world", "ai_usage", "tests"):
+        for f in python_files(folder):
+            text = f.read_text(encoding="utf-8")
+            if any(ord(c) < 32 and c not in "\n\r\t" for c in text):
+                bad.append(str(f.relative_to(ROOT)))
+    assert not bad, "Control characters in: " + ", ".join(bad)
