@@ -1,6 +1,6 @@
 # Max: avatar (identity)
 
-**Status: IN DISCUSSION (26 Nov 2026).** Until now: an orange cloud placeholder (`02-use-cases.md`: "orange cloud for
+**Status: BASE AGREED (27 Nov 2026).** The new flat-bottom animated cloud (Part 4) is Max's character; we keep improving it. Until now: an orange cloud placeholder (`02-use-cases.md`: "orange cloud for
 now, richer animations later"). Max orange `#F7630C` is the brand colour (agreed in `13-ui-design.md`).
 
 ## Part 1: options (PROPOSED 26 Nov 2026)
@@ -42,3 +42,21 @@ avatar, rebuilt cleanly in `teams_sim/web` for Max's pages and meetings; still i
 2. Animation plan: Teams' own motion in the chat (streaming, status, in-place card updates) + a few Max GIF moments
    in cards; the full living avatar only on Max's own pages and meetings. OK?
 3. Add a **Max home page** (living avatar) to the Max app, next to Setup / Health / Costs?
+
+## Part 4: the look, decided direction (Karthi, 27 Nov 2026)
+- Start from the prototype's animated cloud, **but change the shape**: puffy bumps on top and a **flatter bottom with
+  a gentle bulge** (a cloud sitting on the ground). Reason: a round cloud hides body motion; a flat base makes
+  squash-and-stretch, leaning and hops clearly visible.
+- **Body animation must be clearly visible**, not only the eyes: breathing, sway, lean toward the gaze, hops,
+  squash and stretch, follow-through, a ground shadow that reacts. "Very interactive", polished.
+- Built by the frontend specialist as a reusable component: `teams_sim/web/src/avatar/MaxCharacter.tsx`, playground
+  `?view=avatar` (`AvatarLab.tsx`). Pictures will be `pictures/avatar-4-*.png`.
+**Built 27 Nov 2026** (frontend specialist, checked by Claude): `teams_sim/web/src/avatar/MaxCharacter.tsx` +
+`AvatarLab.tsx`, page `?view=avatar`. New shape: 4 puffy top bumps, wide base with rounded corners and a gentle
+bulge, 1.36:1, orange #F7630C with a lighter top band; 3-bump simplified shape at 40 px and below. 16 moods with
+visible body motion (squash and stretch, hops, lean toward the gaze, rocking, slump), springs between states,
+ground shadow reacts, reduced-motion mode, pauses when off-screen; 61 fps measured.
+Pictures: `pictures/avatar-4-lab.png`, `avatar-4-poses.png`, `avatar-4-all-moods.png`, `avatar-4-meeting-dark.png`.
+
+**Karthi (27 Nov 2026): agreed as the base.** We keep working on it from here (next ideas: talking mouth / cheek
+squish, in-between moves such as a wake-up jolt, shape-check tests, then using it in the real places).

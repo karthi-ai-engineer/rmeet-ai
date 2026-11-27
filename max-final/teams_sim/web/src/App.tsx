@@ -48,6 +48,7 @@ import { ActivityScreen, MailScreen } from "./MailActivity";
 import { MaxApp } from "./MaxApp";
 import { CardsGallery } from "./CardsGallery";
 import { EmojiCompare } from "./EmojiCompare";
+import { AvatarLab } from "./avatar/AvatarLab";
 
 const THEMES = { light: teamsLightTheme, dark: teamsDarkTheme, contrast: teamsHighContrastTheme };
 type ThemeName = keyof typeof THEMES;
@@ -319,10 +320,11 @@ export function App() {
           {view === "calendar" && <CalendarScreen me={me} initialMeeting={q.get("meeting") ?? undefined} key={me} />}
           {view === "mail" && <MailScreen me={me} key={me} />}
           {view === "emoji" && <EmojiCompare />}
+          {view === "avatar" && <AvatarLab />}
           {view === "cards" && <CardsGallery dark={themeName !== "light"} only={q.get("cards")?.split(",")} />}
           {view === "max" && <MaxApp me={me} key={me} initialTab={q.get("mtab") ?? undefined} initialStep={Number(q.get("step") ?? 0)} />}
           {view === "activity" && <ActivityScreen me={me} key={me} />}
-          {!["chat", "teams", "calendar", "mail", "activity", "max", "cards", "emoji"].includes(view) && <div className={s.empty} style={{ flex: 1 }}>The {view} screen is designed in a later mock-up.</div>}
+          {!["chat", "teams", "calendar", "mail", "activity", "max", "cards", "emoji", "avatar"].includes(view) && <div className={s.empty} style={{ flex: 1 }}>The {view} screen is designed in a later mock-up.</div>}
           {view === "teams" && <>
           {/* 3. Teams and channels */}
           <aside className={s.list}>
