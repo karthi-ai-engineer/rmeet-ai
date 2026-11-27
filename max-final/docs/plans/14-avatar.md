@@ -60,3 +60,35 @@ Pictures: `pictures/avatar-4-lab.png`, `avatar-4-poses.png`, `avatar-4-all-moods
 
 **Karthi (27 Nov 2026): agreed as the base.** We keep working on it from here (next ideas: talking mouth / cheek
 squish, in-between moves such as a wake-up jolt, shape-check tests, then using it in the real places).
+
+## Part 5: animation plan (AGREED 27 Nov 2026)
+- **Teams chat:** Teams' own motion (streaming, status lines, cards updating in place) + a few small Max animation
+  moments in cards. **Which moments and where GIFs can play: research first** (Karthi), then decide, aiming to make
+  Max as interactive as Teams allows.
+- **Max's own pages (Max app, home page):** the full living Max (all moods, hover, poke).
+- **Meetings (Max Meeting, later):** Max listens, thinks and speaks live on its tile.
+Research: `docs/research/teams-animation.md` (running 27 Nov).
+
+## Part 6: polish round 1 (built 27 Nov 2026)
+Talking mouth (dark "D" with coral tongue, faint blush cheeks, only while speaking / briefly when happy); in-between
+moves (wake-up jolt, startle, satisfied settle, recover, ready nod; 0.5-0.85 s, springs); interactive: hover lean +
+**poke** (click / tap / Enter: dent, giggle wobble, happy eyes), keyboard focus ring, state-aware label.
+Pictures: `pictures/avatar-5-speaking-mouth.png`, `avatar-5-transitions.png`, `avatar-5-lab.png`.
+Open points from the specialist: ready nod subtle in stills; mouth tiny at 48 px; settle shows dot eyes for 0.15 s;
+"!" pops slightly early in the startle; reduced motion still has a small voice stretch; cheeks faint on purpose;
+no automated tests yet for moves / poke.
+
+## Part 7: where Max can animate in Teams (research 27 Nov 2026: `docs/research/teams-animation.md`)
+- Animated GIFs in cards are officially **not supported** (often play on desktop/web/Android, not iOS): bonus only,
+  first/last frame must be a good still pose. No confetti / message effects / stickers API for bots.
+- **Full live Max only in our own pages inside Teams:** personal tab, dialog, Stageview, meeting side panel and stage;
+  all can be opened from a card button. "HTML widgets" (live HTML in chat) are preview since 16 Nov 2026 → R2 at most.
+- Built-in Teams motion is the professional core: streaming with status lines, reactions (⏳ → ✅ for long tasks),
+  suggested actions, AI label. Don't animate by updating cards (only on real state changes, every few seconds max).
+- Proposed: GIF moments only for **welcome wave** and **big success (celebrate)**, Max on his own small rounded tile
+  (fixes GIF transparency on light/dark), under 150 KB, plays twice, < 5 s; static Max elsewhere; the **personal tab
+  = home of the full animated Max**, cards link to it. To decide with Karthi.
+**Agreed (Karthi, 27 Nov 2026):** GIF moments only for the **welcome wave** and **big success (celebrate)**; calm
+everywhere else; **Max's personal tab is the home of the full animated Max** (cards link to it with "Open Max").
+Polish fixes: Claude decides what looks best (hide mouth below ~64 px, half-closed lids instead of dot eyes while
+settling, "!" timed to the flinch, cheeks slightly stronger but still soft).

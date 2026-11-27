@@ -8,7 +8,10 @@
 // Motion uses springs (smooth blends, never snaps), squash & stretch that keeps volume,
 // anticipation before jumps, follow-through, and a ground shadow that reacts to height.
 // One requestAnimationFrame loop per instance; it pauses when off-screen or when the tab is hidden.
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties,
+  type FocusEvent as ReactFocusEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent,
+} from "react";
 
 export const MAX_COLOR = "#F7630C";
 
@@ -39,7 +42,7 @@ export const MAX_STATE_INFO: Record<MaxState, { label: string; emoji: string }> 
 
 /** Seconds after entering a state where it shows its nicest frozen pose (used for screenshots). */
 export const MAX_FREEZE_POSE: Record<MaxState, number> = {
-  idle: 1.2, listening: 1.3, thinking: 1.5, speaking: 2.26, happy: 0.33, celebrate: 0.34, surprised: 0.2,
+  idle: 1.2, listening: 1.3, thinking: 1.5, speaking: 2.35, happy: 0.33, celebrate: 0.34, surprised: 0.2,
   sleepy: 2.6, confused: 1.4, sorry: 1.4, wink: 0.42, squint: 1.0, lookLeft: 1.1, lookRight: 1.1,
   lookUp: 1.1, lookDown: 1.1,
 };
@@ -56,6 +59,10 @@ export interface MaxCharacterProps {
   still?: boolean;
   /** Freeze the state at this many seconds after entering it (screenshots). */
   freezeAt?: number;
+  /** With freezeAt: come from this state first, so the in-between move (e.g. sleepy → wake-up jolt) is frozen. */
+  freezeFrom?: MaxState;
+  /** Hover to make Max lean toward the pointer; click, tap, Enter or Space to poke. Default: on at 64 px and up. */
+  interactive?: boolean;
   /** Override the system "reduce motion" setting. */
   reducedMotion?: boolean;
   /** Darker ground shadow for dark backgrounds. */
@@ -237,6 +244,81 @@ const easeOutBack = (p: number) => {
   return 1 + c3 * (p - 1) ** 3 + c1 * (p - 1) ** 2;
 };
 const easeOutCubic = (p: number) => 1 - (1 - clamp01(p)) ** 3;
+const smooth = (p: number) => { p = clamp01(p); return p * p * (3 - 2 * p); };
+/** Soft hump from a to b: 0 at both ends with zero slope, 1 in the middle. */
+const hump = (u: number, a: number, b: number) => (u <= a || u >= b ? 0 : Math.sin((Math.PI * (u - a)) / (b - a)) ** 2);
+/** Spring impulse response: starts at 0, swings at `f` Hz and dies out. */
+const ring = (u: number, delay: number, f: number, decay: number) =>
+  u <= delay ? 0 : Math.exp(-decay * (u - delay)) * Math.sin(2 * Math.PI * f * (u - delay));
+/** Rises over `fade` s from a, holds, falls over `fade` s to b. */
+const plateau = (u: number, a: number, b: number, fade: number) => smooth((u - a) / fade) * (1 - smooth((u - b + fade) / fade));
+
+// ---------------------------------------------------------------- in-between moves (short, layered on top of the state's loop)
+
+type MoveKind = "wake" | "startle" | "settle" | "recover" | "nod" | "poke";
+const MOVE_LEN: Record<MoveKind, number> = { wake: 0.8, startle: 0.5, settle: 1.0, recover: 0.7, nod: 0.6, poke: 1.05 };
+interface Move { kind: MoveKind; t0: number }
+interface Offsets { x: number; sq: number; tilt: number; scale: number; yaw: number; pitch: number; wide: number; open: number; happy: number; content: number; giggle: number }
+const NO_OFFSETS: Offsets = { x: 0, sq: 0, tilt: 0, scale: 0, yaw: 0, pitch: 0, wide: 0, open: 0, happy: 0, content: 0, giggle: 0 };
+
+/** Which in-between move plays when changing from one state to another (none for most pairs). */
+function moveFor(prev: MaxState, next: MaxState): MoveKind | null {
+  if (prev === "sleepy" && next !== "sleepy") return "wake";
+  if (next === "surprised") return "startle";
+  if ((prev === "happy" || prev === "celebrate") && next === "idle") return "settle";
+  if (prev === "sorry" && next === "idle") return "recover";
+  if ((prev === "listening" || prev === "thinking") && next === "speaking") return "nod";
+  return null;
+}
+
+/** Adds one move's offsets at `u` seconds after it started. All curves start and end at 0, so nothing snaps. */
+function addMove(o: Offsets, kind: MoveKind, u: number, reduced: boolean) {
+  if (reduced) {   // reduced motion: a poke only changes the eyes
+    if (kind === "poke") o.happy += plateau(u, 0, 0.95, 0.1);
+    return;
+  }
+  switch (kind) {
+    case "wake": {          // eyes pop wide, a small stretch, then a quick head shake
+      const shake = ring(u, 0.2, 5.5, 5.5);
+      o.wide += 0.5 * hump(u, 0, 0.42);
+      o.sq += 0.06 * hump(u, 0, 0.26);
+      o.tilt += 5 * shake; o.x += 5 * shake; o.yaw += 0.16 * shake;
+      break;
+    }
+    case "startle": {       // jerk up, flinch back, tiny shiver
+      o.sq += 0.07 * hump(u, 0, 0.22);
+      o.tilt -= 4 * hump(u, 0, 0.38);
+      o.x += 3 * ring(u, 0, 13, 8);
+      break;
+    }
+    case "settle": {        // satisfied sigh: happy eyes linger, sink down, then soft smiling half-closed eyes, then open
+      o.happy += 0.9 * (1 - smooth((u - 0.3) / 0.18));
+      o.sq += -0.075 * hump(u, 0.04, 0.62) + 0.018 * hump(u, 0.55, 0.85);
+      o.pitch -= 0.08 * hump(u, 0.04, 0.62);
+      o.content += plateau(u, 0.3, 1.0, 0.22);
+      break;
+    }
+    case "recover": {       // small dip, then stand up taller and look up (a blink is scheduled too)
+      o.sq += -0.035 * hump(u, 0, 0.16) + 0.085 * hump(u, 0.1, 0.62);
+      o.scale += 0.03 * hump(u, 0.1, 0.62);
+      o.pitch += 0.12 * hump(u, 0.1, 0.55);
+      break;
+    }
+    case "nod": {           // a "ready" nod: eyes and body dip, come back up
+      const n = ring(u, 0, 2.0, 5.5);
+      o.pitch -= 0.34 * n; o.sq -= 0.065 * n;
+      break;
+    }
+    case "poke": {          // giggle wobble with happy eyes
+      const env = Math.exp(-3.2 * u);
+      o.tilt += 4 * ring(u, 0.05, 6, 3.5);
+      o.sq += 0.04 * Math.sin(2 * Math.PI * 3 * u) ** 2 * env;
+      o.happy += plateau(u, 0, 0.9, 0.09);
+      o.giggle = Math.max(o.giggle, plateau(u, 0.02, 0.95, 0.1));
+      break;
+    }
+  }
+}
 
 /** Speech-like loudness: syllables inside phrases with small pauses. Deterministic in t. */
 function voiceAmp(t: number) {
@@ -264,7 +346,7 @@ const STAR = "M0 -15Q2.5 -2.5 15 0Q2.5 2.5 0 15Q-2.5 2.5 -15 0Q-2.5 -2.5 0 -15Z"
 const QMARK = "M-13 -22C-13 -40 15 -40 15 -24C15 -12 1 -10 1 2";
 const SPARK_COLORS = ["var(--max-sym)", "#FFB900", "var(--max-sym)", "#FFB900", "var(--max-sym)", "#FFB900", "var(--max-sym)", "#FFB900"];
 
-interface EyeEls { g: SVGGElement; pill: SVGRectElement; arch: SVGPathElement; curve: SVGPathElement; lid: SVGRectElement }
+interface EyeEls { g: SVGGElement; pill: SVGRectElement; arch: SVGPathElement; curve: SVGPathElement; lid: SVGRectElement; bow: SVGEllipseElement }
 interface Timed { el: SVGElement; born: number }
 interface Spark extends Timed { ang: number; d0: number; d1: number; size: number; spin: number; x: number; y: number }
 
@@ -276,6 +358,8 @@ class Engine {
   private body: SVGGElement; private path: SVGPathElement; private shadow: SVGEllipseElement | null;
   private eyes: EyeEls[]; private fx: SVGGElement | null; private rings: Timed[]; private zs: Timed[];
   private sparks: Spark[];
+  private mouth: { g: SVGGElement; path: SVGPathElement; clip: SVGPathElement; tongue: SVGEllipseElement } | null;
+  private cheeks: SVGEllipseElement[];
   private fxEls: Record<string, SVGElement | null>;
   private burst: SVGLineElement[]; private dots: SVGCircleElement[];
 
@@ -292,10 +376,12 @@ class Engine {
   private breathPhase = 0; private swayPhase = 0;
   private sacYaw = spring(0, 420, 0.85); private sacPitch = spring(0, 420, 0.85); private sac = { y: 0, p: 0 };
   private nextSaccade = 1.2; private nextBlink = 2.2; private blinkStart = -10; private doubleBlink = false;
-  private nextBeat = 0; private amp = spring(0, 520, 0.9); private lvl = spring(0, 400, 0.9);
+  private nextBeat = 0; private amp = spring(0, 520, 0.9); private softAmp = spring(0, 60, 1); private lvl = spring(0, 400, 0.9);
   private lastRing = -10; private ringIdx = 0; private zNext = 0; private zIdx = 0; private sparkIdx = 0;
   private prevTop = { x: 0, y: 0, vx: 0, vy: 0 };
   private rand = rng(7);
+  private moves: Move[] = []; private off: Offsets = { ...NO_OFFSETS };
+  private mShow = spring(0, 240, 0.55); private mOpen = spring(0, 900, 0.9); private mSmile = spring(0.3, 300, 0.8);
 
   // inputs
   level: number | undefined = undefined;
@@ -303,7 +389,8 @@ class Engine {
   reduced = false;
   onDark = false;
   private mouse = { yaw: 0, pitch: 0 };
-  private calm = false;                    // freeze/still: no random blinks or glances
+  private hover = false;                   // pointer is over the character (lean toward it even without followCursor)
+  private calm = false;                   // freeze/still: no random blinks or glances
   private entered = false;
 
   // loop
@@ -314,7 +401,7 @@ class Engine {
     this.body = this.q("body"); this.path = this.q("path"); this.shadow = this.q("shadow");
     this.eyes = this.qa<SVGGElement>("eye").map((g) => ({
       g, pill: g.querySelector("[data-e=pill]")!, arch: g.querySelector("[data-e=arch]")!,
-      curve: g.querySelector("[data-e=curve]")!, lid: g.querySelector("[data-e=lid]")!,
+      curve: g.querySelector("[data-e=curve]")!, lid: g.querySelector("[data-e=lid]")!, bow: g.querySelector("[data-e=bow]")!,
     }));
     this.fx = this.q("fx");
     this.rings = this.qa<SVGElement>("ring").map((el) => ({ el, born: -10 }));
@@ -322,6 +409,9 @@ class Engine {
     this.sparks = this.qa<SVGElement>("spark").map((el) => ({ el, born: -10, ang: 0, d0: 0, d1: 0, size: 1, spin: 0, x: 0, y: 0 }));
     this.fxEls = Object.fromEntries(["ex", "q1", "q2", "b1", "b2", "b3", "sweat"].map((k) => [k, this.q(k)]));
     this.burst = this.qa("burst"); this.dots = this.qa("dot");
+    const mg = this.q<SVGGElement>("mouth");
+    this.mouth = mg ? { g: mg, path: this.q("mpath"), clip: this.q("mclip"), tongue: this.q("tongue") } : null;
+    this.cheeks = this.qa("cheek");
     this.bumps = compact ? BUMPS_COMPACT : BUMPS_FULL;
     const n = this.bumps.length;
     this.bx = Array(n).fill(0); this.by = Array(n).fill(0); this.bvx = Array(n).fill(0); this.bvy = Array(n).fill(0);
@@ -345,10 +435,39 @@ class Engine {
     this.mouse.yaw = Math.max(-0.65, Math.min(0.65, dx * 0.5));
     this.mouse.pitch = Math.max(-0.45, Math.min(0.45, -dy * 0.42));
   }
+  hoverAt(clientX: number, clientY: number) { this.hover = true; this.setMouse(clientX, clientY); }
+  hoverEnd() { this.hover = false; }
+  /** Poke at a screen point (or the top of the head when no point is given, e.g. from the keyboard). */
+  poke(clientX?: number, clientY?: number) {
+    let x = 0, y = -200;
+    const m = this.svg.getScreenCTM();
+    if (clientX !== undefined && clientY !== undefined && m) {
+      const p = new DOMPoint(clientX, clientY).matrixTransform(m.inverse());
+      x = p.x; y = p.y;
+    }
+    if (this.moves.length > 3) this.moves.shift();
+    this.moves.push({ kind: "poke", t0: this.t });
+    if (this.reduced) return;
+    // squash where poked: a dent in the nearest bumps, a push away from the finger, a squash that wobbles back
+    const bx = x - this.P.shift.v, by = y + this.air;
+    const side = Math.max(-1, Math.min(1, bx / 150));
+    const top = clamp01((-by - 60) / 140);
+    this.jig.vel -= 1.5 + 1.4 * top;
+    this.P.lean.vel -= side * 120; this.P.shift.vel -= side * 70; this.P.tilt.vel -= side * 35;
+    this.bumps.forEach((b, i) => {
+      const dx = b.x + this.bx[i] - bx, dy = b.y + this.by[i] - by, d = Math.max(1, Math.hypot(dx, dy));
+      const w = clamp01(1 - (d - b.r * 0.6) / 110);
+      this.bvx[i] += (dx / d) * 520 * w; this.bvy[i] += (dy / d) * 520 * w;
+    });
+  }
   renderStill() { this.calm = true; this.render(); }
-  freeze(state: MaxState, at: number) {
+  freeze(state: MaxState, at: number, from?: MaxState) {
     this.calm = true;
     for (let t = 0; t < 0.4; t += STEP) this.step(STEP);        // settle in idle first
+    if (from && from !== state) {                                // live in the "from" state for a while
+      this.enter(from);
+      for (let t = 0; t < 1.8; t += STEP) this.step(STEP);
+    }
     this.enter(state);
     const steps = Math.round(at / STEP);
     for (let i = 0; i < steps; i++) this.step(STEP);
@@ -453,6 +572,18 @@ class Engine {
       case "sleepy": this.zNext = this.t + 0.5; break;
       default: this.jig.vel += 0.6;
     }
+    // in-between move for this pair of states (layered on top; the old move, if any, finishes on its own)
+    const move = moveFor(prev, name);
+    if (!move) return;
+    if (this.moves.length > 3) this.moves.shift();
+    this.moves.push({ kind: move, t0: this.t });
+    if (move === "wake") {
+      this.P.closed.vel -= 10;                  // eyes pop open fast
+      this.P.wide.vel += 4;
+      if (!["happy", "celebrate", "surprised", "wink"].includes(name)) this.hop(300, 0.06);
+    }
+    if (move === "recover") this.at(0.42, () => { this.blinkStart = this.t; });
+    if (move === "nod") this.jig.vel -= 0.5;
   }
 
   private beat() {
@@ -491,6 +622,9 @@ class Engine {
     if (this.follow) {
       p.yaw = this.mouse.yaw; p.pitch = this.mouse.pitch;
       p.lean += this.mouse.yaw * 9; p.shift += this.mouse.yaw * 8;
+    } else if (this.hover) {   // gentler than followCursor: Max notices you, keeps its own pose
+      p.yaw += this.mouse.yaw * 0.7; p.pitch += this.mouse.pitch * 0.6;
+      p.lean += this.mouse.yaw * 6; p.shift += this.mouse.yaw * 5;
     } else {
       p.lean += this.sacYaw.v * 10; p.shift += this.sacYaw.v * 8;
     }
@@ -514,9 +648,10 @@ class Engine {
     stepSpring(this.lvl, this.state === "listening" || this.state === "speaking" ? clamp01(this.level ?? 0) : 0, dt);
     const speakSrc = this.state === "speaking" ? (this.level === undefined ? voiceAmp(t) : clamp01(this.level)) : 0;
     stepSpring(this.amp, speakSrc, dt);
+    stepSpring(this.softAmp, speakSrc, dt);
 
     // glances
-    const glancing = !this.calm && !this.follow && (this.state === "idle" || this.state === "speaking" || this.state === "listening");
+    const glancing = !this.calm && !this.follow && !this.hover && (this.state === "idle" || this.state === "speaking" || this.state === "listening");
     if (glancing && t > this.nextSaccade) {
       const back = this.rand() < 0.4;
       const range = this.state === "listening" ? 0.15 : 0.3;
@@ -553,11 +688,33 @@ class Engine {
     }
     stepSpring(this.jig, this.jigTarget, dt);
 
+    // in-between moves and pokes: sum their offsets, drop the finished ones
+    if (this.moves.length) this.moves = this.moves.filter((m) => t - m.t0 < MOVE_LEN[m.kind]);
+    const O: Offsets = { ...NO_OFFSETS };
+    for (const m of this.moves) addMove(O, m.kind, t - m.t0, this.reduced);
+    this.off = O;
+
+    // mouth: while speaking, briefly when happy/celebrating (and in the air), and when giggling after a poke
+    if (!this.compact) {
+      const s = this.state, st = t - this.stateT;
+      let show = 0, open = 0, smile = 0.25;
+      if (s === "speaking") { show = 1; open = this.reduced ? 0.1 + 0.6 * this.softAmp.v : this.amp.v * 1.1; }
+      else if ((s === "happy" || s === "celebrate") && (st < 1.5 || this.airborne)) {
+        show = 1; open = this.airborne ? 0.75 : 0.5; smile = 1;
+      }
+      if (O.giggle > 0 && !this.reduced) {
+        show = Math.max(show, O.giggle);
+        open = Math.max(open, O.giggle * (0.3 + 0.45 * Math.sin(2 * Math.PI * 4.5 * t) ** 2));
+        smile = Math.max(smile, O.giggle);
+      }
+      stepSpring(this.mShow, show, dt); stepSpring(this.mOpen, open, dt); stepSpring(this.mSmile, smile, dt);
+    }
+
     // secondary motion: bumps lag behind the top of the body, then jiggle back (too small to see in compact icons)
     if (!this.reduced && !this.compact) {
-      const lean = (this.P.lean.v * Math.PI) / 180, tilt = (this.P.tilt.v * Math.PI) / 180;
-      const topX = this.P.shift.v + 150 * (Math.tan(lean) + Math.sin(tilt));
-      const topY = this.air + 150 * (this.jig.v + this.P.sq.v + this.amp.v * 0.09);
+      const lean = (this.P.lean.v * Math.PI) / 180, tilt = ((this.P.tilt.v + O.tilt) * Math.PI) / 180;
+      const topX = this.P.shift.v + O.x + 150 * (Math.tan(lean) + Math.sin(tilt));
+      const topY = this.air + 150 * (this.jig.v + this.P.sq.v + O.sq + this.amp.v * 0.09);
       const vx = (topX - this.prevTop.x) / dt, vyTop = (topY - this.prevTop.y) / dt;
       const ax = (vx - this.prevTop.vx) / dt, ay = (vyTop - this.prevTop.vy) / dt;
       this.prevTop = { x: topX, y: topY, vx, vy: vyTop };
@@ -599,7 +756,8 @@ class Engine {
 
   private render() {
     const P = this.P, t = this.t, st = t - this.stateT;
-    const a = Math.max(0, this.amp.v), L = clamp01(this.lvl.v);
+    // voice-driven body motion (stretch, rock, eye bounce) is off in reduced motion; only the mouth follows the voice
+    const a = this.reduced ? 0 : Math.max(0, this.amp.v), L = this.reduced ? 0 : clamp01(this.lvl.v);
 
     // body shape
     if (this.pathDirty) {
@@ -612,15 +770,16 @@ class Engine {
     // squash & stretch (keeps area), lean, tilt
     const airStretch = Math.min(0.13, Math.abs(this.vy) / 4200);
     const listenPulse = this.state === "listening" ? L * 0.07 : 0;
+    const O = this.off;
     const breath = P.breath.v * Math.sin(this.breathPhase);
-    const sq = Math.max(-0.3, Math.min(0.35, P.sq.v + this.jig.v + breath + a * 0.09 + airStretch + listenPulse));
-    const yaw = P.yaw.v + (this.follow ? 0 : this.sacYaw.v);
+    const sq = Math.max(-0.3, Math.min(0.35, P.sq.v + this.jig.v + breath + a * 0.09 + airStretch + listenPulse + O.sq));
+    const yaw = P.yaw.v + (this.follow ? 0 : this.sacYaw.v) + O.yaw;
     const sy = 1 + sq;
     const sx = (1 / sy) * (1 - Math.abs(yaw) * 0.03);
-    const S = P.scale.v;
+    const S = P.scale.v + O.scale;
     const lean = P.lean.v + P.swayLean.v * Math.sin(this.swayPhase);
-    const tilt = P.tilt.v + P.swayTilt.v * Math.sin(this.swayPhase) + (this.state === "speaking" ? a * 1.5 : 0);
-    const shift = P.shift.v;
+    const tilt = P.tilt.v + P.swayTilt.v * Math.sin(this.swayPhase) + (this.state === "speaking" ? a * 1.5 : 0) + O.tilt;
+    const shift = P.shift.v + O.x;
     this.set(this.body, "transform",
       `translate(${shift.toFixed(2)} ${(-this.air).toFixed(2)}) rotate(${tilt.toFixed(2)}) skewX(${(-lean).toFixed(2)}) scale(${(sx * S).toFixed(4)} ${(sy * S).toFixed(4)})`);
 
@@ -632,7 +791,7 @@ class Engine {
     }
 
     // eyes on an imaginary sphere
-    const pitch = P.pitch.v + (this.follow ? 0 : this.sacPitch.v) + a * 0.04;
+    const pitch = P.pitch.v + (this.follow ? 0 : this.sacPitch.v) + a * 0.04 + O.pitch;
     const bp = (t - this.blinkStart) / 0.16;
     const blink = bp >= 0 && bp < 1 ? 1 - 0.92 * Math.sin(bp * Math.PI) : 1;
     const eyeK = this.compact ? 1.32 : 1;
@@ -647,28 +806,30 @@ class Engine {
       const py = FACE_Y - SPHERE_R * Math.sin(pitch) + (this.compact ? 4 : 0);
       const fxs = Math.max(0.25, Math.cos(ey)), fys = Math.max(0.25, Math.cos(pitch));
       const scale = isL ? P.lScale.v : P.rScale.v;
-      const open = Math.max(0, P.open.v * (isL ? P.lOpen.v : P.rOpen.v) * blink);
+      const open = Math.max(0, P.open.v * (isL ? P.lOpen.v : P.rOpen.v) * blink * (1 + O.open));
       const tiltE = isL ? P.lTilt.v : P.rTilt.v;
-      const happy = clamp01(P.happy.v + (isL ? P.lHappy.v : P.rHappy.v));
+      const happy = clamp01(P.happy.v + (isL ? P.lHappy.v : P.rHappy.v) + O.happy);
       const closed = clamp01(P.closed.v);
       const hide = Math.max(happy, closed);
       const w = EW * P.wideX.v * scale;
-      const h = Math.max(3, EH * P.wide.v * open * scale * (1 + a * 0.1) * (1 - hide * 0.75));
+      const h = Math.max(3, EH * (P.wide.v + O.wide) * open * scale * (1 + a * 0.1) * (1 - hide * 0.75));
       this.set(e.pill, "x", (-w / 2).toFixed(2));
       this.set(e.pill, "y", (-h / 2).toFixed(2));
       this.set(e.pill, "width", w.toFixed(2));
       this.set(e.pill, "height", h.toFixed(2));
       this.set(e.pill, "rx", (Math.min(w, h) / 2).toFixed(2));
-      this.op(e.pill, 1 - hide);
+      // short cross-fade window, so pill and curve are never both half see-through for long
+      const xf = (v: number) => smooth((v - 0.35) / 0.45);
+      this.op(e.pill, 1 - xf(hide));
 
       const aw = EW * 1.3 * scale, ah = 15 * scale * eyeK;
       this.set(e.arch, "d", `M${(-aw / 2).toFixed(1)} ${(ah * 0.55).toFixed(1)}Q0 ${(-ah * 1.35).toFixed(1)} ${(aw / 2).toFixed(1)} ${(ah * 0.55).toFixed(1)}`);
       this.set(e.arch, "stroke-width", (EW * 0.42 * scale).toFixed(2));
-      this.op(e.arch, happy);
+      this.op(e.arch, xf(happy));
       const cw = EW * 1.4, ch = 12 * eyeK;
       this.set(e.curve, "d", `M${(-cw / 2).toFixed(1)} ${(-ch * 0.4).toFixed(1)}Q0 ${(ch * 1.1).toFixed(1)} ${(cw / 2).toFixed(1)} ${(-ch * 0.4).toFixed(1)}`);
       this.set(e.curve, "stroke-width", (EW * 0.38).toFixed(2));
-      this.op(e.curve, closed * (1 - happy));
+      this.op(e.curve, xf(closed) * (1 - xf(happy)));
 
       // eyelid in body colour: droops for "sorry", flattens for "squint"
       const lid = clamp01(P.lid.v) * (1 - hide);
@@ -678,10 +839,17 @@ class Engine {
       this.set(e.lid, "height", (16 + lid * h).toFixed(2));
       this.set(e.lid, "transform", `rotate(${(P.lidAngle.v * (isL ? -1 : 1)).toFixed(2)} 0 ${(-h / 2 + lid * h).toFixed(2)})`);
       this.op(e.lid, lid > 0.01 ? 1 : 0);
+      // content (settle): a soft lower lid rises, so the eye reads as a relaxed smiling crescent
+      const cont = clamp01(O.content) * (1 - hide), ry = h * 0.6;
+      this.set(e.bow, "cy", (h / 2 + ry - cont * h * 0.45).toFixed(2));
+      this.set(e.bow, "rx", (w * 1.05).toFixed(2));
+      this.set(e.bow, "ry", ry.toFixed(2));
+      this.op(e.bow, cont > 0.01 ? 1 : 0);
 
       this.set(e.g, "transform", `translate(${px.toFixed(2)} ${py.toFixed(2)}) scale(${fxs.toFixed(4)} ${fys.toFixed(4)}) rotate(${tiltE.toFixed(2)})`);
     });
 
+    this.renderMouth(yaw, pitch);
     if (this.compact || !this.fx) return;
 
     // speaking rings
@@ -704,20 +872,62 @@ class Engine {
     this.renderFx(t, st);
   }
 
+  /** Soft "D" mouth on the face sphere below the eyes, plus two cheeks that squish up as it opens. */
+  private renderMouth(yaw: number, pitch: number) {
+    const M = this.mouth;
+    if (!M) return;
+    const show = this.mShow.v;
+    if (show < 0.01) {
+      this.op(M.g, 0);
+      this.cheeks.forEach((c) => this.op(c, 0));
+      return;
+    }
+    const o = clamp01(this.mOpen.v), sm = clamp01(this.mSmile.v);
+    const mp = pitch - 0.45;
+    const mx = SPHERE_R * Math.sin(yaw) * Math.cos(mp), my = FACE_Y - SPHERE_R * Math.sin(mp);
+    const fxs = Math.max(0.3, Math.cos(yaw)), fys = Math.max(0.3, Math.cos(mp));
+    const w = 38 + sm * 10 - o * 6;           // a little narrower as it opens
+    const c = 2 + sm * 5;                     // corners lift with the smile
+    const depth = 6 + o * 27 + sm * 3;
+    const k = (depth + 0.25 * c) / 0.75;      // cubic control depth that gives `depth` at the middle
+    const f = (v: number) => v.toFixed(1);
+    const d = `M${f(-w / 2)} ${f(-c)}Q0 ${f(c * 0.6)} ${f(w / 2)} ${f(-c)}C${f(w * 0.46)} ${f(k)} ${f(-w * 0.46)} ${f(k)} ${f(-w / 2)} ${f(-c)}Z`;
+    this.set(M.path, "d", d);
+    this.set(M.clip, "d", d);
+    this.set(M.tongue, "cy", f(depth * 0.9));
+    this.set(M.tongue, "rx", f(w * 0.3));
+    this.set(M.tongue, "ry", f(depth * 0.36));
+    this.op(M.tongue, clamp01((depth - 11) / 8));
+    const sc = Math.max(0.0001, show);
+    this.set(M.g, "transform", `translate(${mx.toFixed(2)} ${my.toFixed(2)}) scale(${(fxs * sc).toFixed(4)} ${(fys * sc).toFixed(4)})`);
+    this.op(M.g, show * 2.5);
+
+    const cp = pitch - 0.36;
+    this.cheeks.forEach((el, i) => {
+      const cy = yaw + (i ? 1 : -1) * 0.66;
+      const x = SPHERE_R * Math.sin(cy) * Math.cos(cp), y = FACE_Y - SPHERE_R * Math.sin(cp) - 3.5 * o - 2 * sm;
+      const s = Math.max(0.0001, Math.min(1.1, show));
+      const sxC = s * Math.max(0.2, Math.cos(cy)) * (1 + 0.14 * o), syC = s * (1 - 0.24 * o);
+      this.set(el, "transform", `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${sxC.toFixed(4)} ${syC.toFixed(4)})`);
+      this.op(el, clamp01(show) * 0.9);
+    });
+  }
+
   private renderFx(t: number, st: number) {
     const F = this.fxEls, s = this.state, still = this.reduced;
     // "!" pops with a wobble and burst lines
     const EX = [140, -236];
+    const EX_AT = 0.15;   // "!" starts just before the startle flinch peaks (~0.19 s), so the pop lands on it
     if (s === "surprised") {
       const o = 1 - clamp01((st - 2.2) / 0.4);
-      const sc = (still ? 1 : easeOutBack((st - 0.06) / 0.3)) * (0.6 + 0.4 * o);
+      const sc = (still ? 1 : easeOutBack((st - EX_AT) / 0.16)) * (0.6 + 0.4 * o);
       const wob = still ? 0 : 12 * Math.sin(st * 20) * Math.exp(-st * 3.5);
-      this.tf(F.ex, EX[0], EX[1], sc, wob); this.op(F.ex, st > 0.06 ? o : 0);
+      this.tf(F.ex, EX[0], EX[1], sc, wob); this.op(F.ex, still || st > EX_AT ? o : 0);
     } else this.op(F.ex, 0);
     const angles = [-160, -126, -54, -20];
     this.burst.forEach((ln, i) => {
-      if (s === "surprised" && !still && st > 0.06 && st < 0.7) {
-        const p = (st - 0.06) / 0.6, an = (angles[i] * Math.PI) / 180;
+      if (s === "surprised" && !still && st > EX_AT && st < EX_AT + 0.6) {
+        const p = (st - EX_AT) / 0.6, an = (angles[i] * Math.PI) / 180;
         const r1 = 40 + p * 24, r2 = r1 + 16 * (1 - p) + 3;
         this.set(ln, "x1", (EX[0] + Math.cos(an) * r1).toFixed(1)); this.set(ln, "y1", (EX[1] - 22 + Math.sin(an) * r1).toFixed(1));
         this.set(ln, "x2", (EX[0] + Math.cos(an) * r2).toFixed(1)); this.set(ln, "y2", (EX[1] - 22 + Math.sin(an) * r2).toFixed(1));
@@ -783,16 +993,19 @@ class Engine {
 
 export function MaxCharacter({
   state = "idle", size = 160, level, followCursor = false, color = MAX_COLOR, still = false,
-  freezeAt, reducedMotion, onDark = false, title = "Max", className, style,
+  freezeAt, freezeFrom, interactive, reducedMotion, onDark = false, title = "Max", className, style,
 }: MaxCharacterProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const engRef = useRef<Engine | null>(null);
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const compact = size <= 40;
+  const face = size >= 64;          // mouth and cheeks: too small to read below 64 px
   const tight = compact || still;
   const frozen = freezeAt !== undefined;
   const sysReduced = useReducedMotionPref();
   const reduced = reducedMotion ?? sysReduced;
+  const playable = (interactive ?? size >= 64) && !still && !frozen;
+  const [focusRing, setFocusRing] = useState(false);
 
   // live values the engine reads every frame
   const live = useRef({ state, level, followCursor, reduced, onDark });
@@ -804,10 +1017,10 @@ export function MaxCharacter({
     const l = live.current;
     eng.level = l.level; eng.follow = l.followCursor; eng.reduced = l.reduced; eng.onDark = l.onDark;
     if (still) { eng.renderStill(); }
-    else if (frozen) { eng.freeze(l.state, freezeAt!); }
+    else if (frozen) { eng.freeze(l.state, freezeAt!, freezeFrom); }
     else { eng.setState(l.state); eng.start(); }
     return () => { eng.destroy(); engRef.current = null; };
-  }, [compact, still, frozen, freezeAt, frozen ? state : null, frozen ? level : null, frozen ? reduced : null]);
+  }, [compact, face, still, frozen, freezeAt, frozen ? state : null, frozen ? level : null, frozen ? reduced : null, frozen ? freezeFrom : null]);
 
   useEffect(() => { if (!still && !frozen) engRef.current?.setState(state); }, [state, still, frozen]);
   useEffect(() => { if (engRef.current) engRef.current.level = level; }, [level]);
@@ -825,7 +1038,26 @@ export function MaxCharacter({
   const eyeCol = light ? "#1a1a1a" : "#ffffff";
   const sym = light ? mix(color, "#000000", 0.35) : color;
   const bubble = mix(color, "#ffffff", 0.8);
+  const mouthCol = mix(color, "#000000", light ? 0.6 : 0.45);
   const grad = `max-body-${uid}`;
+  const mclip = `max-mouth-${uid}`, blush = `max-blush-${uid}`;
+  const mood = MAX_STATE_INFO[state].label.toLowerCase();
+  const label = still ? title : `${title}, ${mood}`;
+
+  const poke = (x?: number, y?: number) => engRef.current?.poke(x, y);
+  const playProps = playable ? {
+    tabIndex: 0,
+    role: "button",
+    "aria-label": `${label}. Press to poke.`,
+    onPointerMove: (e: ReactPointerEvent) => { if (!followCursor && e.pointerType === "mouse") engRef.current?.hoverAt(e.clientX, e.clientY); },
+    onPointerLeave: () => engRef.current?.hoverEnd(),
+    onPointerDown: (e: ReactPointerEvent) => { if (e.button === 0) poke(e.clientX, e.clientY); },
+    onKeyDown: (e: ReactKeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!e.repeat) poke(); }
+    },
+    onFocus: (e: ReactFocusEvent<SVGSVGElement>) => setFocusRing(e.currentTarget.matches(":focus-visible")),
+    onBlur: () => setFocusRing(false),
+  } : { role: "img", "aria-label": label };
 
   return (
     <svg
@@ -833,16 +1065,28 @@ export function MaxCharacter({
       viewBox={tight ? VIEW_TIGHT : VIEW_FULL}
       width={size}
       height={size}
-      role="img"
-      aria-label={title}
+      {...playProps}
       className={className}
-      style={{ display: "block", overflow: "visible", flexShrink: 0, ["--max-sym" as string]: sym, ...style }}
+      style={{
+        display: "block", overflow: "visible", flexShrink: 0, ["--max-sym" as string]: sym,
+        ...(playable ? { cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", outline: "none", borderRadius: size * 0.12 } : null),
+        ...(focusRing ? { outline: "2px solid #0F6CBD", outlineOffset: 2, boxShadow: "0 0 0 4px rgba(15,108,189,0.18)" } : null),
+        ...style,
+      }}
     >
       <defs>
         <linearGradient id={grad} gradientUnits="userSpaceOnUse" x1="0" y1={-BODY_H} x2="0" y2="-138">
           <stop offset="0" stopColor={mix(color, "#ffffff", 0.2)} />
           <stop offset="1" stopColor={color} />
         </linearGradient>
+        {face && <clipPath id={mclip}><path data-p="mclip" /></clipPath>}
+        {face && (
+          <radialGradient id={blush}>
+            <stop offset="0" stopColor={mix(color, "#E8336B", 0.5)} stopOpacity="0.95" />
+            <stop offset="0.6" stopColor={mix(color, "#E8336B", 0.45)} stopOpacity="0.6" />
+            <stop offset="1" stopColor={mix(color, "#E8336B", 0.4)} stopOpacity="0" />
+          </radialGradient>
+        )}
       </defs>
       {!tight && <ellipse data-p="shadow" cx="0" cy="3" rx="132" ry="11" fill="#000" opacity="0" />}
       {!compact && !still && (
@@ -852,14 +1096,24 @@ export function MaxCharacter({
       )}
       <g data-p="body">
         <path data-p="path" fill={`url(#${grad})`} />
+        {face && [0, 1].map((i) => (
+          <ellipse key={i} data-p="cheek" rx="21" ry="12" fill={`url(#${blush})`} opacity="0" />
+        ))}
         {[0, 1].map((i) => (
           <g key={i} data-p="eye">
             <rect data-e="pill" fill={eyeCol} />
             <path data-e="arch" fill="none" stroke={eyeCol} strokeLinecap="round" opacity="0" />
             <path data-e="curve" fill="none" stroke={eyeCol} strokeLinecap="round" opacity="0" />
             <rect data-e="lid" fill={color} opacity="0" />
+            <ellipse data-e="bow" cx="0" fill={color} opacity="0" />
           </g>
         ))}
+        {face && (
+          <g data-p="mouth" opacity="0">
+            <path data-p="mpath" fill={mouthCol} stroke={mouthCol} strokeWidth="5" strokeLinejoin="round" />
+            <ellipse data-p="tongue" cx="0" fill={mix(color, "#FF5A7A", 0.55)} clipPath={`url(#${mclip})`} opacity="0" />
+          </g>
+        )}
       </g>
       {!compact && !still && (
         <g data-p="fx">
