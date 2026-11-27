@@ -3,6 +3,7 @@ Folder rules (CLAUDE.md, docs/decisions.md):
   max/         must never import teams_sim/ or world/   (Max only knows real Microsoft contracts)
   teams_sim/   must never import max/                   (the fake cloud can't peek into Max)
   ai_usage/    must never import max/ or teams_sim/     (both use it)
+  world/       must never import teams_sim/; from max/ only its AI client (max.llm, max.config)
   limits.py    must never import max/, ai_usage/ or teams_sim/ (everyone uses it)
   Only max/llm/ may import an AI provider's SDK or call a provider directly (model stays swappable)
 """
@@ -16,7 +17,15 @@ RULES = {
     "max": {"teams_sim", "world"},
     "teams_sim": {"max"},
     "ai_usage": {"max", "teams_sim", "world"},
+    "world": {"teams_sim"},  # the world reaches Max only through the simulator (max/ only for its AI client, below)
 }
+
+
+def test_world_uses_only_maxs_ai_client():
+    """The world's message writer may use Max's provider-neutral AI client and settings, nothing else of max/."""
+    broken = [f"{f.relative_to(ROOT)} imports {n}" for f in python_files("world") for n in imports_of(f)
+              if n.split(".")[0] == "max" and not (n.startswith("max.llm") or n == "max.config")]
+    assert not broken, "\n".join(broken)
 
 
 def imports_of(path: Path) -> set[str]:

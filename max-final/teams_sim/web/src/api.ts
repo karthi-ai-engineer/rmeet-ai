@@ -12,7 +12,11 @@ export interface ApiPerson { id: string; name: string; role: string; is_bot: num
 export interface ApiChannel { id: string; team_id: string; name: string; private: number; pos: number }
 export interface ApiTeam { id: string; name: string; members: string[]; channels: ApiChannel[] }
 export interface ApiChat { id: string; kind: "max" | "group" | "oneToOne"; title: string | null; members: string[] }
-export interface World { me: ApiPerson; people: ApiPerson[]; teams: ApiTeam[]; chats: ApiChat[] }
+export interface World { me: ApiPerson; people: ApiPerson[]; directory: Record<string, string>; teams: ApiTeam[]; chats: ApiChat[] }
+
+/** A file in a channel's Files tab (newest change first). `version` = latest; `versions` = every version, oldest first. */
+export interface ApiFileVersion { v: number; by: string; at: string; size: number }
+export interface ApiFile { id: string; name: string; place: string; version: number; by: string; at: string; size: number; versions: ApiFileVersion[] }
 
 export interface ApiMessage {
   id: string;
@@ -53,6 +57,9 @@ export const api = {
   state: (me: string) => call<World>(`/api/state?${as(me)}`),
   threads: (me: string, channel: string) => call<ApiThread[]>(`/api/channels/${encodeURIComponent(channel)}/threads?${as(me)}`),
   chatMessages: (me: string, chat: string) => call<ApiMessage[]>(`/api/chats/${encodeURIComponent(chat)}/messages?${as(me)}`),
+  files: (me: string, channel: string) => call<ApiFile[]>(`/api/channels/${encodeURIComponent(channel)}/files?${as(me)}`),
+  /** The file itself (opens in the browser for PDF/images, downloads for Office files). No `v` = latest version. */
+  fileUrl: (me: string, id: string, v?: number) => `/api/files/${encodeURIComponent(id)}?${as(me)}${v ? `&v=${v}` : ""}`,
   post: (body: { as: string; kind: "channel" | "chat"; where: string; text: string; thread_id?: string; quote_id?: string }) =>
     call<ApiMessage>("/api/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
   reset: () => call<{ ok: boolean }>("/api/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }),
@@ -122,6 +129,18 @@ function parts(d: Date) {
 export function postTime(iso: string): string {
   const t = parts(new Date(iso));
   return t.key === parts(new Date()).key ? t.time : `${t.date} ${t.time}`;
+}
+
+/** Files tab: like posts, but "Today 14:32" (a bare time looks odd in a list of dates). */
+export function fileTime(iso: string): string {
+  const t = postTime(iso);
+  return t.length <= 5 ? `Today ${t}` : t;
+}
+
+/** "84 KB", "2.1 MB" (at least 1 KB, like Teams). */
+export function fileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 /** Chat bubbles: the time ("14:32") and the day divider ("Today", "Yesterday", "Thu 20 Nov"). */

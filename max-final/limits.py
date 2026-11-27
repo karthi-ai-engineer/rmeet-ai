@@ -72,6 +72,10 @@ class Knowledge(_Section):
     history_window_days: int = Field(ge=1)
 
 
+class World(_Section):
+    generation_budget_usd: float = Field(ge=0)
+
+
 class Limits(_Section):
     ai: AI
     messages: Messages
@@ -79,6 +83,7 @@ class Limits(_Section):
     approvals: Approvals
     search: Search
     knowledge: Knowledge
+    world: World
 
 
 def _merge(base: dict, extra: dict) -> dict:

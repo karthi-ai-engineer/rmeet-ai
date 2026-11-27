@@ -1,0 +1,112 @@
+# SAMPLE messages (Karthi reviews these for style before the full world is written).
+# One message per event of world/facts.yaml (place, author, day and time come from the event), plus everyday chatter.
+# Dates are placeholders ({date:-3} ...) so the history always ends today. Times are Tokyo times.
+
+# ---------------------------------------------------------------- storyline 1: launch (Product Planning › New models)
+- event: e101
+  text: "Kick-off for the Raptor X9 🎮 It replaces the Raptor X7 in our gaming line. Plan: launch on {date:+30}, first batch of 2,400 units. Kenji, can Production confirm the build schedule? Sven, marketing timeline please."
+- event: e102
+  text: "Production can do 2,400 units, but only if all parts arrive 3 weeks before launch. GPU is the long pole as usual."
+- event: e103
+  text: "Marketing wants the launch post ready one week before launch. @Rachitaa can you own the launch post? You know what the big accounts ask for."
+- {id: s101, place: pp-models, by: rachitaa, wd: -18, at: "14:25", reply_to: e101, text: "Yes, I'll take the launch post. I'll share a draft early."}
+- event: e104
+  text: "Launch plan Raptor X9.pptx is in Files: dates, first batch by week, risks. Comments welcome until Friday."
+- event: e108
+  text: "Thermal test done for the Raptor X9 prototype (Aiko's results): passed at 35 °C room temperature, GPU max 79 °C, CPU max 84 °C. Details in Thermal test results.pptx."
+- event: e105
+  text: "Change of plan: the Raptor X9 launch moves from {date:+30} to {date:+35}. The GPU samples slipped a week at both suppliers and Production needs parts 3 weeks before launch. I'll update the deck."
+- event: e106
+  text: "Does Northwind know? Their order depends on the launch date."
+- {id: s102, place: pp-models, by: prince, wd: -7, at: "11:34", reply_to: e105, text: "Not yet. @Rachitaa please send them the new date."}
+- event: e107
+  text: "I updated the launch deck (v2) with the new date. The old version is still in the file history."
+- event: e111
+  text: "Stock plan done ✅ 640 Raptor X7 left in the warehouse, sell-through about 6 weeks at the current rate. Stock plan.xlsx has the details."
+- {id: s103, place: pp-models, by: sven, wd: -1, at: "15:20", reply_to: e111, text: "Good timing, that lines up with the launch campaign."}
+
+# ---------------------------------------------------------------- storyline 1: group chat "New model sync"
+- event: e109
+  text: "Quick check: the price list for the launch is late (owner Praga, was due {date:-4}). What's blocking it?"
+- event: e110
+  text: "Sorry, it's blocked until memory prices settle. New date {date:+2}, I'll send it before lunch that day."
+- event: e404
+  text: "Just to be sure before I talk to customers: what's the current launch date?"
+- {id: s104, place: sync, by: prince, wd: -2, at: "09:26", text: "{date:+35}. It moved last week, see New models."}
+
+# ---------------------------------------------------------------- storyline 2: memory price rise
+- event: e201
+  text: "Heads-up from Meridian Memory: DDR5 prices keep going up. Their notice is in Files (Meridian Memory price notice.pdf)."
+- {id: s201, place: pr-suppliers, by: praga, wd: -19, at: "10:02", reply_to: e201, text: "Thanks Mei. I'll track it in the parts price sheet so Product Planning sees the trend."}
+- event: e202
+  text: "Parts prices.xlsx is up: monthly prices for memory, storage, CPU and GPU. I'll add each new month as quotes come in."
+- event: e203
+  text: "Praga's new memory quotes are in Parts prices.xlsx. 32 GB DDR5 is up again this month, so we need to talk about pricing."
+- event: e204
+  text: "Added the {month@-10:0} prices to Parts prices.xlsx (v2) plus a Memory orders sheet for Finance."
+- event: e205
+  text: "Decision from today's pricing review: all desktop models go up 5% from {date:+20}, because of the memory price rise. Quotes sent before {date:+2} keep the old price."
+- event: e206
+  text: "Noted. Does that include the order we're quoting for Northwind (300 units)?"
+- event: e207
+  text: "Quotes sent before the date keep the old price, so Northwind is fine if the quote goes out in time."
+- event: e208
+  text: "For month-end: the {month@-10:-1} memory spend is in the Memory orders sheet (one line per PO). Please don't edit the line totals."
+- {id: s202, place: pr-general, by: praga, wd: -4, at: "11:30", text: "Got it Lena, I'll leave the sheet as it is."}
+
+# ---------------------------------------------------------------- storyline 3: GPU supplier choice
+- event: e301
+  text: "GPU quotes from both suppliers are in. Brightcore is 6% cheaper than Arvane but ships 2 weeks later."
+- event: e302
+  text: "2 weeks later breaks the launch date unless they can speed up. Let's discuss tomorrow."
+- event: e303
+  text: "I asked Daniel Okafor at Brightcore for a confirmed delivery date. He said he'd come back this week."
+- event: e304
+  text: "Private for now: we call the GPU deal BLUEHERON. Budget for the first batch is 152,600,000 yen (cards, spares and a buffer)."
+- event: e305
+  text: "Got it. Let's keep BLUEHERON only in this channel, please, not in the department channels."
+- event: e306
+  text: "GPU decision is still blocked: no confirmed date from Brightcore yet. I'll chase Daniel again today."
+- {id: s301, place: pr-suppliers, by: mei, wd: -2, at: "10:05", reply_to: e306, text: "If it helps, Arvane can confirm their 3 weeks in writing."}
+
+# ---------------------------------------------------------------- storyline 4: Northwind order (Sales › Big accounts)
+- event: e401
+  text: "Big one: Northwind Systems wants 300 Raptor X9 units for their gaming lounge chain. Order NW-26-0418, we offered 8% volume discount."
+- event: e403
+  text: "FYI Northwind's buyer is Hannah Weiss. She wants delivery by {date:+40} at the latest."
+- event: e402
+  text: "Sent Northwind an update: delivery right after the launch on {date:+30}."
+- event: e603
+  text: "Northwind contact for deliveries: Hannah Weiss, +81 3-5555-0142."
+- {id: s401, place: sa-accounts, by: rachitaa, wd: -16, at: "11:52", reply_to: e603, text: "Thanks Omar, saved it."}
+
+# ---------------------------------------------------------------- everyday life
+- event: e501
+  text: "Lunch: ramen at the new place near the station today? 12:30, I'll book for six 🍜"
+- {id: s501, place: pp-general, by: kenji, wd: -30, at: "12:14", reply_to: e501, text: "Count me in."}
+- event: e502
+  text: "Prince, I'll leave early on Friday for my daughter's piano recital. I'll be online again on Monday."
+- {id: s502, place: prince-praga, by: prince, wd: -18, at: "18:44", text: "Of course, enjoy it!"}
+- event: e503
+  text: "Idea for the launch: bundle the Raptor X9 with a 27-inch monitor for gamers. Several customers asked for a complete setup."
+- {id: s503, place: sa-general, by: omar, wd: -15, at: "10:48", reply_to: e503, text: "Good idea. The lounges at Northwind would like that too."}
+- event: e504
+  text: "Office move: Procurement moves to floor 6 next month. Boxes arrive on Thursday."
+- event: e505
+  text: "Did the Northwind update with the new launch date go out?"
+- {id: s504, place: prince-rachitaa, by: rachitaa, wd: -1, at: "09:36", text: "Not yet, sorry. I'm waiting for Praga's price list so I can send the date and the quote together."}
+- {id: s505, place: praga-rachitaa, by: rachitaa, wd: -6, at: "14:02", text: "Praga, do you have a minute today for the Northwind quote? I need the memory prices."}
+- {id: s506, place: praga-rachitaa, by: praga, wd: -6, at: "14:09", text: "Yes, 15:00 works. The newest prices are in Parts prices.xlsx."}
+
+# ---------------------------------------------------------------- older than the window, edited, deleted
+- event: e601
+  text: "Our memory contract with Meridian ended. For the record: last year we paid 11,800 yen for a 32 GB module."
+- event: e602
+  text: "Raptor X7 results are in: 18,500 units sold in its first year. Thanks everyone!"
+- event: e604
+  text: "Brightcore's GPU price is 52,000 yen per card."
+- {id: s601, place: pr-suppliers, by: mei, wd: -11, at: "13:02", text: "Sorry, wrong number above, I deleted it. Brightcore's quote is in the PDF."}
+
+# ---------------------------------------------------------------- this morning (history ends today; loaded only if their time has passed when the world is loaded or reset)
+- {id: s701, place: pp-general, by: sven, wd: 0, at: "08:52", text: "Morning all! The coffee machine is fixed ☕"}
+- {id: s702, place: sa-general, by: omar, wd: 0, at: "09:10", text: "Reminder: pipeline review this afternoon, bring your numbers."}

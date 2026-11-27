@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -121,6 +121,8 @@ def create_app(db_path: str | Path | None = None, bot_url: str | None = None,
             raise HTTPException(404, f"no person {pid!r}")
         if p["is_bot"]:
             raise HTTPException(403, "bots use the Bot Framework API")
+        if not p["playable"]:
+            raise HTTPException(403, f"{p['name']} is part of the history and can't be played")
         return p
 
     def need_access(pid: str, kind: str, where: str) -> None:
@@ -131,12 +133,29 @@ def create_app(db_path: str | Path | None = None, bot_url: str | None = None,
     @app.get("/api/state")
     async def state(as_: str = Query(alias="as")):
         me = need_person(as_)
-        return {"me": me, "people": store.people(conn), "teams": store.teams_for(conn, as_), "chats": store.chats_for(conn, as_)}
+        return {"me": me, "people": store.people(conn), "directory": store.directory(conn),
+                "teams": store.teams_for(conn, as_), "chats": store.chats_for(conn, as_)}
 
     @app.get("/api/channels/{cid}/threads")
     async def threads(cid: str, as_: str = Query(alias="as")):
         need_access(as_, "channel", cid)
         return store.channel_threads(conn, cid)
+
+    @app.get("/api/channels/{cid}/files")
+    async def channel_files(cid: str, as_: str = Query(alias="as")):
+        need_access(as_, "channel", cid)
+        return store.channel_files(conn, cid)
+
+    @app.get("/api/files/{fid}")
+    async def download(fid: str, as_: str = Query(alias="as"), v: int | None = None):
+        need_person(as_)
+        if not store.can_see_file(conn, as_, fid):  # first: outsiders learn nothing about versions
+            raise HTTPException(403 if store.file_exists(conn, fid) else 404, f"{as_} can't see file {fid}")
+        try:
+            f = store.file_version(conn, fid, v)
+        except store.NotFound as e:
+            raise HTTPException(404, str(e))
+        return FileResponse(f["path"], filename=f["name"], content_disposition_type="inline")
 
     @app.get("/api/chats/{cid}/messages")
     async def chat_messages(cid: str, as_: str = Query(alias="as")):

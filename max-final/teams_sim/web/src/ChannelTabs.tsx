@@ -1,9 +1,11 @@
-// UI design mock-ups: the Files tab and the Plans tab of a channel (static data).
-import { useState, type JSX } from "react";
+// A channel's Files tab and Plans tab. Files: real files from the simulator server (ChannelFiles) or the
+// design mock-up on static data (FilesTab, showcase mode). Plans: still the mock-up.
+import { useEffect, useState, type JSX } from "react";
 import {
   Avatar,
   Badge,
   Button,
+  Link,
   ProgressBar,
   Tab,
   TabList,
@@ -28,6 +30,7 @@ import {
   ChevronDown16Regular,
   ChevronRight16Regular,
   Dismiss20Regular,
+  Document24Regular,
   DocumentPdf24Regular,
   DocumentText24Regular,
   Image24Regular,
@@ -37,6 +40,7 @@ import {
 } from "@fluentui/react-icons";
 import { PEOPLE, type PersonId } from "./mock";
 import { MaxAvatar, personName } from "./ui";
+import { api, fileSize, fileTime, type ApiFile } from "./api";
 
 const useStyles = makeStyles({
   page: { flex: 1, display: "flex", minHeight: 0 },
@@ -60,6 +64,22 @@ const useStyles = makeStyles({
     padding: "14px", display: "flex", flexDirection: "column", gap: "8px", backgroundColor: tokens.colorNeutralBackground2,
   },
   bars: { flex: 1, display: "flex", alignItems: "flex-end", gap: "10px", paddingTop: "6px" },
+  // real files
+  frame: {
+    width: "100%", height: "520px", border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusMedium,
+    backgroundColor: tokens.colorNeutralBackground3,
+  },
+  image: { maxWidth: "100%", borderRadius: tokens.borderRadiusMedium, border: `1px solid ${tokens.colorNeutralStroke2}` },
+  note: {
+    display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "32px 16px", textAlign: "center",
+    borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground2, color: tokens.colorNeutralForeground3,
+  },
+  versions: { display: "flex", flexDirection: "column", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
+  version: {
+    display: "flex", alignItems: "center", gap: "10px", padding: "8px 0", fontSize: tokens.fontSizeBase200,
+    borderBottom: `1px solid ${tokens.colorNeutralStroke3}`,
+  },
+  empty: { padding: "40px", textAlign: "center", color: tokens.colorNeutralForeground3 },
   // plans
   plan: { marginBottom: "14px", overflow: "hidden" },
   planHead: { display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", cursor: "pointer" },
@@ -70,7 +90,7 @@ const useStyles = makeStyles({
 });
 
 // ------------------------------------------------------------------ Files
-type Kind = "xlsx" | "pptx" | "docx" | "pdf" | "png";
+type Kind = "xlsx" | "pptx" | "docx" | "pdf" | "png" | "other"; // png = any image
 interface FileRow { name: string; kind: Kind; by: PersonId | string; when: string; size: string; version?: number; note?: string }
 
 const FILES: FileRow[] = [
@@ -88,7 +108,16 @@ const ICONS: Record<Kind, { icon: JSX.Element; color: string }> = {
   docx: { icon: <DocumentText24Regular />, color: "#185ABD" },
   pdf: { icon: <DocumentPdf24Regular />, color: "#D13438" },
   png: { icon: <Image24Regular />, color: "#8764B8" },
+  other: { icon: <Document24Regular />, color: tokens.colorNeutralForeground2 },
 };
+
+/** The file kind by its extension ("Parts prices.xlsx" -> xlsx, ".jpg" -> image). */
+function kindOf(name: string): Kind {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "png";
+  return (["xlsx", "pptx", "docx", "pdf"] as const).find((k) => k === ext) ?? "other";
+}
+const APP: Partial<Record<Kind, string>> = { xlsx: "Excel", pptx: "PowerPoint", docx: "Word" };
 
 function FileIcon({ kind }: { kind: Kind }) {
   return <span style={{ color: ICONS[kind].color, display: "inline-flex" }}>{ICONS[kind].icon}</span>;
@@ -194,6 +223,117 @@ export function FilesTab() {
         </div>
       </div>
       {open && <Preview f={open} onClose={() => setOpen(null)} />}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ Files, real: from the simulator server
+const colorOf = (id: string) => PEOPLE.find((p) => p.id === id)?.color ?? "neutral"; // background people: neutral
+
+function FilePreview({ f, me, onClose }: { f: ApiFile; me: string; onClose: () => void }) {
+  const s = useStyles();
+  const kind = kindOf(f.name);
+  const url = api.fileUrl(me, f.id);
+  return (
+    <aside className={s.preview} data-testid="file-preview" data-file-name={f.name}>
+      <div className={s.previewHead}>
+        <FileIcon kind={kind} />
+        <Text weight="semibold" style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>{f.name}</Text>
+        <Button as="a" href={url} target="_blank" rel="noopener" appearance="subtle" icon={<Open16Regular />} data-testid="file-open">Open</Button>
+        <Button appearance="subtle" icon={<Dismiss20Regular />} onClick={onClose} aria-label="Close preview" />
+      </div>
+      <div className={s.previewBody}>
+        <Text size={200} className={s.muted}>
+          Changed {fileTime(f.at)} by {personName(f.by)} · {fileSize(f.size)} · version {f.version}
+        </Text>
+        {kind === "png" && <img className={s.image} src={url} alt={f.name} />}
+        {kind === "pdf" && <iframe className={s.frame} src={url} title={f.name} />}
+        {kind !== "png" && kind !== "pdf" && (
+          <div className={s.note}>
+            <FileIcon kind={kind} />
+            <Text size={200}>Preview opens in {APP[kind] ?? "its app"}.</Text>
+            <Button as="a" href={url} target="_blank" rel="noopener" size="small" icon={<Open16Regular />}>Open</Button>
+          </div>
+        )}
+        <div>
+          <Text weight="semibold" block style={{ marginBottom: 6 }}>Versions</Text>
+          <div className={s.versions}>
+            {[...f.versions].reverse().map((v) => (
+              <div key={v.v} className={s.version} data-testid="file-version" data-v={v.v}>
+                <Badge appearance={v.v === f.version ? "filled" : "outline"} size="small" color="informative">v{v.v}</Badge>
+                <span style={{ flex: 1 }}>
+                  {fileTime(v.at)} · {personName(v.by)} · <span className={s.muted}>{fileSize(v.size)}</span>
+                </span>
+                <Link href={api.fileUrl(me, f.id, v.v)} target="_blank" rel="noopener">Open</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/** The channel's real files: list (newest change first) + preview of the picked one. `reload` bumps = load again. */
+export function ChannelFiles({ me, channel, reload, initialFile }: { me: string; channel: string; reload?: number; initialFile?: string | null }) {
+  const s = useStyles();
+  const [files, setFiles] = useState<ApiFile[] | null>(null);
+  const [error, setError] = useState(false);
+  const [openId, setOpenId] = useState<string | null | undefined>(initialFile ?? undefined); // undefined = first file
+  useEffect(() => {
+    let gone = false;
+    setError(false);
+    api.files(me, channel).then((fs) => { if (!gone) setFiles(fs); }, () => { if (!gone) { setFiles([]); setError(true); } });
+    return () => { gone = true; };
+  }, [me, channel, reload]);
+  // the picked file; none picked yet (or the linked one isn't here) = the newest; closed = none
+  const open = openId === null ? null : files?.find((f) => f.id === openId) ?? files?.[0] ?? null;
+  return (
+    <div className={s.page}>
+      <div className={s.main}>
+        <div className={s.bar}>
+          <Tooltip content="Uploading comes later" relationship="description">
+            <Button appearance="primary" icon={<ArrowUpload20Regular />} disabledFocusable>Upload</Button>
+          </Tooltip>
+          {files && <Text className={s.muted} size={200}>{files.length} {files.length === 1 ? "file" : "files"}</Text>}
+        </div>
+        <div className={s.card}>
+          {files === null ? <div className={s.empty}>Loading files…</div>
+            : error ? <div className={s.empty}>Couldn't load the files of this channel.</div>
+            : files.length === 0 ? <div className={s.empty} data-testid="files-empty">No files in this channel yet.</div>
+            : (
+              <Table size="medium" aria-label="Files">
+                <TableHeader>
+                  <TableRow>
+                    <TableHeaderCell>Name</TableHeaderCell>
+                    <TableHeaderCell style={{ width: 150 }}>Modified</TableHeaderCell>
+                    <TableHeaderCell style={{ width: 170 }}>Modified by</TableHeaderCell>
+                    <TableHeaderCell style={{ width: 90 }}>Size</TableHeaderCell>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {files.map((f) => (
+                    <TableRow key={f.id} className={mergeClasses(s.row, open?.id === f.id && s.rowActive)} onClick={() => setOpenId(f.id)}
+                      data-testid="file-row" data-file-name={f.name}>
+                      <TableCell>
+                        <TableCellLayout media={<FileIcon kind={kindOf(f.name)} />}>
+                          {f.name}{" "}
+                          {f.version > 1 && <Badge appearance="outline" size="small" color="informative">v{f.version}</Badge>}
+                        </TableCellLayout>
+                      </TableCell>
+                      <TableCell>{fileTime(f.at)}</TableCell>
+                      <TableCell>
+                        <TableCellLayout media={<Avatar size={20} name={personName(f.by)} color={colorOf(f.by)} />}>{personName(f.by)}</TableCellLayout>
+                      </TableCell>
+                      <TableCell className={s.muted}>{fileSize(f.size)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+        </div>
+      </div>
+      {open && <FilePreview key={open.id} f={open} me={me} onClose={() => setOpenId(null)} />}
     </div>
   );
 }

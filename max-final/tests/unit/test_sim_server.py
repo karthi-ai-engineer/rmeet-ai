@@ -113,3 +113,37 @@ def test_a_stuck_tab_is_closed_so_it_reconnects():
     asyncio.run(live.send_all({"type": "reset"}))
     assert stuck.closed and ("prince", stuck) not in live.sockets
     assert fine.got == [{"type": "reset"}] and ("praga", fine) in live.sockets
+
+
+# ---------------------------------------------------------------- Step 3: the world, files, names
+
+def test_state_has_everyones_names_but_only_playable_people(client):
+    s = client.get("/api/state", params={"as": "prince"}).json()
+    assert [p["id"] for p in s["people"]] == ["prince", "praga", "rachitaa", "karthi"]
+    assert s["directory"]["kenji"] == "Kenji Mori" and s["directory"]["max"] == "Max"
+    assert client.get("/api/state", params={"as": "kenji"}).status_code == 403     # background people can't be played
+
+
+def test_channel_files_and_download(client):
+    listed = client.get("/api/channels/pr-suppliers/files", params={"as": "praga"}).json()
+    pp = next(f for f in listed if f["name"] == "Parts prices.xlsx")
+    assert pp["version"] == 2 and len(pp["versions"]) == 2
+    r = client.get(f"/api/files/{pp['id']}", params={"as": "praga"})
+    assert r.status_code == 200 and r.content[:2] == b"PK"                     # an xlsx is a zip
+    assert "Parts%20prices.xlsx" in r.headers["content-disposition"]            # the standard encoded name
+    old = client.get(f"/api/files/{pp['id']}", params={"as": "praga", "v": 1})
+    assert old.status_code == 200 and old.content != r.content
+
+
+def test_private_files_closed_to_others(client):
+    assert client.get("/api/channels/pp-budget/files", params={"as": "rachitaa"}).status_code == 403
+    assert client.get("/api/files/gpu-budget", params={"as": "rachitaa"}).status_code == 403
+    assert client.get("/api/files/gpu-budget", params={"as": "prince"}).status_code == 200
+    assert client.get("/api/files/nope", params={"as": "prince"}).status_code == 404
+
+
+def test_outsiders_learn_nothing_about_private_versions(client):
+    assert client.get("/api/files/gpu-budget", params={"as": "rachitaa", "v": 9}).status_code == 403
+    assert client.get("/api/files/gpu-budget", params={"as": "rachitaa", "v": 1}).status_code == 403
+    assert client.get("/api/files/gpu-budget", params={"as": "prince", "v": 0}).status_code == 404
+    assert client.get("/api/files/gpu-budget", params={"as": "prince", "v": 9}).status_code == 404

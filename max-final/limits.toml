@@ -27,5 +27,8 @@ expire_after_h = 24              # then: "Expired, nothing was done"
 [search]
 max_searches_per_question = 3
 
+[world]
+generation_budget_usd = 3.0      # one-time cost cap for writing the simulated world's messages (python run.py world-write)
+
 [knowledge]
 history_window_days = 30         # how far back Max reads a chat when it joins (15 / 30 / 60 / 90)

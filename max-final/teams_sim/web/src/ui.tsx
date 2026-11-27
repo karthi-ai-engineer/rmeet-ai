@@ -17,9 +17,14 @@ const useStyles = makeStyles({
   sources: { marginTop: "8px", display: "flex", flexDirection: "column", gap: "2px" },
 });
 
+/** Everyone's display name by id (playable, background people, Max). Real mode: App fills it from /api/state.
+ *  Empty in showcase mode, so the mock names are used there. */
+let directory: Record<string, string> = {};
+export function setDirectory(d: Record<string, string> | undefined) { directory = d ?? {}; }
+
 export function personName(id: string): string {
   if (id === "max") return "Max";
-  return PEOPLE.find((p) => p.id === id)?.name ?? BACKGROUND[id] ?? id;
+  return directory[id] ?? PEOPLE.find((p) => p.id === id)?.name ?? BACKGROUND[id] ?? id;
 }
 
 /** Max's still icon (chats, lists, mail, activity, headers). Real Teams only shows a still bot icon here;

@@ -71,6 +71,7 @@ export interface Message {
   id: string;
   author: PersonId | "max" | string; // string = background person
   time: string;
+  at?: string; // real mode: when it was sent (UTC ISO), for the day dividers
   text: string;
   sources?: Source[];
   edited?: boolean;

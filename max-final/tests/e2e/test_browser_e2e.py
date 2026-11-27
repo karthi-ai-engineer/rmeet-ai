@@ -3,30 +3,9 @@ Step 2 in a real browser (Edge already on the PC, via Playwright): play several 
 talk to Max, see live updates, private channel rules.
 """
 
-import pytest
-from playwright.sync_api import Browser, Page, expect, sync_playwright
+from playwright.sync_api import expect
 
-TIMEOUT = 15_000
-
-
-@pytest.fixture(scope="session")
-def browser():
-    with sync_playwright() as p:
-        b = p.chromium.launch(channel="msedge", headless=True)
-        yield b
-        b.close()
-
-
-def open_as(browser: Browser, sim: str, person: str, query: str) -> Page:
-    page = browser.new_page(viewport={"width": 1400, "height": 900})
-    page.set_default_timeout(TIMEOUT)
-    page.goto(f"{sim}/?as={person}&theme=light&{query}")
-    return page
-
-
-def messages(page: Page, author: str | None = None):
-    sel = '[data-testid="msg"]' + (f'[data-author="{author}"]' if author else "")
-    return page.locator(sel)
+from tests.e2e.conftest import messages, open_as
 
 
 def test_mention_in_channel_max_replies_live_for_everyone(browser, sim):

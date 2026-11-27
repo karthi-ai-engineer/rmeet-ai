@@ -1,6 +1,6 @@
 // Simulator bar + Teams frame + channel view. Real mode: data and live updates from the simulator server (api.ts).
 // Showcase mode (?demo= / ?fresh= / ?step=, or server not reachable): the agreed design mock-ups on mock data.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Avatar,
   Badge,
@@ -41,10 +41,10 @@ import {
   ThumbLike16Regular,
 } from "@fluentui/react-icons";
 import { PEOPLE, TEAMS, THREADS, type Message, type PersonId, type Thread } from "./mock";
-import { SHOWCASE, api, postTime, startLive, stopLive, useLive, type ApiMessage, type ApiThread, type World } from "./api";
-import { MAX_ORANGE, MaxAvatar, RichText, Sources, personName } from "./ui";
+import { SHOWCASE, api, chatTime, postTime, startLive, stopLive, useLive, type ApiMessage, type ApiThread, type World } from "./api";
+import { MAX_ORANGE, MaxAvatar, RichText, Sources, personName, setDirectory } from "./ui";
 import { ChatScreen, type NavTarget } from "./ChatScreen";
-import { FilesTab, PlansTab } from "./ChannelTabs";
+import { ChannelFiles, FilesTab, PlansTab } from "./ChannelTabs";
 import { CalendarScreen } from "./CalendarScreen";
 import { ActivityScreen, MailScreen } from "./MailActivity";
 import { MaxApp } from "./MaxApp";
@@ -113,7 +113,7 @@ const useStyles = makeStyles({
   },
   feed: { flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "16px" },
   thread: {
-    maxWidth: "860px", backgroundColor: tokens.colorNeutralBackground1, borderRadius: tokens.borderRadiusLarge,
+    maxWidth: "860px", flexShrink: 0, // long history: cards keep their size, the feed scrolls backgroundColor: tokens.colorNeutralBackground1, borderRadius: tokens.borderRadiusLarge,
     boxShadow: tokens.shadow2, overflow: "hidden",
   },
   msg: { display: "flex", gap: "12px", padding: "12px 16px" },
@@ -134,10 +134,16 @@ const useStyles = makeStyles({
   compose: { padding: "12px 20px 16px", flexShrink: 0 },
   composeInner: { maxWidth: "860px", display: "flex", gap: "8px", alignItems: "flex-end" },
   empty: { color: tokens.colorNeutralForeground3, padding: "40px", textAlign: "center" },
+  dayDivider: {
+    maxWidth: "860px", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0,
+    fontSize: tokens.fontSizeBase200, color: tokens.colorNeutralForeground3,
+    "::before": { content: '""', flex: 1, borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
+    "::after": { content: '""', flex: 1, borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
+  },
 });
 
 // server messages in the shape the screens use
-const toMessage = (m: ApiMessage): Message => ({ id: m.id, author: m.author, time: postTime(m.created_at), text: m.text,
+const toMessage = (m: ApiMessage): Message => ({ id: m.id, author: m.author, time: postTime(m.created_at), at: m.created_at, text: m.text,
   edited: !!m.edited_at, aiLabel: !!m.ai_label, feedback: !!m.feedback });
 const toThread = (t: ApiThread): Thread => ({ id: t.id, channelId: t.where_id, post: toMessage(t), replies: t.replies.map(toMessage) });
 
@@ -265,7 +271,7 @@ export function App() {
   useEffect(() => {
     if (!real) return;
     let gone = false;
-    api.state(me).then((w) => { if (!gone) setWorld(w); }).catch(() => { if (!gone && !world) setOffline(true); });
+    api.state(me).then((w) => { if (!gone) { setDirectory(w.directory); setWorld(w); } }).catch(() => { if (!gone && !world) setOffline(true); });
     return () => { gone = true; };
   }, [real, me, reloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -324,6 +330,20 @@ export function App() {
     return () => window.clearTimeout(t);
   }, [maxTyping]);
 
+  // the open channel's posts; real mode opens at the newest post (bottom, like Teams) and follows new posts
+  // while you are at the bottom (scrolled up to read older posts = it stays where you are)
+  const shown = current ? threads.filter((t) => t.channelId === current.id) : [];
+  const feedRef = useRef<HTMLDivElement>(null);
+  const stickRef = useRef(true);
+  const feedKey = `${me}|${current?.id}|${tab}|${view}`;
+  const lastFeedKey = useRef("");
+  useLayoutEffect(() => {
+    if (!real) return;
+    if (lastFeedKey.current !== feedKey) { lastFeedKey.current = feedKey; stickRef.current = true; }
+    const el = feedRef.current;
+    if (el && stickRef.current) el.scrollTop = el.scrollHeight;
+  }, [real, feedKey, threads]);
+
   const switchPerson = (id: PersonId) => {
     setMe(id);
     const u = new URL(window.location.href);
@@ -358,6 +378,7 @@ export function App() {
   const addPost = () => {
     if (!newPost.trim() || !current) return;
     if (real) { // the box is cleared only when the server has the post
+      stickRef.current = true; // your own new post: show it
       api.post({ as: me, kind: "channel", where: current.id, text: newPost.trim() })
         .then((m) => { sent(m); setNewPost(""); }, failed);
       return;
@@ -486,20 +507,30 @@ export function App() {
                   </div>
                   <TabList selectedValue={tab} onTabSelect={(_, d) => setTab(String(d.value))} style={{ marginLeft: "12px" }}>
                     <Tab value="posts">Posts</Tab>
-                    <Tab value="files">Files</Tab>
+                    <Tab value="files" data-testid="files-tab">Files</Tab>
                     <Tab value="plans">Plans</Tab>
                   </TabList>
                 </div>
-                {tab === "files" && <FilesTab />}
+                {tab === "files" && (real
+                  ? <ChannelFiles key={`${me}-${current.id}`} me={me} channel={current.id} reload={reloadKey} initialFile={firstLoad ? q.get("file") : undefined} />
+                  : <FilesTab />)}
                 {tab === "plans" && <PlansTab me={me} initialView={q.get("pview") ?? "list"} />}
-                {tab === "posts" && <div className={s.feed}>
-                  {tab === "posts" && threads.filter((t) => t.channelId === current.id).length === 0 && (
-                    <div className={s.empty}>No posts yet in {current.name}.</div>
-                  )}
-                  {tab === "posts" && threads.filter((t) => t.channelId === current.id).map((t) => (
-                    <ThreadView key={t.id} t={t} me={me} onReply={addReply}
-                      maxTyping={!!maxTyping && maxTyping.where === current.id && maxTyping.thread === t.id} />
-                  ))}
+                {tab === "posts" && <div className={s.feed} ref={feedRef} data-testid="feed"
+                  onScroll={(e) => { const el = e.currentTarget; stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
+                  {shown.length === 0 && <div className={s.empty}>No posts yet in {current.name}.</div>}
+                  {shown.map((t, i) => {
+                    const day = t.post.at ? chatTime(t.post.at).day : null; // real mode only: Teams-like day dividers
+                    const prev = i > 0 && shown[i - 1].post.at ? chatTime(shown[i - 1].post.at!).day : null;
+                    return (
+                      <Fragment key={t.id}>
+                        {day && day !== prev && (
+                          <div className={s.dayDivider} data-testid="day-divider"><span>{day}</span></div>
+                        )}
+                        <ThreadView t={t} me={me} onReply={addReply}
+                          maxTyping={!!maxTyping && maxTyping.where === current.id && maxTyping.thread === t.id} />
+                      </Fragment>
+                    );
+                  })}
                 </div>}
                 {tab === "posts" && (
                   <div className={s.compose}>

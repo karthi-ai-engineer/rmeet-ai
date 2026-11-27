@@ -70,3 +70,15 @@ def make_llm(clock, meter):
         llm = LLM(backend, meter, list(models), sleep=clock.sleep, clock=clock, **kw)
         return llm, backend
     return make
+
+
+@pytest.fixture(scope="session")
+def world_cache(tmp_path_factory):
+    return tmp_path_factory.mktemp("world_cache")
+
+
+@pytest.fixture(autouse=True)
+def fixed_world_day(world_cache, monkeypatch):
+    """The simulated Teams' world always for the same day in tests; its files made once per test run."""
+    monkeypatch.setenv("TEAMS_SIM_TODAY", "2026-11-27")
+    monkeypatch.setenv("WORLD_CACHE_DIR", str(world_cache))

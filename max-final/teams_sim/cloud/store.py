@@ -21,12 +21,11 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from teams_sim.cloud import seed
-
-SCHEMA_VERSION = 2  # simulator data can always be rebuilt: a new version simply starts from the start set
+SCHEMA_VERSION = 4  # simulator data can always be rebuilt: a new version simply starts from the start set
 
 SCHEMA = [
-    "CREATE TABLE people (id TEXT PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL, is_bot INTEGER NOT NULL DEFAULT 0)",
+    """CREATE TABLE people (id TEXT PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL, is_bot INTEGER NOT NULL DEFAULT 0,
+        playable INTEGER NOT NULL DEFAULT 0, pos INTEGER NOT NULL DEFAULT 0)""",  # playable = Karthi can play them
     "CREATE TABLE teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, pos INTEGER NOT NULL)",
     "CREATE TABLE team_members (team_id TEXT NOT NULL, person_id TEXT NOT NULL, PRIMARY KEY (team_id, person_id))",
     """CREATE TABLE channels (id TEXT PRIMARY KEY, team_id TEXT NOT NULL, name TEXT NOT NULL,
@@ -52,8 +51,13 @@ SCHEMA = [
         pending     INTEGER NOT NULL DEFAULT 0  -- a bot answer still streaming: not shown in lists until final
     )""",
     "CREATE INDEX messages_by_place ON messages (where_kind, where_id, created_at)",
+    "CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)",  # e.g. which world version is loaded
+    "CREATE TABLE files (id TEXT PRIMARY KEY, place TEXT NOT NULL, name TEXT NOT NULL)",  # a channel's Files tab
+    """CREATE TABLE file_versions (file_id TEXT NOT NULL, v INTEGER NOT NULL, path TEXT NOT NULL, by TEXT NOT NULL,
+        at TEXT NOT NULL, size INTEGER NOT NULL, PRIMARY KEY (file_id, v))""",
 ]
-TABLES = ["people", "teams", "team_members", "channels", "channel_members", "chats", "chat_members", "messages"]
+TABLES = ["people", "teams", "team_members", "channels", "channel_members", "chats", "chat_members", "messages",
+          "files", "file_versions", "meta"]
 
 
 class NotAllowed(Exception):
@@ -73,9 +77,21 @@ def connect(path: str | Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA busy_timeout = 5000")
-    if conn.execute("PRAGMA user_version").fetchone()[0] != SCHEMA_VERSION:
+    if conn.execute("PRAGMA user_version").fetchone()[0] != SCHEMA_VERSION or _world_changed(conn):
         _rebuild(conn)
     return conn
+
+
+def _world_changed(conn) -> bool:
+    """The world (fact sheet, messages, its code) changed since this database was filled: start from the new one."""
+    from teams_sim.cloud import world
+
+    row = conn.execute("SELECT value FROM meta WHERE key = 'world_version'").fetchone()
+    return row is None or row[0] != world.version()
+
+
+def set_meta(conn, key: str, value: str) -> None:
+    conn.execute("INSERT OR REPLACE INTO meta VALUES (?, ?)", (key, value))
 
 
 def _rebuild(conn: sqlite3.Connection) -> None:
@@ -112,32 +128,50 @@ def reset(conn: sqlite3.Connection) -> None:
 
 
 def _fill(conn: sqlite3.Connection) -> None:
-    for pid, name, role in seed.PEOPLE:
-        conn.execute("INSERT INTO people VALUES (?, ?, ?, 0)", (pid, name, role))
-    conn.execute("INSERT INTO people VALUES (?, ?, ?, 1)", seed.MAX)
-    for pos, (tid, name, members, channels) in enumerate(seed.TEAMS):
-        conn.execute("INSERT INTO teams VALUES (?, ?, ?)", (tid, name, pos))
-        for p in [*members, "max"]:  # Max is installed in every department
-            conn.execute("INSERT INTO team_members VALUES (?, ?)", (tid, p))
-        for cpos, (cid, cname, private_for) in enumerate(channels):
-            conn.execute("INSERT INTO channels VALUES (?, ?, ?, ?, ?)", (cid, tid, cname, int(bool(private_for)), cpos))
-            for p in private_for or []:
-                conn.execute("INSERT INTO channel_members VALUES (?, ?)", (cid, p))
-    for pid, *_ in seed.PEOPLE:
-        _add_chat(conn, f"max-{pid}", "max", None, [pid, "max"])
-    for cid, kind, title, members in seed.CHATS:
-        _add_chat(conn, cid, kind, title, members)
-    keys: dict[str, str] = {}
-    for kind, where, root, key, author, at, text in seed.MESSAGES:
-        mid = str(_ms(at))
-        keys[key] = mid
-        conn.execute(
-            "INSERT INTO messages (id, where_kind, where_id, thread_id, author, text, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (mid, kind, where, keys[root] if root else None, author, text, _iso(int(mid))),
-        )
+    """The start state: Thirdwave's world (world/), with dates sliding so its history ends today."""
+    from teams_sim.cloud import world  # the loader uses this module's functions below
+
+    world.fill(conn)
 
 
-def _add_chat(conn, cid, kind, title, members):
+# ---------------------------------------------------------------- filling (used by the world loader, inside a transaction)
+
+def add_person(conn, pid: str, name: str, role: str, *, playable: bool, is_bot: bool = False, pos: int = 0) -> None:
+    conn.execute("INSERT INTO people (id, name, role, is_bot, playable, pos) VALUES (?, ?, ?, ?, ?, ?)",
+                 (pid, name, role, int(is_bot), int(playable), pos))
+
+
+def add_team(conn, tid: str, name: str, pos: int, members: list[str]) -> None:
+    conn.execute("INSERT INTO teams VALUES (?, ?, ?)", (tid, name, pos))
+    for p in members:
+        conn.execute("INSERT INTO team_members VALUES (?, ?)", (tid, p))
+
+
+def add_channel(conn, cid: str, tid: str, name: str, pos: int, private_for: list[str] | None) -> None:
+    conn.execute("INSERT INTO channels VALUES (?, ?, ?, ?, ?)", (cid, tid, name, int(bool(private_for)), pos))
+    for p in private_for or []:
+        conn.execute("INSERT INTO channel_members VALUES (?, ?)", (cid, p))
+
+
+def add_history(conn, *, kind: str, where: str, author: str, text: str, created_at: str, thread_id: str | None,
+                edited_at: str | None = None, deleted: bool = False) -> str:
+    """A past message with its own time (the world's history). Returns its Teams-like id."""
+    mid = _ms(created_at)
+    while conn.execute("SELECT 1 FROM messages WHERE id = ?", (str(mid),)).fetchone():
+        mid += 1
+    conn.execute(
+        """INSERT INTO messages (id, where_kind, where_id, thread_id, author, text, created_at, edited_at, deleted)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (str(mid), kind, where, thread_id, author, text, created_at, edited_at, int(deleted)))
+    return str(mid)
+
+
+def add_file_version(conn, fid: str, place: str, name: str, v: int, path: str, by: str, at: str, size: int) -> None:
+    conn.execute("INSERT OR IGNORE INTO files VALUES (?, ?, ?)", (fid, place, name))
+    conn.execute("INSERT INTO file_versions VALUES (?, ?, ?, ?, ?, ?)", (fid, v, path, by, at, size))
+
+
+def add_chat(conn, cid, kind, title, members):
     conn.execute("INSERT INTO chats VALUES (?, ?, ?)", (cid, kind, title))
     for p in members:
         conn.execute("INSERT INTO chat_members VALUES (?, ?)", (cid, p))
@@ -146,7 +180,13 @@ def _add_chat(conn, cid, kind, title, members):
 # ---------------------------------------------------------------- people and places
 
 def people(conn) -> list[dict]:
-    return [dict(r) for r in conn.execute("SELECT * FROM people WHERE is_bot = 0 ORDER BY rowid")]
+    """The people you can play (Prince, Praga, Rachitaa, Karthi), in the team's order."""
+    return [dict(r) for r in conn.execute("SELECT * FROM people WHERE playable = 1 ORDER BY pos")]
+
+
+def directory(conn) -> dict[str, str]:
+    """Everyone's display name (playable, background, Max)."""
+    return {r["id"]: r["name"] for r in conn.execute("SELECT id, name FROM people")}
 
 
 def person(conn, pid: str) -> dict:
@@ -189,6 +229,42 @@ def chat(conn, cid: str) -> dict:
 def chats_for(conn, pid: str) -> list[dict]:
     ids = [r[0] for r in conn.execute("SELECT chat_id FROM chat_members WHERE person_id = ?", (pid,))]
     return [chat(conn, c) for c in ids]
+
+
+# ---------------------------------------------------------------- files (a channel's Files tab)
+
+def channel_files(conn, cid: str) -> list[dict]:
+    """Files in a channel, newest change first; each with its current version and all versions."""
+    out = []
+    for f in conn.execute("SELECT * FROM files WHERE place = ?", (cid,)):
+        versions = [dict(v) for v in conn.execute(
+            "SELECT v, by, at, size FROM file_versions WHERE file_id = ? ORDER BY v", (f["id"],))]
+        cur = versions[-1]
+        out.append({"id": f["id"], "name": f["name"], "place": cid, "version": cur["v"], "by": cur["by"],
+                    "at": cur["at"], "size": cur["size"], "versions": versions})
+    return sorted(out, key=lambda f: f["at"], reverse=True)
+
+
+def file_version(conn, fid: str, v: int | None = None) -> dict:
+    if v is None:
+        row = conn.execute("SELECT * FROM file_versions WHERE file_id = ? ORDER BY v DESC LIMIT 1", (fid,)).fetchone()
+    else:
+        row = conn.execute("SELECT * FROM file_versions WHERE file_id = ? AND v = ?", (fid, v)).fetchone()
+    if not row:
+        raise NotFound(f"no file {fid!r} version {v}")
+    if not Path(row["path"]).exists():
+        raise NotFound(f"the content of {fid!r} is gone (its made files were removed): press Reset world")
+    name = conn.execute("SELECT name FROM files WHERE id = ?", (fid,)).fetchone()["name"]
+    return {**dict(row), "name": name, "path": Path(row["path"])}
+
+
+def file_exists(conn, fid: str) -> bool:
+    return conn.execute("SELECT 1 FROM files WHERE id = ?", (fid,)).fetchone() is not None
+
+
+def can_see_file(conn, pid: str, fid: str) -> bool:
+    row = conn.execute("SELECT place FROM files WHERE id = ?", (fid,)).fetchone()
+    return bool(row) and can_see(conn, pid, "channel", row["place"])
 
 
 def max_chat_for(conn, pid: str) -> dict:

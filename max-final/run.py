@@ -9,6 +9,8 @@ One command for everything (standard library only, so it works before anything i
   python run.py start       start the simulated Teams + Max in the background (builds the screens if needed)
   python run.py stop        stop them
   python run.py e2e         end-to-end tests (starts its own copies on free ports; slower)
+  python run.py world       check Thirdwave's simulated world for today (facts proven / pending / problems)
+  python run.py world-write write the full world's everyday messages with the AI model (--plan: just show the plan)
 """
 
 from __future__ import annotations
@@ -188,6 +190,8 @@ COMMANDS = {
     "start": start,
     "stop": stop,
     "e2e": e2e,
+    "world": lambda: run_py("-m", "world.check"),
+    "world-write": lambda: run_py("-m", "world.make.write_messages", *sys.argv[2:]),
 }
 
 
