@@ -1,4 +1,5 @@
-// UI design mock-up: the Chat screen (1:1 with Max, group chats, 1:1 chats). Static data, Max not connected.
+// The Chat screen (1:1 with Max, group chats, 1:1 chats). Real mode (`live` given): chats and messages from the
+// simulator server, live updates, the real Max answers. Showcase mode: the agreed design demos on mock data.
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Avatar,
@@ -53,6 +54,7 @@ import { PEOPLE, type PersonId } from "./mock";
 import { MAX_ORANGE, MaxAvatar, RichText, Sources, personName } from "./ui";
 import { CardFrame } from "./CardsGallery";
 import { CARDS, SORRY_CARD, SORRY_RETRIED_CARD, celebrateCard, welcomeCard } from "./cards";
+import { api, chatTime, useLive, type ApiChat, type ApiMessage } from "./api";
 
 const useStyles = makeStyles({
   wrap: { display: "flex", flex: 1, minWidth: 0, minHeight: 0 },
@@ -317,6 +319,28 @@ function PromptList({ onPick }: { onPick: (text: string) => void }) {
 
 const plain = (t: string) => t.replace(/\*\*/g, "").replace(/\s*\[\d+\]/g, "").split("\n")[0];
 
+// ---- real mode: server chats and messages in the shape this screen uses
+const toChat = (c: ApiChat): Chat => ({
+  id: c.id, kind: c.kind, title: c.title ?? undefined, withMax: c.members.includes("max"),
+  members: c.members.filter((m) => m !== "max") as PersonId[], messages: [],
+});
+function toChatMessage(m: ApiMessage): ChatMessage {
+  const card = m.attachments.find((a) => a.contentType === "application/vnd.microsoft.card.adaptive")?.content;
+  return {
+    id: m.id, author: m.author as PersonId | "max", ...chatTime(m.created_at), at: m.created_at, text: m.text,
+    quote: m.quote ? { author: personName(m.quote.author), text: plain(m.quote.text) } : undefined,
+    card: card ? { before: card } : undefined,
+    system: !m.ai_label, feedback: !!m.feedback, // what Max marked, like Teams does
+  };
+}
+/** A new or changed message merged into a chat's messages (same id = replace, deleted = remove). */
+function mergeChatMessage(list: ChatMessage[], m: ApiMessage): ChatMessage[] {
+  if (m.deleted) return list.filter((x) => x.id !== m.id);
+  const msg = toChatMessage(m);
+  return list.some((x) => x.id === m.id) ? list.map((x) => (x.id === m.id ? msg : x)) : [...list, msg];
+}
+const MAX_WAIT_MS = 20_000; // the compose box in the Max chat unlocks by itself if no answer comes
+
 function chatTitle(c: Chat, me: PersonId) {
   if (c.kind === "max") return "Max";
   if (c.kind === "group") return c.title ?? "Group chat";
@@ -340,7 +364,7 @@ function ChatAvatar({ c, me, size = 36 }: { c: Chat; me: PersonId; size?: 28 | 3
 function TypingBubble() {
   const s = useStyles();
   return (
-    <div className={mergeClasses(s.row, s.rowFirst)}>
+    <div className={mergeClasses(s.row, s.rowFirst)} data-testid="typing">
       <MaxAvatar size={32} />
       <div className={s.col}>
         <div className={s.meta}><span className={s.maxName}>Max</span><span className={s.time}>is typing…</span></div>
@@ -359,7 +383,7 @@ function MessageRow({ m, me, first, onReply, latest, onPick, fb, onThumb, onCard
   const isMax = m.author === "max";
   const p = PEOPLE.find((x) => x.id === m.author);
   return (
-    <div className={mergeClasses(s.row, first && s.rowFirst, mine && s.rowMine)}>
+    <div className={mergeClasses(s.row, first && s.rowFirst, mine && s.rowMine)} data-testid="msg" data-author={m.author} data-msg-id={m.id}>
       {!mine && (
         <div className={s.avatarSlot}>
           {first && (isMax ? <MaxAvatar size={32} /> : <Avatar name={personName(m.author)} color={p?.color} size={32} />)}
@@ -404,7 +428,7 @@ function MessageRow({ m, me, first, onReply, latest, onPick, fb, onThumb, onCard
               {refsOpen && <Sources sources={m.sources} />}
             </div>
           )}
-          {isMax && !m.system && (
+          {isMax && (m.feedback ?? !m.system) && (
             <div className={s.feedback}>
               <Button size="small" appearance="subtle" aria-label="Helpful" onClick={() => onThumb?.(m, "up")}
                 icon={fb === "up" ? <ThumbLike16Filled primaryFill={tokens.colorBrandForeground1} /> : <ThumbLike16Regular />} />
@@ -463,18 +487,20 @@ const useStream = makeStyles({
 });
 
 /** Teams streaming: short status updates ("informative updates") first, then the text appears as it is written. */
-function StreamingBubble({ status, text, onStop }: { status: string | null; text: string; onStop: () => void }) {
+function StreamingBubble({ status, text, onStop }: { status: string | null; text: string; onStop?: () => void }) {
   const s = useStyles();
   const st = useStream();
   return (
-    <div className={mergeClasses(s.row, s.rowFirst)}>
+    <div className={mergeClasses(s.row, s.rowFirst)} data-testid="stream">
       <MaxAvatar size={32} />
       <div className={s.col} style={{ minWidth: 320 }}>
         <div className={s.meta}><span className={s.maxName}>Max</span><span className={s.time}>now</span></div>
-        <div className={s.bubble} style={{ paddingRight: 44 }}>
-          <Tooltip content="Stop" relationship="label">
-            <button className={st.stopBtn} style={{ position: "absolute", right: 8, bottom: 8 }} onClick={onStop} aria-label="Stop"><span className={st.stopSquare} /></button>
-          </Tooltip>
+        <div className={s.bubble} style={{ paddingRight: onStop ? 44 : undefined }}>
+          {onStop && (
+            <Tooltip content="Stop" relationship="label">
+              <button className={st.stopBtn} style={{ position: "absolute", right: 8, bottom: 8 }} onClick={onStop} aria-label="Stop"><span className={st.stopSquare} /></button>
+            </Tooltip>
+          )}
           {status && !text && (
             <>
               <div className={st.status}>{status}</div>
@@ -529,7 +555,10 @@ function FeedbackDialog({ open, me, onClose, onSend }: { open: boolean; me: Pers
 
 /** Where a card button or link takes you (Teams deep links in real Teams). */
 export interface NavTarget { view: string; chat?: string; mtab?: string; channel?: string; tab?: string; meeting?: string }
-interface ChatProps { me: PersonId; initialChat: string; fresh?: boolean; demo?: string; dark?: boolean; onOpen?: (to: NavTarget) => void }
+interface ChatProps {
+  me: PersonId; initialChat: string; fresh?: boolean; demo?: string; dark?: boolean; onOpen?: (to: NavTarget) => void;
+  live?: ApiChat[]; // real mode: this person's chats from the server (no fake Max answers then)
+}
 
 const welcomeMessage = (me: PersonId): ChatMessage => ({
   id: "welcome", author: "max", day: "Today", time: new Date().toTimeString().slice(0, 5), text: "", system: true,
@@ -550,10 +579,13 @@ export function ChatScreen(props: ChatProps) {
   return <ChatInner key={run} {...props} onRestart={() => setRun((r) => r + 1)} />;
 }
 
-function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: ChatProps & { onRestart?: () => void }) {
+function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart, live }: ChatProps & { onRestart?: () => void }) {
   const s = useStyles();
+  const real = !!live;
   const moments = demo === "moments";
-  const [chats, setChats] = useState<Chat[]>(() => [
+  const [chats, setChats] = useState<Chat[]>(() => real ? [
+    ...live.filter((c) => c.kind === "max").map(toChat), ...live.filter((c) => c.kind !== "max").map(toChat),
+  ] : [
     demo === "card" || demo === "carddone" ? { ...maxChatFor(me), messages: [
       { id: "cq", author: me, day: "Today", time: "10:40", text: "Email Prince the Q1 pricing summary" },
       { id: "ca", author: "max", day: "Today", time: "10:41", text: cannedAnswer("email").text,
@@ -570,7 +602,8 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
   const [promptsOpen, setPromptsOpen] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, string>>((): Record<string, string> => (demo === "fbdone" ? { da: `down:${me === "prince" ? "Thanks. Saved as a lesson for the team." : "Thanks. Sent to Prince (team lead) as a lesson to accept."}` } : {}));
   const [fbFor, setFbFor] = useState<string | null>(demo === "feedback" ? "da" : null);
-  const [activeId, setActiveId] = useState(chats.some((c) => c.id === initialChat) ? initialChat : "max");
+  const firstChat = real && initialChat === "max" ? `max-${me}` : initialChat;
+  const [activeId, setActiveId] = useState(chats.some((c) => c.id === firstChat) ? firstChat : chats[0]?.id ?? "max");
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [typing, setTyping] = useState(false);
@@ -585,13 +618,63 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
   const [momentStep, setMomentStep] = useState(0);
   const [filter, setFilter] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const active = chats.find((c) => c.id === activeId)!;
-  const busy = !!stream && active.kind === "max";
+  // real mode: what the server tells us live (Max typing / streaming), and "waiting for Max" after asking in the Max chat
+  const [typingIn, setTypingIn] = useState<string | null>(null);
+  const [liveStream, setLiveStream] = useState<{ chatId: string; streamId: string; text: string } | null>(null);
+  const [waitingIn, setWaitingIn] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const active = chats.find((c) => c.id === activeId) ?? chats[0];
+  const shownStream = real
+    ? (liveStream?.chatId === active.id && liveStream.text ? { status: null, text: liveStream.text } : null)
+    : (stream && active.kind === "max" ? stream : null);
+  const showTyping = real ? (typingIn === active.id || (liveStream?.chatId === active.id && !liveStream.text)) : typing;
+  const busy = active.kind === "max" && (real ? waitingIn === active.id || liveStream?.chatId === active.id : !!stream);
   const newMaxChat = active.kind === "max" && !active.messages.some((m) => m.author !== "max");
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [activeId, active.messages.length, typing, stream?.text, stream?.status]);
+  }, [activeId, active.messages.length, showTyping, shownStream?.text, shownStream?.status]);
+
+  // real mode: load every chat's messages (the list shows the last one), then keep them up to date live
+  const arrivedWhileLoading = useRef(new Map<string, ApiMessage[]>());
+  useEffect(() => {
+    if (!real) return;
+    let gone = false;
+    live.forEach((c) => {
+      arrivedWhileLoading.current.set(c.id, []); // live messages that come in while loading are applied on top
+      api.chatMessages(me, c.id).then((ms) => {
+        if (gone) return;
+        let messages = ms.map(toChatMessage);
+        for (const m of arrivedWhileLoading.current.get(c.id) ?? []) messages = mergeChatMessage(messages, m);
+        arrivedWhileLoading.current.delete(c.id);
+        setChats((cs) => cs.map((x) => (x.id === c.id ? { ...x, messages } : x)));
+      }).catch(() => {});
+    });
+    return () => { gone = true; };
+  }, [real, live, me]);
+  useLive((e) => {
+    if (e.type === "typing" || e.type === "stream") {
+      if (e.kind !== "chat") return;
+      if (e.type === "typing") setTypingIn(e.where);
+      else setLiveStream({ chatId: e.where, streamId: e.stream_id, text: e.text });
+      return;
+    }
+    if (e.type !== "message" && e.type !== "update") return;
+    const m = e.message;
+    if (m.where_kind !== "chat") return;
+    if (m.author === "max" && e.type === "message") {
+      setTypingIn((t) => (t === m.where_id ? null : t));
+      setLiveStream((st) => (st && (st.streamId === e.stream_id || st.chatId === m.where_id) ? null : st));
+      setWaitingIn((w) => (w === m.where_id ? null : w));
+    }
+    arrivedWhileLoading.current.get(m.where_id)?.push(m);
+    setChats((cs) => cs.map((c) => (c.id === m.where_id ? { ...c, messages: mergeChatMessage(c.messages, m) } : c)));
+  }, real);
+  useEffect(() => { // typing notes, a stalled stream and the compose lock end by themselves if no answer comes
+    if (!typingIn && !waitingIn && !liveStream) return;
+    const t = window.setTimeout(() => { setTypingIn(null); setWaitingIn(null); setLiveStream(null); }, MAX_WAIT_MS);
+    return () => window.clearTimeout(t);
+  }, [typingIn, waitingIn, liveStream]);
 
   const visible = useMemo(
     () => chats.filter((c) => chatTitle(c, me).toLowerCase().includes(filter.toLowerCase())),
@@ -652,6 +735,25 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
     setPromptsOpen(false);
     const text = raw.trim();
     if (!text) return;
+    if (real) { // the server saves it and hands it to Max; Max's answer arrives live
+      const chatId = active.id;
+      const quoted = replyTo;
+      api.post({ as: me, kind: "chat", where: chatId, text, quote_id: replyTo?.id })
+        .then((m) => {
+          setSendError(null);
+          setChats((cs) => cs.map((c) => (c.id === chatId ? { ...c, messages: mergeChatMessage(c.messages, m) } : c)));
+        })
+        .catch((e) => { // nothing is lost: the text (and quote) go back in the box
+          setWaitingIn(null);
+          setDraft(text);
+          setReplyTo(quoted);
+          setSendError(`Couldn't send: ${e instanceof Error ? e.message : e}. Your text is kept.`);
+        });
+      if (active.kind === "max") setWaitingIn(chatId);
+      setDraft("");
+      setReplyTo(null);
+      return;
+    }
     const time = new Date().toTimeString().slice(0, 5);
     const msg: ChatMessage = {
       id: crypto.randomUUID(), author: me, day: "Today", time, text,
@@ -704,6 +806,12 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
   }, [moments]);
 
   const onCard = (mm: ChatMessage, verb: string) => {
+    if (real) { // card buttons that only open a page; real card actions go to Max in a later step
+      if (verb === "Open Max") onOpen?.({ view: "max", mtab: "home" });
+      if (verb === "Open plan") onOpen?.({ view: "teams", channel: "pp-models", tab: "plans" });
+      if (verb === "What can you do?" && !busy) sendText("What can you do?");
+      return;
+    }
     if (verb === "approve" || verb === "approveEdited" || verb === "book" || verb === "accept") patchMsg(mm.id, { card: { ...mm.card!, done: true } });
     if (verb === "retry" && mm.card && !mm.card.done && !busy) {
       patchMsg(mm.id, { card: { ...mm.card, done: true } });
@@ -715,13 +823,15 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
   };
 
   const pinned = visible.filter((c) => c.kind === "max");
-  const recent = visible.filter((c) => c.kind !== "max");
+  const lastAt = (c: Chat) => c.messages[c.messages.length - 1]?.at ?? ""; // UTC ISO times sort as text
+  const recent = visible.filter((c) => c.kind !== "max").sort((a, b) => (real ? lastAt(b).localeCompare(lastAt(a)) : 0));
 
   const listItem = (c: Chat) => {
     const last = c.messages[c.messages.length - 1] ?? { author: "max", day: "Today", time: "", text: "New chat", id: "none" };
-    const unread = c.id !== activeId && last.author !== me && c.kind !== "oneToOne";
+    const unread = c.id !== active.id && last.author !== me && c.kind !== "oneToOne";
     return (
-      <div key={c.id} className={mergeClasses(s.item, c.id === activeId && s.itemActive)} onClick={() => setActiveId(c.id)}>
+      <div key={c.id} className={mergeClasses(s.item, c.id === active.id && s.itemActive)} onClick={() => setActiveId(c.id)}
+        data-testid="chat-item" data-chat-id={c.id}>
         <ChatAvatar c={c} me={me} />
         <div className={s.itemBody}>
           <div className={s.itemTop}>
@@ -761,7 +871,7 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
           <div style={{ paddingBottom: "8px" }}>
             <div className={s.headName} style={active.kind === "max" ? { color: MAX_ORANGE } : undefined}>{chatTitle(active, me)}</div>
             {active.kind === "max" && <Text size={200} style={{ color: tokens.colorNeutralForeground3 }}>Your AI teammate · only you can see this chat</Text>}
-            {active.kind === "group" && <Text size={200} style={{ color: tokens.colorNeutralForeground3 }}>{active.members.map(personName).join(", ")} · Max</Text>}
+            {active.kind === "group" && <Text size={200} style={{ color: tokens.colorNeutralForeground3 }}>{active.members.map(personName).join(", ")}{active.withMax !== false && " · Max"}</Text>}
           </div>
           <TabList defaultSelectedValue="chat" size="small" style={{ marginLeft: "8px", alignSelf: "flex-end" }}>
             <Tab value="chat">Chat</Tab>
@@ -801,23 +911,24 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
                     dark={dark}
                     onCard={onCard}
                     fb={feedback[m.id]} onThumb={(mm, k) => (k === "up" ? setFeedback((f) => ({ ...f, [mm.id]: "up" })) : setFbFor(mm.id))}
-                    latest={m.id === active.messages[active.messages.length - 1]?.id && !stream} />
+                    latest={m.id === active.messages[active.messages.length - 1]?.id && !shownStream} />
                 </div>
               );
             })}
-            {typing && <TypingBubble />}
+            {showTyping && !shownStream && <TypingBubble />}
             <FeedbackDialog open={!!fbFor} me={me} onClose={() => setFbFor(null)}
               onSend={(_r, _t, lesson) => {
                 const msg = lesson ? (me === "prince" ? "Thanks. Saved as a lesson for the team." : "Thanks. Sent to Prince (team lead) as a lesson to accept.") : "Thanks for the feedback.";
                 setFeedback((f) => ({ ...f, [fbFor!]: `down:${msg}` }));
                 setFbFor(null);
               }} />
-            {stream && active.kind === "max" && <StreamingBubble status={stream.status} text={stream.text} onStop={stopStream} />}
+            {shownStream && <StreamingBubble status={shownStream.status} text={shownStream.text} onStop={real ? undefined : stopStream} />}
             {newMaxChat && !busy && <Starters onPick={sendText} />}
           </div>
         </div>
 
         <div className={s.compose}>
+          {sendError && <Text size={200} block data-testid="send-error" style={{ color: tokens.colorPaletteRedForeground1, marginBottom: 6 }}>{sendError}</Text>}
           <div className={s.composeBox}>
             {replyTo && (
               <div className={s.replyingTo}>
@@ -829,8 +940,8 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
               </div>
             )}
             <Textarea className={s.composeText} appearance="filled-lighter" resize="none" value={draft}
-              disabled={busy}
-              placeholder={busy ? "Max is answering… (stop it to ask something else)" : active.kind === "max" ? "Message Max (no @ needed here)" : "Type a message (use @Max to ask Max)"}
+              disabled={busy} data-testid="chat-box"
+              placeholder={busy ? (real ? "Max is answering…" : "Max is answering… (stop it to ask something else)") : active.kind === "max" ? "Message Max (no @ needed here)" : "Type a message (use @Max to ask Max)"}
               onChange={(_, d) => setDraft(d.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!busy) send(); } }} />
             <div className={s.composeBar}>
@@ -848,7 +959,8 @@ function ChatInner({ me, initialChat, fresh, demo, dark, onOpen, onRestart }: Ch
               <span className={s.hint}>Enter to send · Shift+Enter for a new line</span>
               <div style={{ flex: 1 }} />
               <Tooltip content="Send" relationship="label">
-                <Button appearance="transparent" icon={<Send20Filled primaryFill={busy ? tokens.colorNeutralForegroundDisabled : tokens.colorBrandForeground1} />} onClick={send} disabled={!draft.trim() || busy} />
+                <Button appearance="transparent" icon={<Send20Filled primaryFill={busy ? tokens.colorNeutralForegroundDisabled : tokens.colorBrandForeground1} />} onClick={send} disabled={!draft.trim() || busy}
+                  data-testid="chat-send" />
               </Tooltip>
             </div>
           </div>

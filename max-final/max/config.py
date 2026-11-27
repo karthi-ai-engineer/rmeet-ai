@@ -150,6 +150,57 @@ def load_settings(**overrides) -> Settings:
                           + ". Check max-final/.env (copy .env.example if it doesn't exist).") from None
 
 
+class TeamsSettings(BaseSettings):
+    """How Max connects to Teams. Kept apart from the AI settings: Max can start without an AI key.
+
+    TEAMS_MODE = sim     the simulated Teams on this PC (default). Max listens on 127.0.0.1 only and accepts
+                         unsigned messages (the simulator can't sign like Microsoft does).
+    TEAMS_MODE = teams   real Microsoft Teams. Needs the app registration: CLIENT_ID, CLIENT_SECRET, TENANT_ID.
+    BOT_PORT             where Max listens (default 3978).
+    """
+
+    model_config = SettingsConfigDict(env_file=ROOT / ".env", env_file_encoding="utf-8", extra="ignore",
+                                      populate_by_name=True, env_ignore_empty=True)
+
+    teams_mode: Literal["sim", "teams"] = "sim"
+    bot_port: int = Field(3978, ge=1, le=65535)
+    client_id: str = ""
+    client_secret: SecretStr | None = None
+    tenant_id: str = ""
+
+    @field_validator("teams_mode", mode="before")
+    @classmethod
+    def _tidy(cls, v):
+        return v.strip().lower() if isinstance(v, str) else v
+
+    @model_validator(mode="after")
+    def _registration(self) -> TeamsSettings:
+        if self.teams_mode == "teams":
+            missing = [n for n, v in (("CLIENT_ID", self.client_id), ("CLIENT_SECRET", self.client_secret),
+                                      ("TENANT_ID", self.tenant_id)) if not v]
+            if missing:
+                raise ValueError(f"{', '.join(missing)} missing (needed for TEAMS_MODE=teams)")
+        return self
+
+    @property
+    def bot_host(self) -> str:
+        return "127.0.0.1" if self.teams_mode == "sim" else "0.0.0.0"
+
+
+def load_teams_settings(**overrides) -> TeamsSettings:
+    try:
+        return TeamsSettings(**overrides)
+    except SettingsError:
+        raise ConfigError("Teams settings problem: a Teams setting could not be read. Check max-final/.env.") from None
+    except ValidationError as e:
+        problems = []
+        for err in e.errors():
+            msg = str(err.get("msg", "")).removeprefix("Value error, ")
+            name = str(err["loc"][0]).upper() if err["loc"] else ""
+            problems.append(msg if not name else f"{name} is invalid")   # our own messages already name the setting
+        raise ConfigError("Teams settings problem: " + "; ".join(problems) + ". Check max-final/.env.") from None
+
+
 def safe_url(url: str) -> str:
     """The address without any user:password part (that would be a secret)."""
     parts = urlsplit(url)

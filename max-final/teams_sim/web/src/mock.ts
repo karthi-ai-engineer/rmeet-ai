@@ -74,6 +74,8 @@ export interface Message {
   text: string;
   sources?: Source[];
   edited?: boolean;
+  aiLabel?: boolean;  // real mode: only when Max marked it (mock-ups: every Max message)
+  feedback?: boolean; // real mode: only when Max asked for 👍/👎
 }
 
 export interface Thread {

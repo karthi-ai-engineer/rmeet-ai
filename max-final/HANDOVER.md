@@ -1,22 +1,20 @@
 # Max final: handover
 
-Last updated: 26 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
+Last updated: 27 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 
 ## 1. Where we are in one minute
 
 - **Max** = a semi-autonomous AI teammate for Microsoft Teams. This is the **real product** (not a demo).
-- **Step 0 (foundation) is built, tested and committed**: settings, Gemini client with time limits + backup
-  model, SQLite store (raw layer), AI usage meter + dashboard, `run.py`. **Step 1** (branch `step-1`): any AI
-  provider via settings (`LLM_PROVIDER`: gemini or openai_compatible), all limits in `limits.toml`.
+- **Built so far (each step: plan → tests → build → independent review → end-to-end test → docs):**
+  Step 0 foundation · Step 1 any AI provider + one limits file (merged into `max-final`) · **Step 2 simulated Teams
+  in the browser** (branch `step-2`): people, departments, channels (one private), chats, live updates; Max connects
+  through the **real Bot Framework contract** (Teams SDK for Python) and says hello. `docs/plans/step-2.md`.
 - **The design phase is DONE (26 Nov 2026).** All topics in `docs/plans/01-open-topics.md` are agreed, except
   **Max Meeting** (topic 7), which became its own module and is **paused until the chat Max (R1) is built**
-  (`docs/plans/meeting/01-overview.md`).
-- **The UI is designed** (`docs/plans/13-ui-design.md`, pictures `docs/plans/pictures/ui-*.png`): a simulated Teams
-  built with Fluent UI v9 in `teams_sim/web/` (mock data only), Max's own pages, developer tools, all cards (drawn by
-  Microsoft's Adaptive Cards renderer) and Max's chat (prompt starters, streaming, answers, feedback, cards).
-  Run it: `cd teams_sim/web && npm install && npm run dev` (or `npm run build -- --base ./ && npx vite preview --port 5181`).
-- **Next: Step 1** of the build plan (`docs/plans/12-build-plan.md`): any AI provider can be plugged in + all limits
-  in one settings file. Write `docs/plans/step-1.md` (1-page plan) first and get Karthi's OK.
+  (`docs/plans/meeting/01-overview.md`). UI: `docs/plans/13-ui-design.md`; Max's character and chat animations:
+  `docs/plans/14-avatar.md` (agreed 27 Nov).
+- **Run it:** `python run.py start` → open http://localhost:5100 (switch person in the top bar, write `@Max`).
+  Design showcases still work with URL params, e.g. `?view=chat&chat=max&demo=moments`.
 - **R1 size:** one laptop, about 4 simulated users in 1-2 teams, Karthi plays all of them (`03-requirements.md` §1).
 - In examples and the simulated team use the names **Karthi, Prince, Rachitaa, Praga**.
 
@@ -42,6 +40,8 @@ Last updated: 26 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 | `docs/plans/13-ui-design.md` | UI design, all agreed; mock-ups in `teams_sim/web/` |
 | `docs/plans/meeting/01-overview.md` | Max Meeting module (paused) |
 | `docs/plans/step-0.md` | Step 0 plan and results |
+| `docs/plans/step-1.md`, `step-2.md`, ... | One file per build step: plan, results, review fixes, known gaps |
+| `docs/plans/14-avatar.md` | Max's character + the chat animation moments (agreed 27 Nov) |
 | `docs/plans/README.md` | Map of the plans folder: numbered files in reading order + one `pictures/` folder |
 | `docs/research/` | All research reports (Teams access, storage, AI stack, app stack, prototype review, knowledge/RAG, tools, competitors, memory) |
 
@@ -60,19 +60,21 @@ Last updated: 26 Nov 2026. Read with `CLAUDE.md` (rules for Claude).
 
 ## 4. Setup on another machine (e.g. home laptop)
 
-1. Install **Python 3.12+** (developed on 3.13) and Git. Node is only needed later (frontend build).
+1. Install **Python 3.12+** (developed on 3.13), Git and **Node.js 20+** (builds the Teams screens).
 2. Clone and switch to the work branch:
    ```
    git clone https://github.com/karthi-ai-engineer/rmeet-ai.git
    cd rmeet-ai
-   git checkout max-final
+   git checkout max-final        # or the newest step branch (step-2, step-3, ...)
    cd max-final
    ```
 3. Copy `.env.example` to `.env` and paste your **AI key** (`LLM_API_KEY`; the old `GEMINI_API_KEY` also works). Never commit `.env`.
 4. `python run.py setup` (creates `.venv`, installs exact library versions).
-5. `python run.py test` → should show **103 passed** (offline, free).
+5. `python run.py test` → all pass (offline, free). `python run.py e2e` → end-to-end + browser tests (needs Node.js
+   20+ and Microsoft Edge; builds the screens itself).
 6. `python run.py check` → live check with the key (main, backup, fallback drill).
-7. `python run.py settings` → provider, models and every limit. Optional: `python run.py dashboard` → AI usage
+7. `python run.py start` → simulated Teams + Max on http://localhost:5100 (`python run.py stop` to stop).
+8. `python run.py settings` → provider, models and every limit. Optional: `python run.py dashboard` → AI usage
    dashboard on http://localhost:8600. Own limits: copy lines from `limits.toml` into `data/limits.toml`.
 
 Notes:
@@ -82,19 +84,16 @@ Notes:
 - Claude's own notes ("memory") live per machine. Everything important is in `CLAUDE.md` and this file,
   so a new session on another machine has the same rules.
 
-## 5. Next session: start here (paused 26 Nov 2026)
+## 5. Next session: start here (27 Nov 2026)
 
 **Where we stopped:**
-- **Step 1 is built, reviewed and fixed** on branch **`step-1`** (pushed): any AI provider via `LLM_*` settings,
-  OpenAI-style backend (proven live through Gemini's OpenAI door), `ai_usage/` (was `gemini_cost/`), every limit in
-  `limits.toml` + `data/limits.toml`, `python run.py settings`. 125 tests pass; live check passes.
-  Results + review fixes: `docs/plans/step-1.md`. **Next: Karthi merges `step-1` into `max-final`.**
-- **Avatar design is in progress:** `docs/plans/14-avatar.md` (options A-D, blob style 1-3, and the animated cloud
-  engine found in `../max-demo/bot-avatar/`). Three open questions at the end of that file.
-- On the home laptop: `git fetch` then `git checkout step-1` to continue (or merge it first).
+- **Step 2 is DONE** on branch **`step-2`** (pushed): see `docs/plans/step-2.md` (results, bugs found, known gaps).
+  Karthi merges `step-2` into `max-final` when happy.
+- **Git identity:** commit only as `karthi-ai-engineer` (repo-local `git config user.email` =
+  `296384397+karthi-ai-engineer@users.noreply.github.com`). The PC's global email belongs to a company GitHub
+  account; check `git config user.email` before committing on a new clone.
+- **Step 3 (Thirdwave's world)** continues on branch **`step-3`**: `docs/plans/step-3.md`. Per the agreed process
+  (`11-sim-world.md` Part 3) **Karthi reviews the fact sheet + samples before the full world is generated**.
 
-**Then:**
-1. Settle the avatar questions, then Step 2 of `docs/plans/12-build-plan.md` (simulated Teams for real, starting from
-   the mock-ups in `teams_sim/web/`). Write `docs/plans/step-2.md` first and get Karthi's OK.
-2. Keep the rules in `CLAUDE.md`: one part at a time, limits are settings, model stays swappable, Claude decides UI
-   details and shows images.
+**Keep the rules in `CLAUDE.md`:** one part at a time, limits are settings, model stays swappable, Claude decides UI
+details and shows images, test end to end before saying something works.

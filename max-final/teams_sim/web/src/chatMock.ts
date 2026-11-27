@@ -5,6 +5,7 @@ export interface ChatMessage {
   id: string;
   author: PersonId | "max";
   time: string; // shown time
+  at?: string;  // real mode: exact time (UTC ISO), for sorting
   day: string; // divider label
   text: string;
   sources?: Source[];
@@ -15,6 +16,7 @@ export interface ChatMessage {
   card?: { before: object; after?: object; done?: boolean; afterText?: string; retry?: string }; // an Adaptive Card attached to the message
   botReaction?: string; // a reaction Max put on this message (status for long tasks: ⏳ while working, ✅ when done)
   system?: boolean; // Max's own notices (welcome, done, errors): no "AI generated" label, no 👍/👎
+  feedback?: boolean; // real mode: 👍/👎 only when Max asked for them (mock-ups: every non-system Max message)
 }
 
 export interface Chat {
@@ -22,6 +24,7 @@ export interface Chat {
   kind: "max" | "group" | "oneToOne";
   title?: string; // group name
   members: PersonId[]; // people (Max is implied for kind "max")
+  withMax?: boolean; // group chats: false when Max isn't in this chat
   messages: ChatMessage[];
 }
 

@@ -127,7 +127,7 @@ data/            runtime: database, logs, files (not in git)
 | Local hearing model (faster-whisper) | Yes, re-test on a real voice recording first |
 | 4-5 s spoken reply in live meetings | Accepted for now, improve later |
 | Paid Gemini key with daily cap | Open: Karthi to check |
-| Language / private channels | English only, no private channels in the simulation |
+| Language / private channels | English only. The simulation has **one private channel** (Product Planning › Budget, Prince + Karthi) to test privacy, as agreed in `docs/plans/11-sim-world.md` (27 Nov 2026) |
 | Deleted content purge | After 7 days |
 | Max's avatar | Later: redesigned as its own step. For now Max is a normal Teams app with a bot icon. |
 | Demo world | Designed fresh (not copied from max-demo) |

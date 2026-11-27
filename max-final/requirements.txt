@@ -10,9 +10,13 @@ httpx2==2.16.2
 pydantic==2.14.4
 pydantic-settings==2.16.3
 
-# Web server (Gemini cost dashboard now; Max and the fake Teams later)
+# Web server (usage dashboard, the simulated Teams, Max)
 fastapi==0.165.0
 uvicorn==0.54.0
 
-# Tests
+# Microsoft Teams SDK for Python (Max's bot side; same code for the simulator and real Teams)
+microsoft-teams-apps==2.2.1
+
+# Tests (Playwright drives the Edge already on the PC: no browser download)
 pytest==9.2.0
+playwright==1.58.0
